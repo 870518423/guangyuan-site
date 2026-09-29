@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>奥系人间体大全</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="奥系人间体查询工具：按名称、本命、特训、获得方式、前置要求快速检索">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #101828;
+    --panel2: #0d1526;
+    --border: #1e2a41;
+    --border2: #263449;
+    --text: #e6ebf5;
+    --muted: #8b98ad;
+    --dim: #64748b;
+    --blue: #3b82f6;
+    --gold: #fbbf24;
+    --c-star: #fbbf24;
+    --c-multi: #38bdf8;
+    --c-monster: #34d399;
+    --c-alien: #a78bfa;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* 返回首页（站内导航） */
+  .back-home {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .82rem; color: var(--muted); text-decoration: none;
+    margin-bottom: 12px; padding: 4px 10px 4px 7px;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--panel2);
+    transition: color .15s, border-color .15s;
+  }
+  .back-home:hover { color: #93c5fd; border-color: var(--blue); }
+
+  /* ---------- header ---------- */
+  header { text-align: center; padding: 12px 0 18px; }
+  header h1 {
+    margin: 0 0 6px;
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--muted); font-size: .82rem; }
+  header .sub b { color: var(--gold); font-weight: 600; }
+  header .sub span { color: var(--dim); }
+
+  /* ---------- toolbar ---------- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(10, 14, 26, .92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0 10px;
+    margin: 0 -16px 16px;
+    padding-left: 16px; padding-right: 16px;
+  }
+  .search-row { position: relative; display: flex; align-items: center; }
+  .search-row input {
+    width: 100%;
+    height: 46px;
+    padding: 0 42px 0 16px;
+    background: var(--panel2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: .92rem;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search-row input::placeholder { color: var(--dim); }
+  .search-row input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+  .search-row input::-webkit-search-cancel-button { display: none; }
+  #clearQ {
+    position: absolute; right: 8px;
+    width: 30px; height: 30px; border: 0; border-radius: 50%;
+    background: transparent; color: var(--dim); font-size: .9rem;
+    cursor: pointer; display: none;
+  }
+  #clearQ.on { display: block; }
+  #clearQ:hover { color: var(--text); background: var(--border); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px 6px 8px;
+    background: var(--panel2);
+    border: 1px solid var(--border2);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: .82rem;
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s;
+  }
+  .chip img { width: 18px; height: 18px; object-fit: contain; border-radius: 50%; }
+  .chip .n { color: var(--dim); font-size: .75rem; font-variant-numeric: tabular-nums; }
+  .chip:hover { border-color: var(--border2); color: var(--text); }
+  .chip.on { color: #fff; border-color: currentColor; background: rgba(255,255,255,.06); }
+  .chip.on .n { color: inherit; opacity: .75; }
+
+  .toolbar-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 10px; gap: 10px;
+  }
+  .count { color: var(--muted); font-size: .8rem; }
+  .count b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .viewtoggle { display: flex; background: var(--panel2); border: 1px solid var(--border2); border-radius: 9px; padding: 2px; }
+  .viewtoggle button {
+    border: 0; background: transparent; color: var(--muted);
+    font-size: .8rem; padding: 5px 14px; border-radius: 7px; cursor: pointer;
+    font-family: inherit; transition: all .15s;
+  }
+  .viewtoggle button.on { background: var(--blue); color: #fff; }
+
+  /* ---------- cards ---------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--fcolor, var(--border2));
+    border-radius: var(--radius);
+    padding: 13px 14px 14px;
+    transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: var(--border2); border-left-color: var(--fcolor, var(--blue)); }
+  .card-hd { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .card-hd .ficon {
+    width: 30px; height: 30px; object-fit: contain; flex: 0 0 30px;
+    border-radius: 50%; background: rgba(255,255,255,.04);
+  }
+  .card-hd h3 {
+    margin: 0; font-size: 1.02rem; font-weight: 650; color: var(--text);
+    flex: 1; min-width: 0;
+  }
+  .card-hd h3.link { cursor: pointer; }
+  .card-hd h3.link:hover { color: var(--fcolor, var(--blue)); text-decoration: underline; }
+  .card-hd .fname { font-size: .72rem; color: var(--fcolor, var(--muted)); white-space: nowrap; opacity: .9; }
+
+  .row { display: flex; gap: 8px; margin-top: 7px; align-items: flex-start; }
+  .row:first-child { margin-top: 0; }
+  .row .k {
+    flex: 0 0 58px; font-size: .74rem; color: var(--dim);
+    padding-top: 2px; text-align: right; white-space: nowrap;
+  }
+  .row .tags { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    font-size: .78rem; padding: 2px 8px; border-radius: 6px;
+    background: rgba(255,255,255,.05); color: #c3cddd;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .tag.nam { cursor: pointer; border-color: rgba(59,130,246,.35); color: #93c5fd; background: rgba(59,130,246,.1); }
+  .tag.nam:hover { background: rgba(59,130,246,.22); color: #bfdbfe; }
+  .tag.nam.self { border-color: var(--gold); color: var(--gold); background: rgba(251,191,36,.12); }
+  .tag.lv { color: var(--gold); background: rgba(251,191,36,.09); border-color: rgba(251,191,36,.22); font-variant-numeric: tabular-nums; }
+  .tag.shop { color: #fca5a5; background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.25); }
+  .tag.none { color: var(--dim); background: transparent; }
+  em.hi { font-style: normal; background: rgba(251,191,36,.32); color: #fff; border-radius: 3px; padding: 0 1px; }
+
+  /* ---------- table ---------- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 860px; }
+  thead th {
+    position: sticky; top: 0; z-index: 1;
+    background: #0f1a2e; color: var(--muted); font-weight: 600;
+    text-align: left; padding: 11px 12px; white-space: nowrap;
+    border-bottom: 1px solid var(--border2); font-size: .78rem;
+  }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid rgba(30,42,65,.6); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: rgba(255,255,255,.025); }
+  td.c-name { font-weight: 600; white-space: nowrap; }
+  td.c-name.link { cursor: pointer; }
+  td.c-name.link:hover { color: var(--blue); text-decoration: underline; }
+  td.c-fac { white-space: nowrap; color: var(--fcolor, var(--muted)); }
+  td .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* ---------- empty ---------- */
+  .empty { text-align: center; color: var(--dim); padding: 70px 20px; }
+  .empty .big { font-size: 2.2rem; margin-bottom: 10px; opacity: .5; }
+
+  /* ---------- modal ---------- */
+  .mask {
+    position: fixed; inset: 0; background: rgba(4,7,15,.72);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    z-index: 90; opacity: 0; pointer-events: none; transition: opacity .18s;
+  }
+  .mask.on { opacity: 1; pointer-events: auto; }
+  .modal {
+    position: fixed; z-index: 100;
+    left: 50%; top: 50%; transform: translate(-50%, -46%) scale(.97);
+    width: min(620px, calc(100vw - 24px));
+    max-height: min(78vh, 720px);
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    box-shadow: 0 24px 70px rgba(0,0,0,.6);
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s, transform .18s;
+  }
+  .modal.on { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .m-hd {
+    display: flex; align-items: center; gap: 11px;
+    padding: 16px 18px 13px; border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .m-hd img { width: 38px; height: 38px; object-fit: contain; border-radius: 50%; background: rgba(255,255,255,.05); }
+  .m-hd h2 { margin: 0; font-size: 1.16rem; font-weight: 700; flex: 1; min-width: 0; }
+  .m-hd .fname { font-size: .76rem; color: var(--fcolor, var(--muted)); white-space: nowrap; }
+  #mClose {
+    position: absolute; right: 12px; top: 12px;
+    width: 30px; height: 30px; border: 0; border-radius: 8px;
+    background: transparent; color: var(--dim); cursor: pointer; font-size: .95rem;
+  }
+  #mClose:hover { background: var(--border); color: var(--text); }
+  .m-body { padding: 15px 18px 18px; overflow-y: auto; flex: 1; }
+  .m-sec { margin-bottom: 16px; }
+  .m-sec:last-child { margin-bottom: 0; }
+  .m-sec .st {
+    font-size: .76rem; color: var(--dim); letter-spacing: .6px;
+    margin-bottom: 7px; display: flex; align-items: center; gap: 7px;
+  }
+  .m-sec .st::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+  .m-sec .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .m-sec .hint { font-size: .76rem; color: var(--dim); }
+  .m-sec.rev .st { color: #7dd3fc; }
+  .m-foot { padding: 11px 18px 14px; border-top: 1px solid var(--border); display: flex; gap: 9px; }
+  .m-foot button {
+    flex: 1; height: 38px; border-radius: 9px; border: 1px solid var(--border2);
+    background: var(--panel2); color: var(--muted); font-family: inherit;
+    font-size: .82rem; cursor: pointer; transition: all .15s;
+  }
+  .m-foot button:hover { color: var(--text); border-color: var(--blue); }
+  .m-foot button:disabled { opacity: .35; cursor: default; }
+
+  footer { margin-top: 34px; text-align: center; color: var(--dim); font-size: .76rem; line-height: 1.9; }
+  footer a { color: var(--muted); }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 14px 12px 50px; }
+    header h1 { font-size: 1.42rem; }
+    .toolbar { margin-left: -12px; margin-right: -12px; padding-left: 12px; padding-right: 12px; }
+    .cards { grid-template-columns: 1fr; gap: 10px; }
+    .row .k { flex-basis: 54px; }
+    .modal { max-height: 84vh; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-home" href="index.html">← 返回首页</a>
+
+  <header>
+    <h1>奥系人间体大全</h1>
+    <p class="sub">共 <b id="totalCount">0</b> 位人间体 · 数据更新于 <span id="genTime">—</span></p>
+  </header>
+
+  <div class="toolbar">
+    <div class="search-row">
+      <input id="q" type="search" placeholder="搜索人间体 / 本命 / 特训 / 获得方式 / 前置…" autocomplete="off" spellcheck="false">
+      <button id="clearQ" title="清空" aria-label="清空">✕</button>
+    </div>
+    <div class="chips" id="facets"></div>
+    <div class="toolbar-bottom">
+      <span class="count" id="resultCount">…</span>
+      <div class="viewtoggle" id="viewToggle">
+        <button data-view="card" class="on">卡片</button>
+        <button data-view="table">表格</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div id="cardView" class="cards"></div>
+    <div id="tableView" class="tablewrap hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>人间体</th><th>阵营</th><th>本命</th><th>获得方式</th><th>前置要求</th><th>特训所需人间体</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="empty" class="empty hidden">
+      <div class="big">🔍</div>
+      <div>没有匹配的人间体，换个关键词试试</div>
+    </div>
+  </main>
+
+  <footer>
+    <div>数据来源：<span id="srcName">—</span>　·　点击蓝色名字可跳转查看该人间体</div>
+    <div>本页为个人整理的查询工具，数据以游戏内实际为准</div>
+  </footer>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="m-hd">
+    <img id="mIcon" src="" alt="">
+    <h2 id="mName">—</h2>
+    <span class="fname" id="mFaction"></span>
+    <button id="mClose" title="关闭" aria-label="关闭">✕</button>
+  </div>
+  <div class="m-body" id="mBody"></div>
+  <div class="m-foot">
+    <button id="mBack">← 返回列表</button>
+  </div>
+</div>
+
+<script>
+const GUIDE = /*__GUIDE_DATA__*/ null;
+</script>
+<script>
+(function () {
+  "use strict";
+
+  const entries = GUIDE.entries;
+  const factions = GUIDE.factions;
+  const byName = Object.create(null);
+  entries.forEach(e => { byName[e.name] = e; });
+  const FAC = Object.create(null);
+  factions.forEach(f => { FAC[f.name] = f; });
+
+  // ---- 反查索引 ----
+  const trainedBy = Object.create(null); // name -> [人间体]
+  const prereqOf = Object.create(null);
+  const fateOf = Object.create(null);
+  entries.forEach(e => {
+    (e.traits || []).forEach(t => { (trainedBy[t] = trainedBy[t] || []).push(e.name); });
+    (e.prereq || []).forEach(t => { (prereqOf[t] = prereqOf[t] || []).push(e.name); });
+    (e.fate || []).forEach(t => { (fateOf[t] = fateOf[t] || []).push(e.name); });
+  });
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const isName = v => !!byName[v];
+  const isLv = v => /^LV\d+/i.test(v);
+  const isShop = v => /商店|礼包|赠送|^vip|送的|首充/i.test(v);
+
+  let q = "";
+  let facet = "全部";
+  let view = "card";
+
+  // ---- 高亮 ----
+  function hl(text) {
+    const s = esc(text);
+    if (!q) return s;
+    try {
+      const re = new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
+      return s.replace(re, "<em class=\"hi\">$1</em>");
+    } catch (e) { return s; }
+  }
+
+  function hit(e) {
+    if (facet !== "全部" && e.faction !== facet) return false;
+    if (!q) return true;
+    const hay = [e.name, e.faction].concat(e.fate || [], e.how || [], e.prereq || [], e.traits || []).join("\u0001").toLowerCase();
+    return hay.indexOf(q.toLowerCase()) !== -1;
+  }
+
+  // 排序优先级：名称完全一致 > 名称包含 > 阵营命中 > 其它字段命中；同级保持原表顺序
+  function results() {
+    const base = entries.filter(hit);
+    if (!q) return base;
+    const ql = q.toLowerCase();
+    return base
+      .map((e, i) => {
+        const n = e.name.toLowerCase();
+        let rank = 3;
+        if (n === ql) rank = 0;
+        else if (n.indexOf(ql) !== -1) rank = 1;
+        else if ((e.faction || "").toLowerCase().indexOf(ql) !== -1) rank = 2;
+        return { e: e, rank: rank, i: i };
+      })
+      .sort((a, b) => (a.rank - b.rank) || (a.i - b.i))
+      .map(x => x.e);
+  }
+
+  // ---- 标签渲染 ----
+  function tag(v, selfName) {
+    if (v === null || v === undefined || v === "") return "";
+    let cls = "tag";
+    if (isName(v)) cls += " nam" + (v === selfName ? " self" : "");
+    else if (isLv(v)) cls += " lv";
+    else if (isShop(v)) cls += " shop";
+    const clickable = isName(v);
+    const attr = clickable ? ` data-goto="${esc(v)}" role="button" tabindex="0"` : "";
+    return `<span class="${cls}"${attr}>${hl(v)}</span>`;
+  }
+  function tags(list, selfName, emptyText) {
+    if (!list || !list.length) return `<span class="tag none">${emptyText || "—"}</span>`;
+    return list.map(v => tag(v, selfName)).join("");
+  }
+  function rowOf(k, list, selfName, emptyText) {
+    return `<div class="row"><span class="k">${k}</span><div class="tags">${tags(list, selfName, emptyText)}</div></div>`;
+  }
+
+  // ---- 卡片 ----
+  function cardHtml(e) {
+    const f = FAC[e.faction] || {};
+    return `<article class="card" style="--fcolor:${f.color || "var(--border2)"}">
+      <div class="card-hd">
+        <img class="ficon" src="${esc(f.icon || "")}" alt="${esc(e.faction)}" loading="lazy" decoding="async">
+        <h3 class="link" data-goto="${esc(e.name)}">${hl(e.name)}</h3>
+        <span class="fname">${hl(e.faction)}</span>
+      </div>
+      <div class="card-bd">
+        ${rowOf("获得", e.how, e.name)}
+        ${rowOf("本命", e.fate, e.name)}
+        ${rowOf("前置", e.prereq, e.name)}
+        ${rowOf("特训所需", e.traits, e.name, "无")}
+      </div>
+    </article>`;
+  }
+
+  function tableRowHtml(e) {
+    const f = FAC[e.faction] || {};
+    return `<tr>
+      <td class="c-name link" data-goto="${esc(e.name)}">${hl(e.name)}</td>
+      <td class="c-fac" style="--fcolor:${f.color || "var(--muted)"}">${hl(e.faction)}</td>
+      <td><div class="tags">${tags(e.fate, e.name)}</div></td>
+      <td><div class="tags">${tags(e.how, e.name)}</div></td>
+      <td><div class="tags">${tags(e.prereq, e.name)}</div></td>
+      <td><div class="tags">${tags(e.traits, e.name, "无")}</div></td>
+    </tr>`;
+  }
+
+  // ---- 渲染 ----
+  function render() {
+    const list = results();
+    const isCard = view === "card";
+    const has = list.length > 0;
+    $("cardView").classList.toggle("hidden", !isCard || !has);
+    $("tableView").classList.toggle("hidden", isCard || !has);
+    $("empty").classList.toggle("hidden", has);
+    $("resultCount").innerHTML = `显示 <b>${list.length}</b> / ${entries.length} 位`;
+    if (!has) {
+      $("cardView").innerHTML = "";
+      $("tbody").innerHTML = "";
+      return;
+    }
+    if (isCard) $("cardView").innerHTML = list.map(cardHtml).join("");
+    else $("tbody").innerHTML = list.map(tableRowHtml).join("");
+  }
+
+  // ---- 筛选条 ----
+  function renderFacets() {
+    const order = factions.map(f => f.name);
+    const all = [{ name: "全部", icon: "", color: "var(--blue)", count: entries.length }].concat(
+      factions.map(f => ({
+        name: f.name, icon: f.icon, color: f.color,
+        count: entries.filter(e => e.faction === f.name).length
+      }))
+    );
+    $("facets").innerHTML = all.map(f => {
+      const on = facet === f.name ? " on" : "";
+      const style = f.name === "全部" ? "" : ` style="--fcolor:${f.color}"`;
+      const img = f.icon ? `<img src="${esc(f.icon)}" alt="">` : "";
+      return `<span class="chip${on}"${style} data-facet="${esc(f.name)}">${img}${esc(f.name)}<span class="n">${f.count}</span></span>`;
+    }).join("");
+  }
+
+  // ---- 详情弹层 ----
+  const stack = [];
+  function openDetail(name, push) {
+    const e = byName[name];
+    if (!e) return;
+    if (push !== false) { if (stack[stack.length - 1] !== name) stack.push(name); }
+    const f = FAC[e.faction] || {};
+    const m = $("modal");
+    m.style.setProperty("--fcolor", f.color || "var(--blue)");
+    $("mIcon").src = f.icon || "";
+    $("mIcon").alt = e.faction;
+    $("mName").innerHTML = esc(e.name);
+    $("mFaction").textContent = e.faction;
+
+    const secs = [];
+    secs.push(`<div class="m-sec"><div class="st">获得方式</div><div class="tags">${tags(e.how, e.name)}</div></div>`);
+    secs.push(`<div class="m-sec"><div class="st">本命</div><div class="tags">${tags(e.fate, e.name)}</div></div>`);
+    secs.push(`<div class="m-sec"><div class="st">前置要求</div><div class="tags">${tags(e.prereq, e.name)}</div></div>`);
+    secs.push(`<div class="m-sec"><div class="st">特训所需人间体（${(e.traits || []).length}）</div><div class="tags">${tags(e.traits, e.name, "无")}</div></div>`);
+
+    const tb = trainedBy[e.name] || [];
+    const po = prereqOf[e.name] || [];
+    const fo = fateOf[e.name] || [];
+    if (tb.length) {
+      secs.push(`<div class="m-sec rev"><div class="st">参与以下人间体的特训（${tb.length}）</div><div class="tags">${tags(tb, e.name)}</div></div>`);
+    }
+    if (po.length) {
+      secs.push(`<div class="m-sec rev"><div class="st">被列为前置要求（${po.length}）</div><div class="tags">${tags(po, e.name)}</div></div>`);
+    }
+    if (fo.length) {
+      secs.push(`<div class="m-sec rev"><div class="st">被下列人间体作为本命（${fo.length}）</div><div class="tags">${tags(fo, e.name)}</div></div>`);
+    }
+    $("mBody").innerHTML = secs.join("");
+    $("mBack").textContent = stack.length > 1 ? "← 返回上一个" : "← 返回列表";
+    m.classList.add("on");
+    $("mask").classList.add("on");
+    $("mBody").scrollTop = 0;
+  }
+  function closeDetail() {
+    $("modal").classList.remove("on");
+    $("mask").classList.remove("on");
+    stack.length = 0;
+  }
+
+  // ---- 事件 ----
+  document.addEventListener("click", ev => {
+    const chip = ev.target.closest("[data-facet]");
+    if (chip) { facet = chip.dataset.facet; renderFacets(); render(); return; }
+    const goto = ev.target.closest("[data-goto]");
+    if (goto) { openDetail(goto.dataset.goto); return; }
+  });
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape") { closeDetail(); return; }
+    if (ev.key === "Enter" && ev.target.closest("[data-goto]")) { openDetail(ev.target.dataset.goto); }
+  });
+
+  $("q").addEventListener("input", e => {
+    q = e.target.value.trim();
+    $("clearQ").classList.toggle("on", q.length > 0);
+    render();
+  });
+  $("clearQ").addEventListener("click", () => {
+    $("q").value = ""; q = ""; $("clearQ").classList.remove("on"); render(); $("q").focus();
+  });
+  $("viewToggle").addEventListener("click", e => {
+    const b = e.target.closest("button[data-view]");
+    if (!b) return;
+    view = b.dataset.view;
+    [].forEach.call($("viewToggle").children, x => x.classList.toggle("on", x === b));
+    render();
+  });
+  $("mClose").addEventListener("click", closeDetail);
+  $("mask").addEventListener("click", closeDetail);
+  $("mBack").addEventListener("click", () => {
+    if (stack.length > 1) { stack.pop(); openDetail(stack[stack.length - 1], false); }
+    else { closeDetail(); }
+  });
+
+  // ---- 初始化 ----
+  $("totalCount").textContent = entries.length;
+  $("genTime").textContent = GUIDE.generated;
+  $("srcName").textContent = GUIDE.source;
+  renderFacets();
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- ✏️【0】浏览器标签页标题 / 搜索结果的站点简介 -->
+<title>奥系工具站</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="奥系光元工具站：光元收益预测器 + 奥系人间体大全">
+<link rel="icon" href="assets/favicon-32.png">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #101828;
+    --panel2: #0d1526;
+    --border: #1e2a41;
+    --border2: #263449;
+    --text: #e6ebf5;
+    --muted: #8b98ad;
+    --dim: #64748b;
+    --blue: #3b82f6;
+    --gold: #fbbf24;
+    --c-star: #fbbf24;
+    --c-multi: #38bdf8;
+    --c-monster: #34d399;
+    --c-alien: #a78bfa;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* 背景光晕 */
+  .glow {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(680px 340px at 50% -80px, rgba(59,130,246,.22), transparent 70%),
+      radial-gradient(520px 300px at 12% 18%, rgba(251,191,36,.10), transparent 70%),
+      radial-gradient(520px 300px at 88% 26%, rgba(167,139,250,.10), transparent 70%);
+  }
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 940px; margin: 0 auto;
+    padding: 48px 18px 60px;
+  }
+
+  /* ---------- header ---------- */
+  header { text-align: center; margin-bottom: 38px; }
+  .logo {
+    width: 72px; height: 72px; object-fit: contain;
+    filter: drop-shadow(0 6px 20px rgba(59,130,246,.4));
+    margin-bottom: 5px;
+  }
+  header h1 {
+    margin: 0 0 8px;
+    font-size: 2rem; font-weight: 700; letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--gold), #f8fafc 45%, var(--blue));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--muted); font-size: .88rem; letter-spacing: 3px; }
+  header .sub i { font-style: normal; color: var(--dim); letter-spacing: 0; margin: 0 7px; }
+
+  /* ---------- entries ---------- */
+  .entries { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .entry {
+    position: relative;
+    display: block; text-decoration: none; color: inherit;
+    background: linear-gradient(160deg, var(--panel), var(--panel2));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px 20px;
+    overflow: hidden;
+    transition: transform .18s, border-color .18s, box-shadow .18s;
+  }
+  .entry::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--accent, var(--blue)); opacity: .85;
+  }
+  .entry::after {
+    content: ""; position: absolute; right: -60px; top: -60px;
+    width: 190px; height: 190px; border-radius: 50%;
+    background: radial-gradient(circle, var(--accent, var(--blue)), transparent 68%);
+    opacity: .1; transition: opacity .18s;
+  }
+  .entry:hover {
+    transform: translateY(-3px);
+    border-color: var(--border2);
+    box-shadow: 0 14px 34px rgba(0,0,0,.4);
+  }
+  .entry:hover::after { opacity: .18; }
+  .entry:active { transform: translateY(-1px); }
+
+  .entry .top { display: flex; align-items: center; gap: 13px; margin-bottom: 12px; position: relative; }
+  .entry .ico {
+    width: 52px; height: 52px; flex: 0 0 52px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.045);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .entry .ico img { width: 36px; height: 36px; object-fit: contain; }
+  .entry .badge {
+    position: absolute; right: 0; top: 0;
+    font-size: .68rem; letter-spacing: 1px;
+    padding: 3px 9px; border-radius: 999px;
+    color: var(--accent, var(--blue));
+    border: 1px solid currentColor; opacity: .85;
+  }
+  .entry h2 { margin: 0; font-size: 1.16rem; font-weight: 700; letter-spacing: .4px; }
+  .entry .desc { margin: 0 0 14px; color: var(--muted); font-size: .84rem; line-height: 1.7; }
+  .entry .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .entry .meta span {
+    font-size: .72rem; padding: 2px 9px; border-radius: 6px;
+    background: rgba(255,255,255,.05); color: #b6c2d4;
+  }
+  .entry .go {
+    margin-left: auto; color: var(--accent, var(--blue));
+    font-size: 1.1rem; opacity: .55; transition: opacity .18s, transform .18s;
+  }
+  .entry:hover .go { opacity: 1; transform: translateX(3px); }
+
+  /* ---------- 阵营小条 ---------- */
+  .factions {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 16px;
+    margin: 26px 0 0; padding: 14px 16px;
+    background: rgba(255,255,255,.02);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .factions span { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--muted); }
+  .factions img { width: 20px; height: 20px; object-fit: contain; border-radius: 50%; }
+  .factions b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ---------- 更新记录 ---------- */
+  .changelog { margin-top: 34px; }
+  .changelog h3 {
+    margin: 0 0 14px; font-size: .8rem; font-weight: 600;
+    color: var(--dim); letter-spacing: 2px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .changelog h3::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+  .changelog ul { list-style: none; margin: 0; padding: 0; }
+  .changelog li {
+    display: flex; gap: 14px; padding: 9px 0;
+    border-bottom: 1px dashed rgba(38,52,73,.55);
+    font-size: .84rem;
+  }
+  .changelog li:last-child { border-bottom: 0; }
+  .changelog time {
+    flex: 0 0 78px; color: var(--gold); font-size: .78rem;
+    font-variant-numeric: tabular-nums; padding-top: 2px; opacity: .85;
+  }
+  .changelog p { margin: 0; color: var(--muted); }
+
+  footer {
+    margin-top: 42px; text-align: center;
+    color: var(--dim); font-size: .76rem; line-height: 2;
+  }
+  footer .hr { height: 1px; background: var(--border); margin: 0 0 20px; }
+  footer b { color: var(--muted); font-weight: 500; }
+
+  @media (max-width: 700px) {
+    .wrap { padding: 34px 14px 48px; }
+    header { margin-bottom: 28px; }
+    .logo { width: 60px; height: 60px; }
+    header h1 { font-size: 1.6rem; }
+    header .sub { font-size: .8rem; letter-spacing: 2px; }
+    .entries { grid-template-columns: 1fr; gap: 12px; }
+    .entry { padding: 18px 16px 17px; }
+    .entry .ico { width: 46px; height: 46px; flex-basis: 46px; border-radius: 12px; }
+    .entry .ico img { width: 32px; height: 32px; }
+    .entry h2 { font-size: 1.06rem; }
+    .changelog li { gap: 10px; }
+    .changelog time { flex-basis: 66px; font-size: .74rem; }
+  }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<div class="wrap">
+
+  <!-- ✏️【1】站点名称与副标题 -->
+  <header>
+    <img class="logo" src="assets/guangyuan.png" alt="光元">
+    <h1>奥系工具站</h1>
+    <p class="sub">预测光元收益 <i>·</i> 人间体查询</p>
+  </header>
+
+  <nav class="entries">
+
+    <!-- ✏️【2】第一张卡片：计算器 -->
+    <a class="entry" href="calculator.html" style="--accent:#3b82f6">
+      <div class="top">
+        <div class="ico"><img src="assets/guangyuan.png" alt=""></div>
+        <h2>光元收益预测器</h2>
+        <span class="badge">工具</span>
+      </div>
+      <p class="desc">按日期跨度测算各类产出的收益总量，内置每日／月总量／军械箱／每周固定／循环签到等多种算法，支持氪金开关与收益占比环形图。</p>
+      <div class="meta">
+        <span>16 项产出</span>
+        <span>6 类算法</span>
+        <span>收益占比图</span>
+        <span class="go">→</span>
+      </div>
+    </a>
+
+    <!-- ✏️【3】第二张卡片：人间体查询 -->
+    <a class="entry" href="guides.html" style="--accent:#fbbf24">
+      <div class="top">
+        <div class="ico"><img src="assets/factions/star.png" alt=""></div>
+        <h2>奥系人间体/羁绊大全</h2>
+        <span class="badge">工具</span>
+      </div>
+      <p class="desc">完整收录131 位人间体：本命、获得方式、前置要求、特训所需人间体，支持点击名称互跳与反向查询，快速看清相互关系。</p>
+      <div class="meta">
+        <span>4 大阵营</span>
+        <span>131 条数据</span>
+        <span>互跳 / 反查</span>
+        <span class="go">→</span>
+      </div>
+    </a>
+  </nav>
+
+  <!-- ✏️【4】四大阵营计数条（数字要跟表格一致） -->
+  <div class="factions">
+    <span><img src="assets/factions/star.png" alt="">奥特之星 <b>32</b></span>
+    <span><img src="assets/factions/multiverse.png" alt="">多宇宙 <b>45</b></span>
+    <span><img src="assets/factions/monster.png" alt="">怪兽 <b>28</b></span>
+    <span><img src="assets/factions/alien.png" alt="">宇宙人 <b>26</b></span>
+  </div>
+
+  <!-- ✏️【5】更新记录（有新版本就在最上面加一行 <li>…</li>） -->
+  <section class="changelog">
+    <h3>更新记录</h3>
+    <ul>
+      <li><time>2026-09-28</time><p>新增「奥系人间体大全」查询页，收录 4 大阵营共 131 位人间体</p></li>
+      <li><time>2026-09-03</time><p>签到改为 30 天循环签到，支持按月、跨月乃至半年窗口预测</p></li>
+      <li><time>2026-08-14</time><p>「维护」改为每周二发放；新增「小联赛竞猜」；收益占比图例优化</p></li>
+      <li><time>2026-08-01</time><p>界面紧凑化重构，新增收益占比环形图</p></li>
+      <li><time>2026-07-30</time><p>支持安装到手机主屏，并可离线使用</p></li>
+    </ul>
+  </section>
+
+  <!-- ✏️【6】页脚说明 -->
+  <footer>
+    <div class="hr"></div>
+    <div>本工具为个人整理，数据以游戏内实际为准</div>
+    <div>建议使用手机浏览器「添加到主屏幕」，可离线使用</div>
+  </footer>
+
+</div>
+</body>
+</html>

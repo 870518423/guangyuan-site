@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>奥系人间体大全</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="奥系人间体查询工具：按名称、本命、特训、获得方式、前置要求快速检索">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #101828;
+    --panel2: #0d1526;
+    --border: #1e2a41;
+    --border2: #263449;
+    --text: #e6ebf5;
+    --muted: #8b98ad;
+    --dim: #64748b;
+    --blue: #3b82f6;
+    --gold: #fbbf24;
+    --c-star: #fbbf24;
+    --c-multi: #38bdf8;
+    --c-monster: #34d399;
+    --c-alien: #a78bfa;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* 返回首页（站内导航） */
+  .back-home {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .82rem; color: var(--muted); text-decoration: none;
+    margin-bottom: 12px; padding: 4px 10px 4px 7px;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--panel2);
+    transition: color .15s, border-color .15s;
+  }
+  .back-home:hover { color: #93c5fd; border-color: var(--blue); }
+
+  /* ---------- header ---------- */
+  header { text-align: center; padding: 12px 0 18px; }
+  header h1 {
+    margin: 0 0 6px;
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--muted); font-size: .82rem; }
+  header .sub b { color: var(--gold); font-weight: 600; }
+  header .sub span { color: var(--dim); }
+
+  /* ---------- toolbar ---------- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(10, 14, 26, .92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0 10px;
+    margin: 0 -16px 16px;
+    padding-left: 16px; padding-right: 16px;
+  }
+  .search-row { position: relative; display: flex; align-items: center; }
+  .search-row input {
+    width: 100%;
+    height: 46px;
+    padding: 0 42px 0 16px;
+    background: var(--panel2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: .92rem;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search-row input::placeholder { color: var(--dim); }
+  .search-row input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+  .search-row input::-webkit-search-cancel-button { display: none; }
+  #clearQ {
+    position: absolute; right: 8px;
+    width: 30px; height: 30px; border: 0; border-radius: 50%;
+    background: transparent; color: var(--dim); font-size: .9rem;
+    cursor: pointer; display: none;
+  }
+  #clearQ.on { display: block; }
+  #clearQ:hover { color: var(--text); background: var(--border); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px 6px 8px;
+    background: var(--panel2);
+    border: 1px solid var(--border2);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: .82rem;
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s;
+  }
+  .chip img { width: 18px; height: 18px; object-fit: contain; border-radius: 50%; }
+  .chip .n { color: var(--dim); font-size: .75rem; font-variant-numeric: tabular-nums; }
+  .chip:hover { border-color: var(--border2); color: var(--text); }
+  .chip.on { color: #fff; border-color: currentColor; background: rgba(255,255,255,.06); }
+  .chip.on .n { color: inherit; opacity: .75; }
+
+  .toolbar-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 10px; gap: 10px;
+  }
+  .count { color: var(--muted); font-size: .8rem; }
+  .count b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .viewtoggle { display: flex; background: var(--panel2); border: 1px solid var(--border2); border-radius: 9px; padding: 2px; }
+  .viewtoggle button {
+    border: 0; background: transparent; color: var(--muted);
+    font-size: .8rem; padding: 5px 14px; border-radius: 7px; cursor: pointer;
+    font-family: inherit; transition: all .15s;
+  }
+  .viewtoggle button.on { background: var(--blue); color: #fff; }
+
+  /* ---------- cards ---------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--fcolor, var(--border2));
+    border-radius: var(--radius);
+    padding: 13px 14px 14px;
+    transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: var(--border2); border-left-color: var(--fcolor, var(--blue)); }
+  .card-hd { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .card-hd .ficon {
+    width: 30px; height: 30px; object-fit: contain; flex: 0 0 30px;
+    border-radius: 50%; background: rgba(255,255,255,.04);
+  }
+  .card-hd h3 {
+    margin: 0; font-size: 1.02rem; font-weight: 650; color: var(--text);
+    flex: 1; min-width: 0;
+  }
+  .card-hd h3.link { cursor: pointer; }
+  .card-hd h3.link:hover { color: var(--fcolor, var(--blue)); text-decoration: underline; }
+  .card-hd .fname { font-size: .72rem; color: var(--fcolor, var(--muted)); white-space: nowrap; opacity: .9; }
+
+  .row { display: flex; gap: 8px; margin-top: 7px; align-items: flex-start; }
+  .row:first-child { margin-top: 0; }
+  .row .k {
+    flex: 0 0 58px; font-size: .74rem; color: var(--dim);
+    padding-top: 2px; text-align: right; white-space: nowrap;
+  }
+  .row .tags { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    font-size: .78rem; padding: 2px 8px; border-radius: 6px;
+    background: rgba(255,255,255,.05); color: #c3cddd;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .tag.nam { cursor: pointer; border-color: rgba(59,130,246,.35); color: #93c5fd; background: rgba(59,130,246,.1); }
+  .tag.nam:hover { background: rgba(59,130,246,.22); color: #bfdbfe; }
+  .tag.nam.self { border-color: var(--gold); color: var(--gold); background: rgba(251,191,36,.12); }
+  .tag.lv { color: var(--gold); background: rgba(251,191,36,.09); border-color: rgba(251,191,36,.22); font-variant-numeric: tabular-nums; }
+  .tag.shop { color: #fca5a5; background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.25); }
+  .tag.none { color: var(--dim); background: transparent; }
+  em.hi { font-style: normal; background: rgba(251,191,36,.32); color: #fff; border-radius: 3px; padding: 0 1px; }
+
+  /* ---------- table ---------- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 860px; }
+  thead th {
+    position: sticky; top: 0; z-index: 1;
+    background: #0f1a2e; color: var(--muted); font-weight: 600;
+    text-align: left; padding: 11px 12px; white-space: nowrap;
+    border-bottom: 1px solid var(--border2); font-size: .78rem;
+  }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid rgba(30,42,65,.6); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: rgba(255,255,255,.025); }
+  td.c-name { font-weight: 600; white-space: nowrap; }
+  td.c-name.link { cursor: pointer; }
+  td.c-name.link:hover { color: var(--blue); text-decoration: underline; }
+  td.c-fac { white-space: nowrap; color: var(--fcolor, var(--muted)); }
+  td .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* ---------- empty ---------- */
+  .empty { text-align: center; color: var(--dim); padding: 70px 20px; }
+  .empty .big { font-size: 2.2rem; margin-bottom: 10px; opacity: .5; }
+
+  /* ---------- modal ---------- */
+  .mask {
+    position: fixed; inset: 0; background: rgba(4,7,15,.72);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    z-index: 90; opacity: 0; pointer-events: none; transition: opacity .18s;
+  }
+  .mask.on { opacity: 1; pointer-events: auto; }
+  .modal {
+    position: fixed; z-index: 100;
+    left: 50%; top: 50%; transform: translate(-50%, -46%) scale(.97);
+    width: min(620px, calc(100vw - 24px));
+    max-height: min(78vh, 720px);
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    box-shadow: 0 24px 70px rgba(0,0,0,.6);
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s, transform .18s;
+  }
+  .modal.on { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .m-hd {
+    display: flex; align-items: center; gap: 11px;
+    padding: 16px 18px 13px; border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .m-hd img { width: 38px; height: 38px; object-fit: contain; border-radius: 50%; background: rgba(255,255,255,.05); }
+  .m-hd h2 { margin: 0; font-size: 1.16rem; font-weight: 700; flex: 1; min-width: 0; }
+  .m-hd .fname { font-size: .76rem; color: var(--fcolor, var(--muted)); white-space: nowrap; }
+  #mClose {
+    position: absolute; right: 12px; top: 12px;
+    width: 30px; height: 30px; border: 0; border-radius: 8px;
+    background: transparent; color: var(--dim); cursor: pointer; font-size: .95rem;
+  }
+  #mClose:hover { background: var(--border); color: var(--text); }
+  .m-body { padding: 15px 18px 18px; overflow-y: auto; flex: 1; }
+  .m-sec { margin-bottom: 16px; }
+  .m-sec:last-child { margin-bottom: 0; }
+  .m-sec .st {
+    font-size: .76rem; color: var(--dim); letter-spacing: .6px;
+    margin-bottom: 7px; display: flex; align-items: center; gap: 7px;
+  }
+  .m-sec .st::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+  .m-sec .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .m-sec .hint { font-size: .76rem; color: var(--dim); }
+  .m-sec.rev .st { color: #7dd3fc; }
+  .m-foot { padding: 11px 18px 14px; border-top: 1px solid var(--border); display: flex; gap: 9px; }
+  .m-foot button {
+    flex: 1; height: 38px; border-radius: 9px; border: 1px solid var(--border2);
+    background: var(--panel2); color: var(--muted); font-family: inherit;
+    font-size: .82rem; cursor: pointer; transition: all .15s;
+  }
+  .m-foot button:hover { color: var(--text); border-color: var(--blue); }
+  .m-foot button:disabled { opacity: .35; cursor: default; }
+
+  footer { margin-top: 34px; text-align: center; color: var(--dim); font-size: .76rem; line-height: 1.9; }
+  footer a { color: var(--muted); }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 14px 12px 50px; }
+    header h1 { font-size: 1.42rem; }
+    .toolbar { margin-left: -12px; margin-right: -12px; padding-left: 12px; padding-right: 12px; }
+    .cards { grid-template-columns: 1fr; gap: 10px; }
+    .row .k { flex-basis: 54px; }
+    .modal { max-height: 84vh; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-home" href="index.html">← 返回首页</a>
+
+  <header>
+    <h1>奥系人间体大全</h1>
+    <p class="sub">共 <b id="totalCount">0</b> 位人间体 · 数据更新于 <span id="genTime">—</span></p>
+  </header>
+
+  <div class="toolbar">
+    <div class="search-row">
+      <input id="q" type="search" placeholder="搜索人间体 / 本命 / 特训 / 获得方式 / 前置…" autocomplete="off" spellcheck="false">
+      <button id="clearQ" title="清空" aria-label="清空">✕</button>
+    </div>
+    <div class="chips" id="facets"></div>
+    <div class="toolbar-bottom">
+      <span class="count" id="resultCount">…</span>
+      <div class="viewtoggle" id="viewToggle">
+        <button data-view="card" class="on">卡片</button>
+        <button data-view="table">表格</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div id="cardView" class="cards"></div>
+    <div id="tableView" class="tablewrap hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>人间体</th><th>阵营</th><th>本命</th><th>获得方式</th><th>前置要求</th><th>特训所需人间体</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="empty" class="empty hidden">
+      <div class="big">🔍</div>
+      <div>没有匹配的人间体，换个关键词试试</div>
+    </div>
+  </main>
+
+  <footer>
+    <div>数据来源：<span id="srcName">—</span>　·　点击蓝色名字可跳转查看该人间体</div>
+    <div>本页为个人整理的查询工具，数据以游戏内实际为准</div>
+  </footer>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="m-hd">
+    <img id="mIcon" src="" alt="">
+    <h2 id="mName">—</h2>
+    <span class="fname" id="mFaction"></span>
+    <button id="mClose" title="关闭" aria-label="关闭">✕</button>
+  </div>
+  <div class="m-body" id="mBody"></div>
+  <div class="m-foot">
+    <button id="mBack">← 返回列表</button>
+  </div>
+</div>
+
+<script>
+const GUIDE = {"generated":"2026-09-28 22:04","source":"人间体大全（含特训及条件）.xlsx","factions":[{"name":"奥特之星","icon":"assets/factions/star.png","color":"#fbbf24"},{"name":"多宇宙","icon":"assets/factions/multiverse.png","color":"#38bdf8"},{"name":"怪兽","icon":"assets/factions/monster.png","color":"#34d399"},{"name":"宇宙人","icon":"assets/factions/alien.png","color":"#a78bfa"}],"entries":[{"name":"健一凯伊","faction":"奥特之星","fate":["帕瓦德"],"how":["城市","LV39"],"prereq":["帕瓦特"],"traits":["格朗迪","流离浪人","杰克辛德"]},{"name":"杰克辛德","faction":"奥特之星","fate":["葛雷特"],"how":["沙漠","LV39"],"prereq":["葛雷特"],"traits":["健一凯伊","神乐元气","光之适能者"]},{"name":"星凉子","faction":"奥特之星","fate":["由利安"],"how":["森林","LV39"],"prereq":["由利安"],"traits":["矢的猛","乡秀树","光之适能者"]},{"name":"矢的猛","faction":"奥特之星","fate":["爱迪","爱迪（突破）"],"how":["城市","LV42"],"prereq":["爱迪","由利安","霍"],"traits":["星凉子","乡秀树","迫水真吾","雷","初恋少年"]},{"name":"凤源","faction":"奥特之星","fate":["雷欧","雷欧（突破）"],"how":["海洋","LV42"],"prereq":["雷欧","赛文","挪巴","诸星团"],"traits":["诸星团","日野比未来","绿原川子","布莱克指令","大河望"]},{"name":"东光太郎","faction":"奥特之星","fate":["泰罗","超级泰罗（超泰/超太）","超级泰罗（突破）"],"how":["限时商店6000光元"],"prereq":[],"traits":["绿原川子","圣诞老人","迫水真吾","礼堂光","雷"]},{"name":"北斗星司","faction":"奥特之星","fate":["艾斯","艾斯Q","闪光艾斯"],"how":["城市","LV42"],"prereq":["艾斯","亚波人","满月超兽"],"traits":["南夕子","诸星团","早田进","东光太郎","乡秀树"]},{"name":"乡秀树","faction":"奥特之星","fate":["杰克","杰克（突破）"],"how":["海洋","LV42"],"prereq":["杰克","古敦","双尾"],"traits":["早田进","诸星团","迫水真吾","东光太郎","北斗星司"]},{"name":"诸星团","faction":"奥特之星","fate":["赛文","赛文（突破）"],"how":["森林","LV42"],"prereq":["赛文","艾雷王","匹特星人"],"traits":["早田进","乡秀树","大河望","东光太郎","北斗星司"]},{"name":"早田进","faction":"奥特之星","fate":["初代"],"how":["限时商店购买"],"prereq":[],"traits":["诸星团","乡秀树","马东快斗","东光太郎","北斗星司"]},{"name":"绿原川子","faction":"奥特之星","fate":["奥特之母（奥母）"],"how":["限时商店6000光元"],"prereq":[],"traits":["圣诞老人","东光太郎","凤源","北斗星司","诸星团"]},{"name":"南夕子","faction":"奥特之星","fate":["艾斯","艾斯Q","闪光艾斯"],"how":["限时商店购买"],"prereq":[],"traits":["北斗星司","东光太郎","飞鸟信","真角大古","高山我梦"]},{"name":"日向浩","faction":"奥特之星","fate":["宇宙盘龙号"],"how":["城市","LV54"],"prereq":["宇宙盘龙号","雷"],"traits":["石室章雄","雷","外星科学家"]},{"name":"雷","faction":"奥特之星","fate":["EX哥莫拉","利托拉（S）"],"how":["沙漠","LV47"],"prereq":["哥莫拉","利托拉(S)","艾雷王"],"traits":["早田进","日野比未来","东光太郎","日向浩","格朗迪"]},{"name":"迫水真吾","faction":"奥特之星","fate":["佐菲"],"how":["vip10"],"prereq":[],"traits":["东光太郎","雷布朗多遗族","芹泽和也","飞鸟信","间谍刺客"]},{"name":"芹泽和也","faction":"奥特之星","fate":["希卡利"],"how":["森林","LV42"],"prereq":["骑士猎手—剑","波伽鲁"],"traits":["极恶狂徒","翔","迫水真吾","日野比未来","诸星团"]},{"name":"日野比未来","faction":"奥特之星","fate":["梦比优斯","梦比优斯无限形态","梦比优斯凤凰勇气（突破）"],"how":["海洋","LV42"],"prereq":["梦比优斯","麦克斯"],"traits":["早田进","雷","凤源","迫水真吾","芹泽和也"]},{"name":"马东快斗","faction":"奥特之星","fate":["麦克斯"],"how":["城市","LV54"],"prereq":["麦克斯","奈克瑟斯成年"],"traits":["初恋少年","诸星团","绿原川子","早田进","雷"]},{"name":"鸟羽来叶","faction":"奥特之星","fate":["奥特之王（奥王）","奥特之王（突破）"],"how":["限时商店购买"],"prereq":[],"traits":["石刈亚璃依","圣诞老人","朝仓陆","东光太郎","绿原川子"]},{"name":"伊贺栗令人","faction":"奥特之星","fate":["终极赛罗","赛罗无限形态","终极赛罗闪耀型","赛罗无限形态（银河闪耀）"],"how":["限时商店购买"],"prereq":[],"traits":["雷布朗多遗族","朝仓陆","诸星团","凤源","石刈亚璃依"]},{"name":"朝仓陆","faction":"奥特之星","fate":["捷德","捷德尊皇形态","捷德尊皇形态（捷德之证）","捷德终极形态（孝子）","捷德银河初升"],"how":["限时商店购买"],"prereq":[],"traits":["大河望","石刈亚璃依","鸟羽来叶","伊贺栗令人","雷布朗多遗族"]},{"name":"圣诞老人","faction":"奥特之星","fate":["奥特之父（奥父）","奥特之父（突破）"],"how":["限时商店购买"],"prereq":[],"traits":["北斗星司","绿原川子","雷布朗多遗族","野心家","东光太郎"]},{"name":"岚","faction":"奥特之星","fate":["终极赛罗","终极赛罗闪耀型"],"how":["限时商店购买"],"prereq":[],"traits":["小治","雷布朗多遗族","宇宙怨灵","热血青年","一条寺友也"]},{"name":"比嘉爱琉","faction":"奥特之星","fate":["捷德终极形态"],"how":["限时商店购买"],"prereq":[],"traits":[]},{"name":"雷古洛思","faction":"奥特之星","fate":["雷古洛思（肋骨）"],"how":["限时商店购买"],"prereq":[],"traits":["雷布朗多遗族","诸星团","阿布索留特士兵","凤源","青年利布特"]},{"name":"青年利布特","faction":"奥特之星","fate":["利布特"],"how":["限时商店购买"],"prereq":[],"traits":["真中剑悟","卡露蜜拉","初恋少年","热血青年","伊格尼斯"]},{"name":"夏川遥辉","faction":"奥特之星","fate":["泽塔原生","泽塔","泽塔德尔塔天爪"],"how":["限时商店购买"],"prereq":[],"traits":["伽古拉","朝仓陆","南夕子","北斗星司","贝利亚的怨念"]},{"name":"工藤优幸","faction":"奥特之星","fate":["泰迦","泰迦煜坤形态","泰迦三重斯特利姆形态（泰三）"],"how":["限时商店购买"],"prereq":[],"traits":["凑勇海","凑活海","凑朝阳","朝仓陆","九条莲人"]},{"name":"神乐元气","faction":"奥特之星","fate":["尼奥斯"],"how":["森林","LV39"],"prereq":["尼奥斯"],"traits":["光之适能者","杰克辛德","流离浪人"]},{"name":"光之适能者","faction":"奥特之星","fate":["赛文21","杰诺"],"how":["海洋","LV23"],"prereq":["隐藏11:邪恶的试验"],"traits":["神乐元气","流离浪人","马东快斗","星凉子","藤原树里"]},{"name":"机械天才","faction":"奥特之星","fate":["乌英达姆","机械扎姆"],"how":["森林","LV23"],"prereq":["剧情2:研制翻译机"],"traits":["上古幽魂","热血青年","乡秀树","东光太郎","真木舜一"]},{"name":"热血青年","faction":"奥特之星","fate":["火焰战士","艾雷米库拉斯"],"how":["海洋","LV23"],"prereq":["火焰战士"],"traits":["极恶狂徒","神社祭司","一条寺友也","小治","大河望"]},{"name":"小治","faction":"多宇宙","fate":["钢铁武士"],"how":["森林","LV39"],"prereq":["钢铁武士","军团机械人"],"traits":["一条寺友也","朝仓陆","神社祭司","热血青年","大河望"]},{"name":"吕沟木真也","faction":"多宇宙","fate":["黑暗梅菲斯特"],"how":["沙漠","LV39"],"prereq":["黑暗梅菲斯托","斋田莉子"],"traits":["姬矢准","斋田莉子","三泽广之"]},{"name":"斋田莉子","faction":"多宇宙","fate":["黑暗浮士德"],"how":["海洋","LV23"],"prereq":["黑暗浮士德"],"traits":["姬矢准","三泽广之","吕沟木真也","真木舜一"]},{"name":"姬矢准","faction":"多宇宙","fate":["奈克赛斯红色形态"],"how":["沙漠","LV39"],"prereq":["奈克赛斯"],"traits":["真木舜一","千树怜","吕沟木真也","斋田莉子","飞鸟信"]},{"name":"真木舜一","faction":"多宇宙","fate":["奈克斯特"],"how":["城市","LV23"],"prereq":["奈克斯特"],"traits":["姬矢准","斋田莉子","吕沟木真也","机械天才","千树怜"]},{"name":"三泽广之","faction":"多宇宙","fate":["黑暗梅菲斯特"],"how":["沙漠","LV54"],"prereq":["黑暗梅菲斯托II","黑暗梅菲斯托"],"traits":["千树怜","斋田莉子","吕沟木真也","布莱克指令","末日使者"]},{"name":"千树怜","faction":"多宇宙","fate":["奈克赛斯","奈克赛斯（突破）"],"how":["森林","LV54"],"prereq":["奈克赛斯","姬矢准"],"traits":["真木舜一","姬矢准","飞鸟信","三泽广之","斋田莉子"]},{"name":"春野武藏","faction":"多宇宙","fate":["高斯","雷杰多","高斯（突破）","雷杰多（突破)"],"how":["森林","LV42"],"prereq":["高斯日蚀","藤原树里"],"traits":["末日使者","神社祭司","飞鸟信","礼堂光","千树怜"]},{"name":"藤原树里","faction":"多宇宙","fate":["杰斯提斯","雷杰多","杰斯提斯（突破）","雷杰多（突破)"],"how":["城市","LV23"],"prereq":["杰斯提斯"],"traits":["春野武藏","藤宫博也","飞鸟信","神社祭司","间谍刺客"]},{"name":"飞鸟一马","faction":"多宇宙","fate":["等离子百式"],"how":["海洋","LV39"],"prereq":["等离子百式"],"traits":["飞鸟信","斯菲亚虚体","高山我梦"]},{"name":"绿川麻衣","faction":"多宇宙","fate":["库拉克呼"],"how":["城市","LV54"],"prereq":["由美村良"],"traits":["由美村良","飞鸟信","喜比刚助"]},{"name":"喜比刚助","faction":"多宇宙","fate":["胜利神鹰斯佩里奥","胜利神鹰贝塔号"],"how":["沙漠","LV23"],"prereq":["胜利神鹰ß号","绿川麻衣"],"traits":["飞鸟信","由美村良","绿川麻衣"]},{"name":"飞鸟信","faction":"多宇宙","fate":["戴拿","阿尔法斯佩里奥","闪光戴拿"],"how":["首充赠送"],"prereq":[],"traits":["真角大古","喜比刚助","由美村良","春野武藏","斯菲亚虚体"]},{"name":"由美村良","faction":"多宇宙","fate":["胜利神鹰伽马号"],"how":["城市","LV23"],"prereq":["胜利神鹰γ号"],"traits":["飞鸟信","喜比刚助","绿川麻衣"]},{"name":"正木敬吾","faction":"多宇宙","fate":["邪恶迪迦"],"how":["城市","LV39"],"prereq":["剧情9:影的继承者"],"traits":["七濑丽娜","真角大古","上古幽魂"]},{"name":"居间惠","faction":"多宇宙","fate":["胜利飞燕号"],"how":["海洋","LV39"],"prereq":["基里艾洛德人","宗方诚一"],"traits":["真角大古","七濑丽娜","宗方诚一"]},{"name":"宗方诚一","faction":"多宇宙","fate":["胜利飞燕2号"],"how":["沙漠","LV39"],"prereq":[],"traits":["真角大古","七濑丽娜","居间惠"]},{"name":"真角大古","faction":"多宇宙","fate":["迪迦","闪耀迪迦（闪迪）","闪耀迪迦（突破）"],"how":["vip3"],"prereq":[],"traits":["迫水真吾","七濑丽娜","正木敬吾","上古幽魂","飞鸟信"]},{"name":"七濑丽娜","faction":"多宇宙","fate":["卡蜜拉","雅格第斯号"],"how":["送的"],"prereq":[],"traits":["真角大古","正木敬吾","绿川麻衣","居间惠","初恋少年"]},{"name":"石室章雄","faction":"多宇宙","fate":["空中基地","希格战斗机GT"],"how":["沙漠","LV47"],"prereq":["空中基地"],"traits":["高山我梦","日向浩","绿川麻衣","七濑丽娜","藤宫博也"]},{"name":"高山我梦","faction":"多宇宙","fate":["盖亚","希格战斗机ST","盖亚（突破）"],"how":["城市","LV47"],"prereq":["盖亚","藤宫博也"],"traits":["藤原树里","石室章雄","大空大地","飞鸟信","真角大古"]},{"name":"藤宫博也","faction":"多宇宙","fate":["阿古茹"],"how":["海洋","LV54"],"prereq":["阿古茹"],"traits":["高山我梦","藤原树里","石室章雄","千树怜","飞鸟信"]},{"name":"格朗迪","faction":"多宇宙","fate":["EX雷德王"],"how":["沙漠","LV60"],"prereq":["EX雷德王","雷"],"traits":["大空大地","一条寺友也","翔","雷","礼堂光"]},{"name":"礼堂光","faction":"多宇宙","fate":["银河（gs）","银河维克特利（gv）","银河（突破）"],"how":["限时商店6000光元"],"prereq":[],"traits":["东光太郎","白井校长","阿丽莎","翔","一条寺友也"]},{"name":"阿丽莎","faction":"多宇宙","fate":["维克特利加农炮"],"how":["限时商店购买"],"prereq":[],"traits":["礼堂光","翔","外星科学家"]},{"name":"一条寺友也","faction":"多宇宙","fate":["钢铁九号","钢铁九号（突破）"],"how":["城市","LV54"],"prereq":["钢铁九号"],"traits":["大空大地","白井校长","礼堂光","小治","外星科学家"]},{"name":"翔","faction":"多宇宙","fate":["维克特利","银河维克特利"],"how":["沙漠","LV54"],"prereq":["维克特利","谢帕顿"],"traits":["格朗迪","千树怜","一条寺友也","礼堂光","芹泽和也"]},{"name":"兄妹同心","faction":"多宇宙","fate":["格罗布"],"how":["限时商店购买"],"prereq":[],"traits":["凑活海","凑勇海","朝仓陆","工藤优幸","凑朝阳"]},{"name":"凑朝阳","faction":"多宇宙","fate":["格丽乔"],"how":["限时商店购买"],"prereq":[],"traits":["凑活海","凑勇海","红凯","朝仓陆","礼堂光"]},{"name":"凑勇海","faction":"多宇宙","fate":["布鲁","罗布"],"how":["限时商店购买"],"prereq":[],"traits":["凑活海","红凯","翔","礼堂光","朝仓陆"]},{"name":"凑活海","faction":"多宇宙","fate":["罗索","罗布"],"how":["限时商店购买"],"prereq":[],"traits":["凑勇海","红凯","翔","礼堂光","朝仓陆"]},{"name":"朝日胜人","faction":"多宇宙","fate":["哉阿斯"],"how":["限时商店购买"],"prereq":[],"traits":["早田进","乡秀树","诸星团"]},{"name":"天照女王","faction":"多宇宙","fate":["天照女王"],"how":["限时商店购买"],"prereq":[],"traits":["才气博士","飞鸟信","春野武藏","藤宫博也","高山我梦"]},{"name":"伽古拉","faction":"多宇宙","fate":["伽古拉（刀男）","芝庞顿","法伊布王（五帝兽）","伽古拉（突破）"],"how":["限时商店购买"],"prereq":[],"traits":["红凯","变异怪鸟","怪能野兽","间谍刺客","雷布朗多遗族"]},{"name":"红凯","faction":"多宇宙","fate":["欧布（重光）","欧布暗耀形态","欧布（原生之初）","欧布三重形态（三一）"],"how":["限时商店购买"],"prereq":[],"traits":["伽古拉","高山我梦","飞鸟信","诸星团"]},{"name":"大空大地","faction":"多宇宙","fate":["艾克斯混合装甲","艾克斯贝塔火花铠甲（红X）"],"how":["限时商店购买"],"prereq":[],"traits":["红凯","飞鸟信","春野武藏","礼堂光","马东快斗"]},{"name":"孤门一辉","faction":"多宇宙","fate":["奈克赛斯（突破）","诺亚"],"how":["限时商店购买"],"prereq":[],"traits":["真木舜一","千树怜","礼堂光","翔","姬矢准"]},{"name":"大河望","faction":"多宇宙","fate":["赛迦","终极赛罗","赛迦（突破）"],"how":["限时商店购买"],"prereq":[],"traits":["百特星精英","凤源","早田进","飞鸟信","春野武藏"]},{"name":"星见光成","faction":"多宇宙","fate":["奥美迦","奥美迦青龙装甲","奥美迦白虎装甲","奥美迦朱雀装甲"],"how":["限时商店购买"],"prereq":[],"traits":["大木田宙人","诸星团","早田进","东马快斗","朝日胜人"]},{"name":"大木田宙人","faction":"多宇宙","fate":["奥美迦","奥美迦青龙装甲","奥美迦白虎装甲","奥美迦朱雀装甲"],"how":["限时商店购买"],"prereq":[],"traits":["星见光成","诸星团","早田进","东马快斗","朝日胜人"]},{"name":"飞世优马","faction":"多宇宙","fate":["亚刻","亚刻灼日形态(日亚）","亚刻皓月形态（月亚）","亚刻星河装甲"],"how":["限时商店购买"],"prereq":[],"traits":["比留间弦人","乡秀树","流离浪人"]},{"name":"比留间弦人","faction":"多宇宙","fate":["布莱泽（小布）","布莱泽法多兰装甲（大布）"],"how":["限时商店购买"],"prereq":[],"traits":["上古幽魂","流离浪人","宇宙怨灵","武痴","机械天才"]},{"name":"明日见奏大","faction":"多宇宙","fate":["德凯","德凯强劲形态"],"how":["限时商店购买"],"prereq":[],"traits":["飞鸟信","藤宫博也","卡露蜜拉","真中剑悟","真角大古"]},{"name":"真中剑悟","faction":"多宇宙","fate":["特利迦","特利迦永恒闪耀（闪特）","真特利迦（真特）"],"how":["限时商店购买"],"prereq":[],"traits":["真角大古","七濑丽娜","正木敬吾","居间惠","上古幽魂"]},{"name":"神社祭司","faction":"多宇宙","fate":["壬龙","镜之骑士","佐格"],"how":["海洋","LV35"],"prereq":["镜之骑士"],"traits":["高山我梦","春野武藏","恐怖昆虫","武痴","翔"]},{"name":"百特星精英","faction":"怪兽","fate":["超级芝顿（海帕）","超级芝顿（突破）"],"how":["限时商店购买"],"prereq":[],"traits":["大河望","春野武藏","翔","礼堂光","飞鸟信"]},{"name":"德拉西翁","faction":"怪兽","fate":["千兆恩多拉"],"how":["限时商店购买"],"prereq":[],"traits":["春野武藏","藤原树里","阿布索留特士兵","居间惠"]},{"name":"户井幸雄","faction":"怪兽","fate":["黑蜧"],"how":["限时商店购买"],"prereq":[],"traits":["凑活海","凑勇海","凑朝阳","朝仓陆","雾崎"]},{"name":"姆鲁娜乌","faction":"怪兽","fate":["戴亚伯里克（宝石兽）"],"how":["限时商店购买"],"prereq":[],"traits":["红凯","伽古拉","大空大地","诸星团","礼堂光"]},{"name":"黑暗气息","faction":"怪兽","fate":["鲁格赛特"],"how":["限时商店购买"],"prereq":[],"traits":["凑活海","凑勇海","大阴谋家","宇宙怨灵","凑朝阳"]},{"name":"才气博士","faction":"怪兽","fate":["库因"],"how":["限时商店购买"],"prereq":[],"traits":["天照女王","飞鸟信","藤宫博也","高山我梦","春野武藏"]},{"name":"真伏佑树","faction":"怪兽","fate":["贡基尔刚"],"how":["限时商店购买"],"prereq":[],"traits":["比留间弦人","机械天才","怪能野兽"]},{"name":"瓦拉隆","faction":"怪兽","fate":["瓦拉隆（瓦龙）"],"how":["限时商店购买"],"prereq":[],"traits":["外星科学家","凶暴野兽","末日使者","大阴谋家","宇宙怨灵"]},{"name":"托雷基亚","faction":"怪兽","fate":["格里姆德（邪神）"],"how":["限时商店购买"],"prereq":[],"traits":["工藤优幸","雾崎","贝利亚","雷布朗多遗族","宇宙怨灵"]},{"name":"暗黑影法师","faction":"怪兽","fate":["吉咖奇美拉"],"how":["限时商店购买"],"prereq":[],"traits":["真角大古","飞鸟信","高山我梦","日野比未来","七濑丽娜"]},{"name":"布莱克指令","faction":"怪兽","fate":["挪巴","罗贝鲁伽"],"how":["城市","LV47"],"prereq":["迷之圆盘","挪巴"],"traits":["凤源","空间驯兽师","武痴","变异怪鸟","凶暴野兽"]},{"name":"斯菲亚","faction":"怪兽","fate":["斯菲亚母体"],"how":["限时商店购买"],"prereq":[],"traits":["明日见奏大","真中剑悟","九条莲人","卡露蜜拉","飞鸟信"]},{"name":"中岛洋子","faction":"怪兽","fate":["德斯特鲁多斯（死龙）","奥特人造机甲赛罗（机赛）"],"how":["限时商店购买"],"prereq":[],"traits":["夏川遥辉","朝仓陆","伽古拉","初恋少年"]},{"name":"旭川美利花","faction":"怪兽","fate":["乌拉"],"how":["限时商店购买"],"prereq":[],"traits":["工藤优幸","雾崎","神社祭司","外星科学家","初恋少年"]},{"name":"巴里斯士兵","faction":"怪兽","fate":["吉尔巴里斯"],"how":["限时商店购买"],"prereq":[],"traits":["比嘉爱琉","朝仓陆","红凯","伽古拉","伊贺栗令人"]},{"name":"莫内拉星人","faction":"怪兽","fate":["莫内拉皇后"],"how":["限时商店购买"],"prereq":[],"traits":["飞鸟信","由美村良","真角大古","绿川麻衣","喜比刚助"]},{"name":"九条莲人","faction":"怪兽","fate":["加拉特隆"],"how":["限时商店购买"],"prereq":[],"traits":["巴里斯士兵","武痴","热血青年","机械天才","光之适能者"]},{"name":"斯菲亚虚体","faction":"怪兽","fate":["吉尔加诺德","奈奥盖加雷德"],"how":["城市","LV47"],"prereq":["斯菲亚","大阴谋家"],"traits":["武痴","怪能野兽","极恶狂徒","空间驯兽师","飞鸟一马"]},{"name":"空间驯兽师","faction":"怪兽","fate":["勒休巴斯","贝姆斯塔","那斯","贝姆斯塔（突破）"],"how":["森林","LV39"],"prereq":["变异怪鸟"],"traits":["斯菲亚虚体","布莱克指令","外星科学家","宇宙怨灵","绿川麻衣"]},{"name":"恐怖昆虫","faction":"怪兽","fate":["德拉格里","莫卡旦达"],"how":["森林","LV35"],"prereq":["安东拉"],"traits":["宇宙怨灵","凶暴野兽","神社祭司","野心家","北斗星司"]},{"name":"变异怪鸟","faction":"怪兽","fate":["巴顿","庞顿王","巴顿（突破）"],"how":["森林","LV52"],"prereq":[],"traits":["东光太郎","迫水真吾","凶暴野兽","空间驯兽师","间谍刺客"]},{"name":"外星科学家","faction":"怪兽","fate":["黑色金古桥","加拉翁","黑暗洛普斯赛罗"],"how":["森林","LV47"],"prereq":["加拉翁","机械天才"],"traits":["一条寺友也","间谍刺客","宇宙怨灵","空间驯兽师","末日使者"]},{"name":"怪能野兽","faction":"怪兽","fate":["希尔巴贡王","艾雷王","魔格大蛇"],"how":["海洋","LV32"],"prereq":["匹特星人","亚波人"],"traits":["化石怪人","斯菲亚虚体","间谍刺客","变异怪鸟","凶暴野兽"]},{"name":"凶暴野兽","faction":"怪兽","fate":["戈尔德拉斯王","布莱克王","法伊布王（五帝兽）"],"how":["森林","LV42"],"prereq":["那可尔星人","亚波人"],"traits":["化石怪人","布莱克指令","变异怪鸟","乡秀树","怪能野兽"]},{"name":"化石怪人","faction":"怪兽","fate":["古墩","亚那加基"],"how":["森林","LV32"],"prereq":["剧情6:宇宙第一凶兽"],"traits":["初恋少年","恐怖昆虫","凶暴野兽","间谍刺客","怪能野兽"]},{"name":"上古幽魂","faction":"怪兽","fate":["哥尔赞","德孟佐亚","德孟佐亚（突破）"],"how":["沙漠","LV42"],"prereq":["剧情6:黑暗邪神的降临","哥尔赞"],"traits":["极恶狂徒","末日使者","居间惠","真角大古","七濑丽娜"]},{"name":"旧日支配者","faction":"怪兽","fate":["加坦杰厄"],"how":["限时商店购买"],"prereq":[],"traits":["亚布鲁怨念","雷布朗多遗族","宇宙怨灵","石刈亚璃依","大阴谋家"]},{"name":"亚布鲁怨念","faction":"怪兽","fate":["U杀手萨乌鲁斯（UK）"],"how":["限时商店购买"],"prereq":[],"traits":["间谍刺客","雷布朗多遗族","大阴谋家","变异怪鸟","宇宙怨灵"]},{"name":"阿雷娜","faction":"宇宙人","fate":["艾塔尔加（黄人）"],"how":["限时商店购买"],"prereq":[],"traits":["翔","礼堂光","雷布朗多遗族","春野武藏","白井校长"]},{"name":"石刈亚璃依","faction":"宇宙人","fate":["极恶贝利亚（饥饿）","终极贝利亚","终极贝利亚（突破）"],"how":["限时商店购买"],"prereq":[],"traits":["鸟羽来叶","百特星精英","大河望","神社祭司","热血青年"]},{"name":"伏井出K","faction":"宇宙人","fate":["极恶贝利亚（饥饿）"],"how":["限时商店购买"],"prereq":[],"traits":["鸟羽来叶","朝仓陆","伊贺栗令人","圣诞老人","绿原川子"]},{"name":"石崛光彦","faction":"宇宙人","fate":["黑暗扎基（扎吉）"],"how":["限时商店购买"],"prereq":[],"traits":["姬矢准","三泽广之","吕沟木真也","斋田莉子","千树怜"]},{"name":"白井校长","faction":"宇宙人","fate":["黑暗路基艾尔（黑路）"],"how":["限时商店购买"],"prereq":[],"traits":["礼堂光","宇宙怨灵","一条寺友也","雷布朗多遗族","野心家"]},{"name":"石堂柊","faction":"宇宙人","fate":["基尔亚刻","by基尔亚刻"],"how":["限时商店购买"],"prereq":[],"traits":["飞世优马","比留间弦人","流离浪人"]},{"name":"奥特黑暗杀手","faction":"宇宙人","fate":["奥特黑暗杀手（奥杀）"],"how":["限时商店购买"],"prereq":[],"traits":["白井校长","东光太郎","阿丽莎","雾崎","贝利亚"]},{"name":"阿布索留特士兵","faction":"宇宙人","fate":["塔尔塔罗斯（金人）"],"how":["限时商店购买"],"prereq":[],"traits":["宇宙怨灵","雷布朗多遗族","卡露蜜拉","岚","外星科学家"]},{"name":"卡露蜜拉","faction":"宇宙人","fate":["卡露蜜拉","梅加诺杰厄"],"how":["限时商店购买"],"prereq":[],"traits":["真中剑悟","宇宙怨灵","伊格尼斯","初恋少年","上古幽魂"]},{"name":"伊格尼斯","faction":"宇宙人","fate":["黑暗特利迦","真特利迦"],"how":["限时商店购买"],"prereq":[],"traits":["真中剑悟","卡露蜜拉","热血青年","初恋少年","上古幽魂"]},{"name":"雾崎","faction":"宇宙人","fate":["托雷基亚","格里姆德（邪神）"],"how":["限时商店购买"],"prereq":[],"traits":["凑勇海","凑活海","凑朝阳","朝仓陆","工藤优幸"]},{"name":"苏伊德","faction":"宇宙人","fate":["苏伊德"],"how":["限时商店购买"],"prereq":[],"traits":["飞世优马","石堂柊","大阴谋家"]},{"name":"古阿","faction":"宇宙人","fate":["亡灵古阿"],"how":["限时商店购买"],"prereq":[],"traits":["阿布索留特士兵","大空大地","贝利亚的怨念","翔","礼堂光"]},{"name":"贝利亚","faction":"宇宙人","fate":["贝流多拉","奇美拉贝洛斯（棉裤）"],"how":["限时商店购买"],"prereq":[],"traits":["大河望","绿原川子","雷","鸟羽来叶","圣诞老人"]},{"name":"初恋少年","faction":"宇宙人","fate":["霍","塔玛.迈科.库若"],"how":["海洋","LV23"],"prereq":[],"traits":["失的猛","马东快斗","化石怪人","大空大地","七濑丽娜"]},{"name":"彪形大汉","faction":"宇宙人","fate":["钢铁龙"],"how":["森林","LV23"],"prereq":["剧情6:砸自己的脚"],"traits":["神社祭司","大阴谋家","雷布朗多遗族"]},{"name":"大阴谋家","faction":"宇宙人","fate":["黑暗戈那","帝斯雷姆","格利扎","格利扎（突破）"],"how":["森林","LV35"],"prereq":["黑暗戈那","野心家"],"traits":["小治","彪形大汉","神社祭司","斯菲亚虚体","藤原树里"]},{"name":"野心家","faction":"宇宙人","fate":["雷丘兰星人","美特隆星人","安培拉星人（皇帝）","安培拉星人（突破）"],"how":["海洋","LV23"],"prereq":["雷丘兰星人"],"traits":["七濑丽娜","末日使者","流离浪人","恐怖昆虫","上古幽魂"]},{"name":"流离浪人","faction":"宇宙人","fate":["奈奥巴尔坦（小龙虾）","萨姆星人","黑暗巴尔坦","黑暗巴尔坦（突破）"],"how":["海洋","LV23"],"prereq":["剧情10:20亿3千万"],"traits":["间谍刺客","健一凯伊","光之适能者","神乐元气","野心家"]},{"name":"间谍刺客","faction":"宇宙人","fate":["EX芝顿","巴拉巴","噶次星人"],"how":["城市","LV47"],"prereq":["剧情10:宇宙恐龙","芝顿星人","百特星人"],"traits":["迫水真吾","外星科学家","变异怪鸟","化石怪人","末日使者"]},{"name":"武痴","faction":"宇宙人","fate":["扎姆夏","邪恶戴拿","加休莱茵"],"how":["城市","LV35"],"prereq":["邪恶戴拿","热血青年"],"traits":["布莱克指令","乡秀树","芹泽和也","日野比未来","神社祭司"]},{"name":"末日使者","faction":"宇宙人","fate":["基里艾洛德人","混沌病毒净化","基里艾洛德人（突破）"],"how":["限时商店购买"],"prereq":[],"traits":["雷布朗多遗族","三泽广之","间谍刺客","飞鸟信","高山我梦"]},{"name":"宇宙怨灵","faction":"宇宙人","fate":["巨大亚布鲁","依组麦鲁","宙达"],"how":["城市","LV35"],"prereq":["亚波人"],"traits":["恐怖昆虫","朝仓陆","大空大地","大河望","外星科学家"]},{"name":"极恶狂徒","faction":"宇宙人","fate":["格罗扎姆","佐加","波伽鲁猛斯"],"how":["海洋","LV39"],"prereq":["佐加","格罗扎姆"],"traits":["末日使者","热血青年","雷布朗多遗族","大阴谋家","斯菲亚虚体"]},{"name":"雷布朗多遗族","faction":"宇宙人","fate":["贝利亚","雷布朗多星人（雷人）"],"how":["沙漠","LV60"],"prereq":["贝利亚","雷"],"traits":["迫水真吾","大河望","大阴谋家","格朗迪","雷"]},{"name":"贝利亚的怨念","faction":"宇宙人","fate":["黑暗赛罗"],"how":["限时商店购买"],"prereq":[],"traits":["伊贺栗令人","圣诞老人","贝利亚","伏井出K","朝仓陆"]}]};
+</script>
+<script>
+(function () {
+  "use strict";
+
+  const entries = GUIDE.entries;
+  const factions = GUIDE.factions;
+  const byName = Object.create(null);
+  entries.forEach(e => { byName[e.name] = e; });
+  const FAC = Object.create(null);
+  factions.forEach(f => { FAC[f.name] = f; });
+
+  // ---- 反查索引 ----
+  const trainedBy = Object.create(null); // name -> [人间体]
+  const prereqOf = Object.create(null);
+  const fateOf = Object.create(null);
+  entries.forEach(e => {
+    (e.traits || []).forEach(t => { (trainedBy[t] = trainedBy[t] || []).push(e.name); });
+    (e.prereq || []).forEach(t => { (prereqOf[t] = prereqOf[t] || []).push(e.name); });
+    (e.fate || []).forEach(t => { (fateOf[t] = fateOf[t] || []).push(e.name); });
+  });
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const isName = v => !!byName[v];
+  const isLv = v => /^LV\d+/i.test(v);
+  const isShop = v => /商店|礼包|赠送|^vip|送的|首充/i.test(v);
+
+  let q = "";
+  let facet = "全部";
+  let view = "card";
+
+  // ---- 高亮 ----
+  function hl(text) {
+    const s = esc(text);
+    if (!q) return s;
+    try {
+      const re = new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
+      return s.replace(re, "<em class=\"hi\">$1</em>");
+    } catch (e) { return s; }
+  }
+
+  function hit(e) {
+    if (facet !== "全部" && e.faction !== facet) return false;
+    if (!q) return true;
+    const hay = [e.name, e.faction].concat(e.fate || [], e.how || [], e.prereq || [], e.traits || []).join("\u0001").toLowerCase();
+    return hay.indexOf(q.toLowerCase()) !== -1;
+  }
+
+  // 排序优先级：名称完全一致 > 名称包含 > 阵营命中 > 其它字段命中；同级保持原表顺序
+  function results() {
+    const base = entries.filter(hit);
+    if (!q) return base;
+    const ql = q.toLowerCase();
+    return base
+      .map((e, i) => {
+        const n = e.name.toLowerCase();
+        let rank = 3;
+        if (n === ql) rank = 0;
+        else if (n.indexOf(ql) !== -1) rank = 1;
+        else if ((e.faction || "").toLowerCase().indexOf(ql) !== -1) rank = 2;
+        return { e: e, rank: rank, i: i };
+      })
+      .sort((a, b) => (a.rank - b.rank) || (a.i - b.i))
+      .map(x => x.e);
+  }
+
+  // ---- 标签渲染 ----
+  function tag(v, selfName) {
+    if (v === null || v === undefined || v === "") return "";
+    let cls = "tag";
+    if (isName(v)) cls += " nam" + (v === selfName ? " self" : "");
+    else if (isLv(v)) cls += " lv";
+    else if (isShop(v)) cls += " shop";
+    const clickable = isName(v);
+    const attr = clickable ? ` data-goto="${esc(v)}" role="button" tabindex="0"` : "";
+    return `<span class="${cls}"${attr}>${hl(v)}</span>`;
+  }
+  function tags(list, selfName, emptyText) {
+    if (!list || !list.length) return `<span class="tag none">${emptyText || "—"}</span>`;
+    return list.map(v => tag(v, selfName)).join("");
+  }
+  function rowOf(k, list, selfName, emptyText) {
+    return `<div class="row"><span class="k">${k}</span><div class="tags">${tags(list, selfName, emptyText)}</div></div>`;
+  }
+
+  // ---- 卡片 ----
+  function cardHtml(e) {
+    const f = FAC[e.faction] || {};
+    return `<article class="card" style="--fcolor:${f.color || "var(--border2)"}">
+      <div class="card-hd">
+        <img class="ficon" src="${esc(f.icon || "")}" alt="${esc(e.faction)}" loading="lazy" decoding="async">
+        <h3 class="link" data-goto="${esc(e.name)}">${hl(e.name)}</h3>
+        <span class="fname">${hl(e.faction)}</span>
+      </div>
+      <div class="card-bd">
+        ${rowOf("获得", e.how, e.name)}
+        ${rowOf("本命", e.fate, e.name)}
+        ${rowOf("前置", e.prereq, e.name)}
+        ${rowOf("特训所需", e.traits, e.name, "无")}
+      </div>
+    </article>`;
+  }
+
+  function tableRowHtml(e) {
+    const f = FAC[e.faction] || {};
+    return `<tr>
+      <td class="c-name link" data-goto="${esc(e.name)}">${hl(e.name)}</td>
+      <td class="c-fac" style="--fcolor:${f.color || "var(--muted)"}">${hl(e.faction)}</td>
+      <td><div class="tags">${tags(e.fate, e.name)}</div></td>
+      <td><div class="tags">${tags(e.how, e.name)}</div></td>
+      <td><div class="tags">${tags(e.prereq, e.name)}</div></td>
+      <td><div class="tags">${tags(e.traits, e.name, "无")}</div></td>
+    </tr>`;
+  }
+
+  // ---- 渲染 ----
+  function render() {
+    const list = results();
+    const isCard = view === "card";
+    const has = list.length > 0;
+    $("cardView").classList.toggle("hidden", !isCard || !has);
+    $("tableView").classList.toggle("hidden", isCard || !has);
+    $("empty").classList.toggle("hidden", has);
+    $("resultCount").innerHTML = `显示 <b>${list.length}</b> / ${entries.length} 位`;
+    if (!has) {
+      $("cardView").innerHTML = "";
+      $("tbody").innerHTML = "";
+      return;
+    }
+    if (isCard) $("cardView").innerHTML = list.map(cardHtml).join("");
+    else $("tbody").innerHTML = list.map(tableRowHtml).join("");
+  }
+
+  // ---- 筛选条 ----
+  function renderFacets() {
+    const order = factions.map(f => f.name);
+    const all = [{ name: "全部", icon: "", color: "var(--blue)", count: entries.length }].concat(
+      factions.map(f => ({
+        name: f.name, icon: f.icon, color: f.color,
+        count: entries.filter(e => e.faction === f.name).length
+      }))
+    );
+    $("facets").innerHTML = all.map(f => {
+      const on = facet === f.name ? " on" : "";
+      const style = f.name === "全部" ? "" : ` style="--fcolor:${f.color}"`;
+      const img = f.icon ? `<img src="${esc(f.icon)}" alt="">` : "";
+      return `<span class="chip${on}"${style} data-facet="${esc(f.name)}">${img}${esc(f.name)}<span class="n">${f.count}</span></span>`;
+    }).join("");
+  }
+
+  // ---- 详情弹层 ----
+  const stack = [];
+  function openDetail(name, push) {
+    const e = byName[name];
+    if (!e) return;
+    if (push !== false) { if (stack[stack.length - 1] !== name) stack.push(name); }
+    const f = FAC[e.faction] || {};
+    const m = $("modal");
+    m.style.setProperty("--fcolor", f.color || "var(--blue)");
+    $("mIcon").src = f.icon || "";
+    $("mIcon").alt = e.faction;
+    $("mName").innerHTML = esc(e.name);
+    $("mFaction").textContent = e.faction;
+
+    const secs = [];
+    secs.push(`<div class="m-sec"><div class="st">获得方式</div><div class="tags">${tags(e.how, e.name)}</div></div>`);
+    secs.push(`<div class="m-sec"><div class="st">本命</div><div class="tags">${tags(e.fate, e.name)}</div></div>`);
+    secs.push(`<div class="m-sec"><div class="st">前置要求</div><div class="tags">${tags(e.prereq, e.name)}</div></div>`);
+    secs.push(`<div class="m-sec"><div class="st">特训所需人间体（${(e.traits || []).length}）</div><div class="tags">${tags(e.traits, e.name, "无")}</div></div>`);
+
+    const tb = trainedBy[e.name] || [];
+    const po = prereqOf[e.name] || [];
+    const fo = fateOf[e.name] || [];
+    if (tb.length) {
+      secs.push(`<div class="m-sec rev"><div class="st">参与以下人间体的特训（${tb.length}）</div><div class="tags">${tags(tb, e.name)}</div></div>`);
+    }
+    if (po.length) {
+      secs.push(`<div class="m-sec rev"><div class="st">被列为前置要求（${po.length}）</div><div class="tags">${tags(po, e.name)}</div></div>`);
+    }
+    if (fo.length) {
+      secs.push(`<div class="m-sec rev"><div class="st">被下列人间体作为本命（${fo.length}）</div><div class="tags">${tags(fo, e.name)}</div></div>`);
+    }
+    $("mBody").innerHTML = secs.join("");
+    $("mBack").textContent = stack.length > 1 ? "← 返回上一个" : "← 返回列表";
+    m.classList.add("on");
+    $("mask").classList.add("on");
+    $("mBody").scrollTop = 0;
+  }
+  function closeDetail() {
+    $("modal").classList.remove("on");
+    $("mask").classList.remove("on");
+    stack.length = 0;
+  }
+
+  // ---- 事件 ----
+  document.addEventListener("click", ev => {
+    const chip = ev.target.closest("[data-facet]");
+    if (chip) { facet = chip.dataset.facet; renderFacets(); render(); return; }
+    const goto = ev.target.closest("[data-goto]");
+    if (goto) { openDetail(goto.dataset.goto); return; }
+  });
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape") { closeDetail(); return; }
+    if (ev.key === "Enter" && ev.target.closest("[data-goto]")) { openDetail(ev.target.dataset.goto); }
+  });
+
+  $("q").addEventListener("input", e => {
+    q = e.target.value.trim();
+    $("clearQ").classList.toggle("on", q.length > 0);
+    render();
+  });
+  $("clearQ").addEventListener("click", () => {
+    $("q").value = ""; q = ""; $("clearQ").classList.remove("on"); render(); $("q").focus();
+  });
+  $("viewToggle").addEventListener("click", e => {
+    const b = e.target.closest("button[data-view]");
+    if (!b) return;
+    view = b.dataset.view;
+    [].forEach.call($("viewToggle").children, x => x.classList.toggle("on", x === b));
+    render();
+  });
+  $("mClose").addEventListener("click", closeDetail);
+  $("mask").addEventListener("click", closeDetail);
+  $("mBack").addEventListener("click", () => {
+    if (stack.length > 1) { stack.pop(); openDetail(stack[stack.length - 1], false); }
+    else { closeDetail(); }
+  });
+
+  // ---- 初始化 ----
+  $("totalCount").textContent = entries.length;
+  $("genTime").textContent = GUIDE.generated;
+  $("srcName").textContent = GUIDE.source;
+  renderFacets();
+  render();
+})();
+</script>
+</body>
+</html>

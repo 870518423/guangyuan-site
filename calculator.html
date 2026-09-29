@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0e1a" />
+<meta name="description" content="预测游戏资源的固定每日收益 × 天数总量" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="assets/favicon-32.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="光元预测" />
+<meta name="mobile-web-app-capable" content="yes" />
+<title>光元收益预测器</title>
+<style>
+  :root {
+    --bg-1: #0a0e1a;
+    --bg-2: #0f172a;
+    --card-bg: rgba(15, 23, 42, 0.75);
+    --card-border: #1e3a5f;
+    --card-border-hover: #3b82f6;
+    --blue: #3b82f6;
+    --blue-light: #60a5fa;
+    --gold: #fbbf24;
+    --gold-light: #fcd34d;
+    --text-main: #e2e8f0;
+    --text-dim: #94a3b8;
+    --danger: #ef4444;
+    --pay-color: #a855f7;
+    --pay-color-light: #c084fc;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    min-height: 100vh;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    /* 移动端原生 App 质感 */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 非输入元素禁用文字选中（原生 App 手感） */
+  .header, .time-section, .section-header, .resource-card .name,
+  .resource-card .note, .resource-card .label, .predicted-value,
+  .daily-avg-value, .effective-days-value, .total-label, .total-value,
+  .grand-total, .existing-input-group label, .mobile-total-bar {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  /* ===== 返回首页（站内导航） ===== */
+  .back-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    margin-bottom: 14px;
+    padding: 4px 10px 4px 7px;
+    border: 1px solid rgba(30, 58, 95, 0.8);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.6);
+    transition: color .15s, border-color .15s;
+  }
+  .back-home:hover { color: var(--blue-light); border-color: var(--blue); }
+
+  /* ===== 顶部标题 ===== */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  .header .title-icon {
+    width: 38px;
+    height: 38px;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.5));
+  }
+
+  .header h1 {
+    font-size: 1.75rem;
+    background: linear-gradient(90deg, var(--gold-light), var(--blue-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .header .subtitle {
+    color: var(--text-dim);
+    font-size: 0.875rem;
+    margin-left: auto;
+  }
+
+  /* ===== 时间选择区 ===== */
+  .time-section {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    backdrop-filter: blur(8px);
+  }
+
+  .date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .date-group label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .date-group input[type="date"] {
+    background: rgba(10, 14, 26, 0.8);
+    border: 1px solid var(--card-border);
+    color: var(--text-main);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color-scheme: dark;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .date-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+
+  .days-display {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .days-display .label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .days-display .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+    line-height: 1;
+  }
+
+  .days-display .value.warning {
+    color: var(--danger);
+    text-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+    font-size: 1.1rem;
+  }
+
+  .days-display .sub-info {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    opacity: 0.7;
+  }
+
+  /* ===== 分区标题 ===== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 10px 4px;
+  }
+
+  .section-header h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-header.pay-header h2 { color: var(--pay-color-light); }
+
+  .section-header .badge {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--pay-color-light);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+  }
+
+  .section-header .badge.excluded-badge {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+    border-color: rgba(239, 68, 68, 0.3);
+    display: none;
+  }
+
+  .section-header.excluded .badge.excluded-badge { display: inline-block; }
+  .section-header.excluded .badge.included-badge { display: none; }
+
+  /* ===== 开关 ===== */
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #374151;
+    border-radius: 22px;
+    transition: 0.3s;
+  }
+
+  .toggle-slider:before {
+    content: "";
+    position: absolute;
+    height: 16px; width: 16px;
+    left: 3px; bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  .toggle-switch input:checked + .toggle-slider {
+    background: var(--blue);
+  }
+
+  .toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(18px);
+  }
+
+  .toggle-switch.pay-toggle input:checked + .toggle-slider {
+    background: var(--pay-color);
+  }
+
+  .toggle-label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    user-select: none;
+  }
+
+  /* ===== 资源卡片网格 ===== */
+  .resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    transition: opacity 0.3s;
+  }
+
+  .resources-grid.excluded-grid {
+    opacity: 0.4;
+  }
+
+  .resource-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    backdrop-filter: blur(8px);
+  }
+
+  .resource-card:hover {
+    border-color: var(--card-border-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+  }
+
+  .resource-card.pay-card {
+    border-color: rgba(168, 85, 247, 0.3);
+  }
+
+  .resource-card.pay-card:hover {
+    border-color: var(--pay-color);
+    box-shadow: 0 8px 24px rgba(168, 85, 247, 0.15);
+  }
+
+  .resource-card.indiv-disabled {
+    opacity: 0.45;
+    filter: grayscale(0.5);
+  }
+
+  .pay-individual-toggle {
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed rgba(168, 85, 247, 0.2);
+  }
+
+  .resource-card .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    gap: 8px;
+  }
+
+  .resource-card .name {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--text-main);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .resource-card .type-tag {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-weight: 500;
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--blue-light);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+  }
+
+  .resource-card .type-tag.monthly-tag {
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--gold);
+    border-color: rgba(251, 191, 36, 0.25);
+  }
+
+  .resource-card .type-tag.arsenal-tag {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.25);
+  }
+
+  .resource-card .type-tag.weekly-tag {
+    background: rgba(168, 85, 247, 0.12);
+    color: #c084fc;
+    border-color: rgba(168, 85, 247, 0.25);
+  }
+
+  .resource-card .type-tag.fixed-tag {
+    background: rgba(6, 182, 212, 0.12);
+    color: #22d3ee;
+    border-color: rgba(6, 182, 212, 0.25);
+  }
+
+  .resource-card .type-tag.signin-tag {
+    background: rgba(244, 63, 94, 0.12);
+    color: #fb7185;
+    border-color: rgba(244, 63, 94, 0.25);
+  }
+
+  .resource-card .note {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+
+  .resource-card .delete-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s, border-color 0.2s, background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .resource-card:hover .delete-btn { opacity: 1; }
+
+  .resource-card .delete-btn:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .resource-card .field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .resource-card .field:last-child { margin-bottom: 0; }
+
+  .resource-card .field .label {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    width: 72px;
+    flex-shrink: 0;
+  }
+
+  .resource-card input[type="number"] {
+    background: rgba(10, 14, 26, 0.8);
+    border: 1px solid var(--card-border);
+    color: var(--text-main);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    flex: 1;
+    min-width: 0;
+    text-align: right;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .resource-card input[type="number"]:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+
+  .resource-card input[type="number"]::-webkit-outer-spin-button,
+  .resource-card input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .predicted-value {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .daily-avg-value {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.95rem;
+    color: var(--blue-light);
+    font-weight: 600;
+  }
+
+  .effective-days-value {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    font-weight: 600;
+  }
+
+  .icon-inline {
+    width: 22px;
+    height: 22px;
+    vertical-align: middle;
+    filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.4));
+  }
+
+  .icon-large {
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+    filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
+  }
+
+  .icon-small {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+  }
+
+  .icon-tiny {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+  }
+
+  /* 月总量卡片的每日均量切换行 */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    padding: 3px 0;
+  }
+
+  .toggle-row .toggle-switch {
+    width: 34px;
+    height: 18px;
+  }
+
+  .toggle-row .toggle-slider:before {
+    height: 12px; width: 12px;
+    left: 3px; bottom: 3px;
+  }
+
+  .toggle-row .toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(16px);
+  }
+
+  .toggle-row .toggle-label {
+    font-size: 0.78rem;
+  }
+
+  /* 修复：提高选择器优先级，确保 toggle 关闭时 daily-avg-field 真正隐藏 */
+  .resource-card .daily-avg-field {
+    display: none !important;
+  }
+
+  .resource-card .daily-avg-field.visible {
+    display: flex !important;
+  }
+
+  /* 循环签到：命中明细（可换行，窗口长时自动折行） */
+  .resource-card .signin-detail {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.8rem;
+    color: var(--text-main);
+    line-height: 1.7;
+    word-break: break-word;
+  }
+  .resource-card .signin-hit {
+    white-space: nowrap;
+  }
+
+  /* ===== 添加按钮 ===== */
+  .add-btn {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px dashed var(--blue);
+    color: var(--blue-light);
+    padding: 14px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.2s, border-style 0.2s;
+    width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .add-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-style: solid;
+  }
+
+  /* ===== 底部总计 ===== */
+  .footer-section {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(251, 191, 36, 0.05));
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 16px;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    backdrop-filter: blur(8px);
+  }
+
+  .total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .total-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .total-label .main {
+    font-size: 1rem;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .total-label .sub {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    opacity: 0.7;
+  }
+
+  .total-value {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-shadow: 0 0 16px rgba(251, 191, 36, 0.3);
+  }
+
+  .existing-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    border-top: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  .existing-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .existing-input-group label {
+    font-size: 0.92rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .existing-input-group input[type="number"] {
+    background: rgba(10, 14, 26, 0.8);
+    border: 1px solid var(--card-border);
+    color: var(--text-main);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    width: 200px;
+    text-align: right;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .existing-input-group input[type="number"]:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15);
+  }
+
+  .existing-input-group input[type="number"]::-webkit-outer-spin-button,
+  .existing-input-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .grand-total {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+  }
+
+  .grand-total .label {
+    font-size: 0.82rem;
+    color: var(--gold-light);
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+  }
+
+  .grand-total .value {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--gold-light);
+    text-shadow: 0 0 20px rgba(252, 211, 77, 0.4);
+    line-height: 1;
+  }
+
+  /* ===== 圆环图 ===== */
+  .donut-chart-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    padding: 14px 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  }
+  .donut-chart-title {
+    display: none;
+  }
+  .donut-wrap {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    flex-shrink: 0;
+  }
+  .donut-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .donut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .donut-center-label {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+  .donut-center #donutCenterValue {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .donut-legend {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 340px;
+    overflow-y: auto;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .legend-name {
+    flex: 1;
+    color: var(--text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .legend-value {
+    color: var(--gold);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .legend-pct {
+    color: var(--text-dim);
+    font-weight: 400;
+    margin-left: 4px;
+    font-size: 0.72rem;
+  }
+  .donut-empty {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 8px;
+  }
+
+  /* ===== 操作按钮 ===== */
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--blue);
+    color: var(--blue-light);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .reset-btn:hover {
+    background: var(--blue);
+    color: white;
+  }
+
+  /* ===== 移动端固定底部总计栏 ===== */
+  .mobile-total-bar {
+    display: none; /* 桌面端隐藏 */
+  }
+
+  /* ===== Toast ===== */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--blue);
+    color: var(--text-main);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .toast.error { border-color: var(--danger); }
+
+  /* ===== 响应式 ===== */
+  /* ===== 移动端适配 ===== */
+  @media (max-width: 768px) {
+    .container {
+      padding: calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(80px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
+    }
+    .header { flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; }
+    .header .title-icon { width: 32px; height: 32px; }
+    .header h1 { font-size: 1.35rem; }
+    .header .subtitle { margin-left: 0; width: 100%; font-size: 0.8rem; }
+
+    .time-section {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      border-radius: 10px;
+      backdrop-filter: blur(12px);
+      background: rgba(10, 14, 26, 0.92);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    }
+    .date-group { flex: 1; min-width: 0; }
+    .date-group label { font-size: 0.7rem; }
+    .date-group input[type="date"] { padding: 8px 10px; font-size: 0.85rem; min-height: 40px; }
+    .days-display { margin-left: 0; align-items: flex-end; flex-shrink: 0; }
+    .days-display .label { font-size: 0.7rem; }
+    .days-display .value { font-size: 1.3rem; }
+    .days-display .sub-info { font-size: 0.65rem; }
+
+    /* 网格：宽屏(≥600px)自动排2列，窄屏单列（继承 desktop auto-fill minmax(280px)）*/
+    .resources-grid { gap: 10px; }
+
+    /* 卡片优化 */
+    .resource-card { padding: 10px 12px; }
+    .resource-card .name { font-size: 1rem; }
+    .resource-card .note { font-size: 0.72rem; margin-bottom: 6px; }
+
+    /* 增大触摸目标 */
+    .resource-card input[type="number"] {
+      min-height: 44px;
+      font-size: 1rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+    /* 横排字段保持，仅窄屏(<420px)回退竖排保证输入框宽度 */
+    @media (max-width: 419px) {
+      .resource-card .field { flex-wrap: wrap; }
+      .resource-card .field .label { width: 100%; margin-bottom: 2px; }
+      .resource-card input[type="number"] { width: 100%; }
+    }
+
+    .predicted-value { font-size: 1.2rem; }
+    .icon-inline { width: 20px; height: 20px; }
+
+    /* 开关更大 */
+    .toggle-switch { width: 44px; height: 24px; }
+    .toggle-slider:before { height: 18px; width: 18px; left: 3px; bottom: 3px; }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+    .toggle-row .toggle-switch { width: 38px; height: 20px; }
+    .toggle-row .toggle-slider:before { height: 14px; width: 14px; }
+    .toggle-row .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
+    .toggle-label { font-size: 0.82rem; }
+
+    /* 删除按钮在移动端始终可见 */
+    .resource-card .delete-btn { opacity: 0.6; width: 32px; height: 32px; font-size: 1.3rem; }
+
+    .add-btn { padding: 16px; font-size: 1rem; min-height: 48px; }
+
+    /* 底部总计优化 */
+    .footer-section { padding: 16px 14px; gap: 14px; border-radius: 12px; }
+    .total-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+    .total-value { font-size: 1.5rem; }
+    .existing-row { flex-direction: column; align-items: stretch; gap: 12px; }
+    .existing-input-group { flex-direction: row; align-items: center; gap: 8px; }
+    .existing-input-group input[type="number"] { width: 100%; min-height: 48px; font-size: 1.05rem; flex: 1; }
+    .grand-total { align-items: flex-end; }
+    .grand-total .value { font-size: 1.7rem; }
+
+    /* 圆环图移动端竖排 */
+    .donut-chart-section { flex-direction: column; gap: 12px; }
+    .donut-wrap { width: 130px; height: 130px; }
+    .donut-legend { width: 100%; }
+
+    .reset-btn { padding: 14px 28px; font-size: 0.95rem; min-height: 48px; width: 100%; border-radius: 10px; }
+    .actions { margin-top: 14px; }
+
+    .section-header { margin-bottom: 10px; padding: 6px 2px; }
+    .section-header h2 { font-size: 1rem; }
+
+    /* 固定底部总计栏 */
+    .mobile-total-bar {
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.97), rgba(10, 14, 26, 0.97));
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(251, 191, 36, 0.35);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+      z-index: 200;
+    }
+    .mobile-total-bar .mtb-label { font-size: 0.82rem; color: var(--text-dim); }
+    .mobile-total-bar .mtb-value {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 1.5rem; font-weight: 800; color: var(--gold-light);
+      text-shadow: 0 0 12px rgba(252, 211, 77, 0.3);
+    }
+
+    .toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  }
+
+  /* 超小屏（<380px）进一步压缩 */
+  @media (max-width: 380px) {
+    .container { padding: calc(10px + env(safe-area-inset-top)) 10px calc(76px + env(safe-area-inset-bottom)) 10px; }
+    .header h1 { font-size: 1.1rem; }
+    .header .subtitle { font-size: 0.68rem; }
+    .resource-card { padding: 12px; }
+    .footer-section { padding: 14px 12px; }
+    .total-value, .grand-total .value { font-size: 1.3rem; }
+    .mobile-total-bar .mtb-value { font-size: 1.25rem; }
+    .mobile-total-bar .mtb-label { font-size: 0.75rem; }
+    .time-section { gap: 6px; padding: 8px; }
+    .date-group input[type="date"] { font-size: 0.78rem; padding: 6px 8px; min-height: 36px; }
+    .days-display .value { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- 顶部标题 -->
+  <a class="back-home" href="index.html">← 返回首页</a>
+
+  <div class="header">
+    <img src="assets/guangyuan.png" alt="光元" class="title-icon" />
+    <h1>光元收益预测器</h1>
+    <span class="subtitle">每日固定获取量 × 天数 = 预测总量</span>
+  </div>
+
+  <!-- 时间选择区 -->
+  <div class="time-section">
+    <div class="date-group">
+      <label for="startDate">起始日期</label>
+      <input type="date" id="startDate" />
+    </div>
+    <div class="date-group">
+      <label for="endDate">结束日期</label>
+      <input type="date" id="endDate" />
+    </div>
+    <div class="days-display">
+      <span class="label">总天数</span>
+      <span class="value" id="daysValue">0</span>
+      <span class="sub-info" id="mondayInfo"></span>
+    </div>
+  </div>
+
+  <!-- 氪金项目区 -->
+  <div class="section-header pay-header" id="paySectionHeader">
+    <h2>氪金项目 <span class="badge included-badge">已包含</span><span class="badge excluded-badge">已排除</span></h2>
+    <label class="toggle-switch pay-toggle">
+      <input type="checkbox" id="payToggle" checked />
+      <span class="toggle-slider"></span>
+    </label>
+    <span class="toggle-label">包含氪金收益</span>
+  </div>
+  <div class="resources-grid" id="payGrid"></div>
+
+  <!-- 游戏内产出区 -->
+  <div class="section-header">
+    <h2>游戏内产出</h2>
+  </div>
+  <div class="resources-grid" id="freeGrid"></div>
+
+  <!-- 添加自定义资源按钮 -->
+  <button class="add-btn" id="addBtn">+ 添加自定义资源</button>
+
+  <!-- 底部总计 -->
+  <div class="footer-section">
+    <div class="total-row">
+      <div class="total-label">
+        <span class="main">预测总获取量</span>
+        <span class="sub">所选日期范围内所有资源产出之和</span>
+      </div>
+      <div class="total-value">
+        <span id="totalPredicted">0</span>
+        <img src="assets/guangyuan.png" alt="光元" class="icon-large" />
+      </div>
+    </div>
+
+    <div class="donut-chart-section">
+      <div class="donut-chart-title">光元获取构成</div>
+      <div class="donut-wrap">
+        <svg id="donutChart" viewBox="0 0 200 200" class="donut-svg"></svg>
+        <div class="donut-center">
+          <span class="donut-center-label">总光元</span>
+          <span id="donutCenterValue">0</span>
+          <img src="assets/guangyuan.png" alt="光元" class="icon-tiny" />
+        </div>
+      </div>
+      <div class="donut-legend" id="donutLegend"></div>
+    </div>
+
+    <div class="existing-row">
+      <div class="existing-input-group">
+        <label for="existingAmount">
+          现有光元数量
+          <img src="assets/guangyuan.png" alt="光元" class="icon-small" />
+        </label>
+        <input type="number" id="existingAmount" min="0" step="1" placeholder="0" />
+      </div>
+      <div class="grand-total">
+        <span class="label">最终合计（现有 + 预测）</span>
+        <div class="value">
+          <span id="grandTotal">0</span>
+          <img src="assets/guangyuan.png" alt="光元" class="icon-large" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="reset-btn" id="resetBtn">重置默认</button>
+  </div>
+</div>
+
+<!-- 移动端固定底部总计栏（桌面端隐藏） -->
+<div class="mobile-total-bar" id="mobileTotalBar">
+  <span class="mtb-label">最终合计</span>
+  <span class="mtb-value">
+    <span id="mobileGrandTotal">0</span>
+    <img src="assets/guangyuan.png" alt="光元" class="icon-inline" />
+  </span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'guangyuan-forecast-data-v2';
+
+  // ===== 默认数据 =====
+  function getDefaultData() {
+    return {
+      payEnabled: true,
+      existingAmount: 0,
+      resources: [
+        // 氪金项目
+        { id: 'small-card',   name: '小月卡',   type: 'daily',   daily: 175,  monthlyTotal: 0,    note: '使用月卡券', isPay: true,  showDailyAvg: false, enabled: true },
+        { id: 'big-card',     name: '大月卡',   type: 'daily',   daily: 275,  monthlyTotal: 0,    note: '使用月卡券', isPay: true,  showDailyAvg: false, enabled: true },
+        { id: 'light-clone',  name: '光元克隆', type: 'monthly', daily: 0,    monthlyTotal: 10000, note: '',           isPay: true,  showDailyAvg: false, enabled: true },
+        { id: 'battle-pass',  name: '战令',     type: 'monthly', daily: 0,    monthlyTotal: 9400,  note: '满级',       isPay: true,  showDailyAvg: false, enabled: true },
+        { id: 'lifetime-pay',  name: '终身卡（氪金）', type: 'daily', daily: 200, monthlyTotal: 0, note: '', isPay: true,  showDailyAvg: false, enabled: true },
+        // 游戏内产出
+        { id: 'guard',        name: '警备队',   type: 'daily',   daily: 125,  monthlyTotal: 0,    note: '', isPay: false, showDailyAvg: false, enabled: true },
+        { id: 'daily-task',   name: '日常',     type: 'daily',   daily: 400,  monthlyTotal: 0,    note: '', isPay: false, showDailyAvg: false, enabled: true },
+        { id: 'maintenance',  name: '维护',     type: 'weekly',  weeklyAmount: 350, weeklyDay: 2, note: '', isPay: false, enabled: true },
+        { id: 'prison',       name: '监狱',     type: 'daily',   daily: 200,  monthlyTotal: 0,    note: '每周一无法获得', isPay: false, showDailyAvg: false, isPrison: true, enabled: true },
+        { id: 'sign-in',      name: '签到',     type: 'signin',  signDay: 1,  note: '在第4,9,14,19,24,29号分别发放20,100,150,200,250,300光元', isPay: false, enabled: true },
+        { id: 'contribution', name: '贡献榜',   type: 'monthly', daily: 0,    monthlyTotal: 2100, note: '',           isPay: false, showDailyAvg: false, showEnabledToggle: true, enabled: true },
+        { id: 'flip-card',    name: '翻牌',     type: 'monthly', daily: 0,    monthlyTotal: 2500, note: '可获得2000~3000光元，取中间值2500', isPay: false, showDailyAvg: false, enabled: true },
+        { id: 'lifetime-free',name: '终身卡（免费）', type: 'daily', daily: 100, monthlyTotal: 0, note: '3000 ÷ 30天', isPay: false, showDailyAvg: false, enabled: true },
+        { id: 'arsenal',      name: '军械箱',   type: 'arsenal', daily: 550,  monthlyTotal: 0, multiplier: 1.7, note: '日通21、22章，且19~22章轮换，每两天1192箱子，平均一天600箱子，乘数1.7', isPay: false, showDailyAvg: false, enabled: true },
+        { id: 'share',        name: '每日分享', type: 'daily',   daily: 60,   monthlyTotal: 0,    note: '', isPay: false, showDailyAvg: false, enabled: true },
+        { id: 'league-guess', name: '小联赛竞猜', type: 'fixed',  fixedAmount: 1000, note: '猜对一次50光元，一次比赛可以猜20次，默认全部猜对', isPay: false, showEnabledToggle: true, enabled: true },
+      ]
+    };
+  }
+
+  // ===== 工具函数 =====
+  function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatNumber(n) {
+    if (n === null || n === undefined || isNaN(n)) return '0';
+    return Math.floor(n).toLocaleString('zh-CN');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  function showToast(message, isError) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast show' + (isError ? ' error' : '');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+      toast.className = 'toast' + (isError ? ' error' : '');
+    }, 2400);
+  }
+
+  // ===== 状态加载/保存 =====
+  let state = loadState();
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.resources)) return getDefaultData();
+        if (typeof parsed.payEnabled !== 'boolean') parsed.payEnabled = true;
+        if (typeof parsed.existingAmount !== 'number' || isNaN(parsed.existingAmount)) parsed.existingAmount = 0;
+        // 向后兼容：为旧数据补充 enabled 字段
+        parsed.resources.forEach(r => {
+          if (typeof r.enabled !== 'boolean') r.enabled = true;
+        });
+        // 数据迁移 v3：维护项目从 monthly(月总量1400) 迁移为 weekly(每周二350)
+        const m = parsed.resources.find(r => r.id === 'maintenance');
+        if (m && m.type !== 'weekly') {
+          m.type = 'weekly';
+          m.weeklyAmount = 350;
+          m.weeklyDay = 2;
+          delete m.daily;
+          delete m.monthlyTotal;
+          delete m.showDailyAvg;
+          m.note = '';
+        }
+        // 数据迁移 v4：签到从 daily(每日35) 迁移为 signin(30天循环签到)
+        const si = parsed.resources.find(r => r.id === 'sign-in');
+        if (si && si.type !== 'signin') {
+          si.type = 'signin';
+          si.signDay = 1;
+          delete si.daily;
+          delete si.monthlyTotal;
+          delete si.showDailyAvg;
+          si.note = '在第4,9,14,19,24,29号分别发放20,100,150,200,250,300光元';
+        }
+        // 数据迁移 v3：贡献榜补齐"计入总量"开关字段
+        const c = parsed.resources.find(r => r.id === 'contribution');
+        if (c) c.showEnabledToggle = true;
+        // 数据迁移 v3：补齐新增的"小联赛竞猜"默认项目
+        if (!parsed.resources.some(r => r.id === 'league-guess')) {
+          parsed.resources.push({ id: 'league-guess', name: '小联赛竞猜', type: 'fixed', fixedAmount: 1000, note: '猜对一次50光元，一次比赛可以猜20次，默认全部猜对', isPay: false, showEnabledToggle: true, enabled: true });
+        }
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('读取 localStorage 失败：', e);
+    }
+    return getDefaultData();
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.warn('写入 localStorage 失败：', e);
+      showToast('数据保存失败（可能处于隐私模式）', true);
+    }
+  }
+
+  // ===== 日期与周一计算 =====
+  function getDefaultDates() {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 29); // 29天前 → 含首尾共30天
+    return { start: formatDate(start), end: formatDate(end) };
+  }
+
+  function computeDays() {
+    const startStr = document.getElementById('startDate').value;
+    const endStr = document.getElementById('endDate').value;
+    if (!startStr || !endStr) return 0;
+    const start = new Date(startStr + 'T00:00:00');
+    const end = new Date(endStr + 'T00:00:00');
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+    const diff = end.getTime() - start.getTime();
+    if (diff < 0) return -1;
+    return Math.floor(diff / 86400000) + 1;
+  }
+
+  function countMondaysInRange() {
+    const startStr = document.getElementById('startDate').value;
+    const endStr = document.getElementById('endDate').value;
+    if (!startStr || !endStr) return 0;
+    const start = new Date(startStr + 'T00:00:00');
+    const end = new Date(endStr + 'T00:00:00');
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return 0;
+    let count = 0;
+    const current = new Date(start);
+    while (current <= end) {
+      if (current.getDay() === 1) count++;
+      current.setDate(current.getDate() + 1);
+    }
+    return count;
+  }
+
+  function countTuesdaysInRange() {
+    const startStr = document.getElementById('startDate').value;
+    const endStr = document.getElementById('endDate').value;
+    if (!startStr || !endStr) return 0;
+    const start = new Date(startStr + 'T00:00:00');
+    const end = new Date(endStr + 'T00:00:00');
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return 0;
+    let count = 0;
+    const current = new Date(start);
+    while (current <= end) {
+      if (current.getDay() === 2) count++;
+      current.setDate(current.getDate() + 1);
+    }
+    return count;
+  }
+
+  // ===== 30天循环签到 =====
+  // 仅第 4/9/14/19/24/29 天有奖励；第 30 天无奖励，第 31 天进入新一轮第 1 天（每轮合计 1020）
+  const SIGN_REWARDS = { 4: 20, 9: 100, 14: 150, 19: 200, 24: 250, 29: 300 };
+
+  // 从"今日为第 startDay 天"起向后连续 windowDays 天，返回命中明细 [{ordinal,pos,reward}]
+  // ordinal 为连续签到序号（跨轮时 >30，如 34/39/44），pos=(ordinal-1)%30+1 为周期内位置 1..30
+  function getSignInHits(startDay, windowDays) {
+    const hits = [];
+    if (!(windowDays > 0)) return hits;
+    const s = Math.max(1, Math.min(30, Math.floor(Number(startDay)) || 1));
+    for (let w = 0; w < windowDays; w++) {
+      const ordinal = s + w;
+      const pos = ((ordinal - 1) % 30) + 1;
+      const reward = SIGN_REWARDS[pos];
+      if (reward) hits.push({ ordinal, pos, reward });
+    }
+    return hits;
+  }
+
+  // 窗口内命中奖励总和
+  function getSignInReward(startDay, windowDays) {
+    return getSignInHits(startDay, windowDays).reduce((sum, h) => sum + h.reward, 0);
+  }
+
+  // 命中明细 HTML（如：第19天 +200 · 第24天 +250 …），title 提示周期内真实位置
+  function getSignInDetailHtml(startDay, windowDays) {
+    const hits = getSignInHits(startDay, windowDays);
+    if (!hits.length) return '<span style="color:var(--text-dim)">窗口内无奖励日</span>';
+    return hits
+      .map(h => `<span class="signin-hit" title="周期第${h.pos}天（30天一循环）">第${h.ordinal}天 +${h.reward}</span>`)
+      .join(' · ');
+  }
+
+  // ===== 预测计算 =====
+  function getResourcePrediction(resource, days, mondays) {
+    if (days <= 0) return 0;
+    // 任意资源：enabled === false 时不参与计算（统一规则，含氪金与贡献榜）
+    if (resource.enabled === false) return 0;
+    let effectiveDays = days;
+    if (resource.isPrison) {
+      effectiveDays = Math.max(0, days - mondays);
+    }
+    if (resource.type === 'monthly') {
+      const monthly = Number(resource.monthlyTotal) || 0;
+      return Math.floor((monthly / 30) * days);
+    } else if (resource.type === 'arsenal') {
+      // 军械箱：每日军械箱数量 × 乘数1.7 = 每日光元，再乘天数
+      const dailyArsenal = Number(resource.daily) || 0;
+      const multiplier = Number(resource.multiplier) || 1.7;
+      const dailyLightYuan = Math.floor(dailyArsenal * multiplier);
+      return dailyLightYuan * effectiveDays;
+    } else if (resource.type === 'weekly') {
+      // 维护类：每周固定一天发放一次（当前为每周二），预测 = 每次发放量 × 周二次数
+      const weeklyAmount = Number(resource.weeklyAmount) || 0;
+      const times = countTuesdaysInRange();
+      return Math.floor(weeklyAmount * times);
+    } else if (resource.type === 'fixed') {
+      // 固定总量：一次性活动，不随所选天数变化
+      const fixed = Number(resource.fixedAmount) || 0;
+      return Math.floor(fixed);
+    } else if (resource.type === 'signin') {
+      // 30天循环签到：今日为第 signDay 天，窗口=所选日期跨度天数 N，累计窗口内命中奖励日
+      return getSignInReward(resource.signDay, days);
+    } else {
+      const daily = Number(resource.daily) || 0;
+      return Math.floor(daily * effectiveDays);
+    }
+  }
+
+  function getArsenalDailyLight(resource) {
+    const dailyArsenal = Number(resource.daily) || 0;
+    const multiplier = Number(resource.multiplier) || 1.7;
+    return Math.floor(dailyArsenal * multiplier);
+  }
+
+  function getDailyAverage(resource) {
+    if (resource.type !== 'monthly') return 0;
+    const monthly = Number(resource.monthlyTotal) || 0;
+    return Math.floor(monthly / 30);
+  }
+
+  function getEffectiveDays(resource, days, mondays) {
+    if (resource.isPrison) return Math.max(0, days - mondays);
+    return days;
+  }
+
+  // ===== 渲染单张卡片 =====
+  function renderCard(resource, days, mondays) {
+    const isExcluded = (resource.enabled === false);
+    const predicted = isExcluded ? 0 : getResourcePrediction(resource, days, mondays);
+    const typeTag = resource.type === 'monthly'
+      ? '<span class="type-tag monthly-tag">月总量</span>'
+      : resource.type === 'arsenal'
+        ? '<span class="type-tag arsenal-tag">军械箱</span>'
+        : resource.type === 'weekly'
+          ? '<span class="type-tag weekly-tag">每周二</span>'
+          : resource.type === 'fixed'
+            ? '<span class="type-tag fixed-tag">总量</span>'
+            : resource.type === 'signin'
+              ? '<span class="type-tag signin-tag">循环签到</span>'
+              : '<span class="type-tag">每日</span>';
+
+    let fields = '';
+
+    // 单个项目开关：氪金项目 + 配置了 showEnabledToggle 的项目（贡献榜/小联赛竞猜等）
+    if (resource.isPay || resource.showEnabledToggle === true) {
+      fields += `
+        <div class="toggle-row pay-individual-toggle">
+          <label class="toggle-switch">
+            <input type="checkbox" data-action="toggle-enabled" data-id="${escapeHtml(resource.id)}" ${resource.enabled !== false ? 'checked' : ''} />
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">${resource.enabled !== false ? '计入总量' : '已排除'}</span>
+        </div>
+      `;
+    }
+
+    if (resource.type === 'monthly') {
+      // 月总量输入
+      fields += `
+        <div class="field">
+          <span class="label">月总量</span>
+          <input type="number" data-action="edit-monthly" data-id="${escapeHtml(resource.id)}" value="${Number(resource.monthlyTotal) || 0}" min="0" step="1" />
+        </div>
+      `;
+      // 每日均量开关
+      fields += `
+        <div class="toggle-row">
+          <label class="toggle-switch">
+            <input type="checkbox" data-action="toggle-daily-avg" data-id="${escapeHtml(resource.id)}" ${resource.showDailyAvg ? 'checked' : ''} />
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">显示每日均量</span>
+        </div>
+      `;
+      // 每日均量（仅当开关开启时显示）
+      const dailyAvg = getDailyAverage(resource);
+      fields += `
+        <div class="field daily-avg-field ${resource.showDailyAvg ? 'visible' : ''}">
+          <span class="label">每日均量</span>
+          <span class="daily-avg-value">
+            <span class="daily-avg-number">${formatNumber(dailyAvg)}</span>
+            <img src="assets/guangyuan.png" alt="光元" class="icon-tiny" />
+          </span>
+        </div>
+      `;
+    } else if (resource.type === 'weekly') {
+      // 维护类：每次发放量输入 + 发放次数（周二数）显示
+      fields += `
+        <div class="field">
+          <span class="label">每次发放量</span>
+          <input type="number" data-action="edit-weekly" data-id="${escapeHtml(resource.id)}" value="${Number(resource.weeklyAmount) || 0}" min="0" step="1" />
+        </div>
+      `;
+      const tuesdays = countTuesdaysInRange();
+      fields += `
+        <div class="field">
+          <span class="label">发放次数</span>
+          <span class="effective-days-value">${tuesdays} 次</span>
+        </div>
+      `;
+    } else if (resource.type === 'fixed') {
+      // 固定总量：一次性活动，直接输入一个固定值
+      fields += `
+        <div class="field">
+          <span class="label">总量</span>
+          <input type="number" data-action="edit-fixed" data-id="${escapeHtml(resource.id)}" value="${Number(resource.fixedAmount) || 0}" min="0" step="1" />
+        </div>
+      `;
+    } else if (resource.type === 'arsenal') {
+      // 军械箱：每日军械箱数量输入
+      fields += `
+        <div class="field">
+          <span class="label">每日军械箱</span>
+          <input type="number" data-action="edit-daily" data-id="${escapeHtml(resource.id)}" value="${Number(resource.daily) || 0}" min="0" step="1" />
+        </div>
+      `;
+      // 每日光元 = 军械箱 × 1.7（计算值，不可编辑）
+      const dailyLight = getArsenalDailyLight(resource);
+      fields += `
+        <div class="field">
+          <span class="label">每日光元</span>
+          <span class="daily-avg-value">
+            <span class="arsenal-daily-light">${formatNumber(dailyLight)}</span>
+            <img src="assets/guangyuan.png" alt="光元" class="icon-tiny" />
+          </span>
+        </div>
+      `;
+    } else if (resource.type === 'signin') {
+      // 30天循环签到：输入"当前（今日）处于周期第几天" 1~30，下方展示窗口内命中明细
+      fields += `
+        <div class="field">
+          <span class="label">当前第几天</span>
+          <input type="number" data-action="edit-sign-day" data-id="${escapeHtml(resource.id)}" value="${Number(resource.signDay) || 1}" min="1" max="30" step="1" title="今天处于30天周期中的第几天（1~30）" />
+        </div>
+      `;
+      fields += `
+        <div class="field signin-detail-field">
+          <span class="label">命中明细</span>
+          <span class="signin-detail">${getSignInDetailHtml(resource.signDay, days)}</span>
+        </div>
+      `;
+    } else {
+      // 每日量输入
+      fields += `
+        <div class="field">
+          <span class="label">每日量</span>
+          <input type="number" data-action="edit-daily" data-id="${escapeHtml(resource.id)}" value="${Number(resource.daily) || 0}" min="0" step="1" />
+        </div>
+      `;
+      // 监狱显示有效天数
+      if (resource.isPrison) {
+        const effDays = getEffectiveDays(resource, days, mondays);
+        fields += `
+          <div class="field">
+            <span class="label">有效天数</span>
+            <span class="effective-days-value">${effDays} 天</span>
+          </div>
+        `;
+      }
+    }
+
+    // 预测总量
+    fields += `
+      <div class="field">
+        <span class="label">预测总量</span>
+        <span class="predicted-value">
+          <span class="predicted-number">${formatNumber(predicted)}</span>
+          <img src="assets/guangyuan.png" alt="光元" class="icon-inline" />
+        </span>
+      </div>
+    `;
+
+    return `
+      <div class="resource-card ${resource.isPay ? 'pay-card' : ''} ${isExcluded ? 'indiv-disabled' : ''}" data-id="${escapeHtml(resource.id)}">
+        <div class="card-header">
+          <div class="name">${escapeHtml(resource.name)} ${typeTag}</div>
+          <button class="delete-btn" data-action="delete" data-id="${escapeHtml(resource.id)}" title="删除该资源">×</button>
+        </div>
+        ${resource.note ? `<div class="note">${escapeHtml(resource.note)}</div>` : ''}
+        ${fields}
+      </div>
+    `;
+  }
+
+  // ===== 渲染所有卡片 =====
+  function renderResources() {
+    const days = computeDays();
+    const mondays = countMondaysInRange();
+    const validDays = days > 0 ? days : 0;
+
+    const payResources = state.resources.filter(r => r.isPay);
+    const freeResources = state.resources.filter(r => !r.isPay);
+
+    document.getElementById('payGrid').innerHTML = payResources.map(r => renderCard(r, validDays, mondays)).join('');
+    document.getElementById('freeGrid').innerHTML = freeResources.map(r => renderCard(r, validDays, mondays)).join('');
+
+    // 氪金区状态：根据是否有任意氪金卡开启，决定 header 徽章；同步主开关 checkbox
+    const payHeader = document.getElementById('paySectionHeader');
+    const payCards = state.resources.filter(r => r.isPay);
+    const anyPayEnabled = payCards.some(r => r.enabled !== false);
+    const allPayEnabled = payCards.every(r => r.enabled !== false);
+    const payToggleEl = document.getElementById('payToggle');
+    if (payToggleEl) payToggleEl.checked = allPayEnabled;
+    if (anyPayEnabled) payHeader.classList.remove('excluded');
+    else payHeader.classList.add('excluded');
+  }
+
+  // ===== 渲染总计 =====
+  function renderTotals() {
+    const days = computeDays();
+    const daysEl = document.getElementById('daysValue');
+    const mondayInfoEl = document.getElementById('mondayInfo');
+
+    if (days === -1) {
+      daysEl.textContent = '结束日期早于起始日期';
+      daysEl.classList.add('warning');
+      mondayInfoEl.textContent = '';
+    } else {
+      daysEl.textContent = days + ' 天';
+      daysEl.classList.remove('warning');
+      const mondays = countMondaysInRange();
+      if (mondays > 0) {
+        mondayInfoEl.textContent = `其中周一 ${mondays} 天（监狱不产出）`;
+      } else {
+        mondayInfoEl.textContent = '';
+      }
+    }
+
+    const validDays = days > 0 ? days : 0;
+    const mondays = countMondaysInRange();
+    let total = 0;
+    state.resources.forEach(r => {
+      total += getResourcePrediction(r, validDays, mondays);
+    });
+
+    document.getElementById('totalPredicted').textContent = formatNumber(total);
+
+    const existing = Math.floor(Number(state.existingAmount) || 0);
+    const grand = total + existing;
+    document.getElementById('grandTotal').textContent = formatNumber(grand);
+    // 同步移动端固定底栏
+    const mtb = document.getElementById('mobileGrandTotal');
+    if (mtb) mtb.textContent = formatNumber(grand);
+
+    // 渲染圆环图
+    renderDonutChart(validDays, mondays);
+  }
+
+  // ===== 圆环图（各资源预测量占比，纯 SVG 离线渲染）=====
+  function renderDonutChart(validDays, mondays) {
+    const DONUT_COLORS = [
+      '#a855f7', '#3b82f6', '#fbbf24', '#10b981', '#ec4899',
+      '#06b6d4', '#f97316', '#8b5cf6', '#22c55e', '#ef4444',
+      '#0ea5e9', '#eab308', '#d946ef', '#14b8a6', '#f43f5e'
+    ];
+    const svg = document.getElementById('donutChart');
+    const legend = document.getElementById('donutLegend');
+    const centerVal = document.getElementById('donutCenterValue');
+    if (!svg || !legend || !centerVal) return;
+
+    // 计算每个 enabled 资源的预测值，并按 state 顺序预分配颜色
+    const items = state.resources
+      .map((r, idx) => ({
+        name: r.name,
+        value: getResourcePrediction(r, validDays, mondays),
+        color: DONUT_COLORS[idx % DONUT_COLORS.length],
+      }))
+      .filter(it => it.value > 0);
+
+    const total = items.reduce((s, it) => s + it.value, 0);
+    centerVal.textContent = formatNumber(total);
+
+    if (total <= 0) {
+      svg.innerHTML = `<circle cx="100" cy="100" r="80" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="22"/>`;
+      legend.innerHTML = `<div class="donut-empty">暂无数据</div>`;
+      return;
+    }
+
+    const R = 80;
+    const C = 2 * Math.PI * R;
+    let offset = 0;
+    let circles = '';
+    items.forEach(it => {
+      const len = (it.value / total) * C;
+      circles += `<circle cx="100" cy="100" r="${R}" fill="none" stroke="${it.color}" stroke-width="22"
+        stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}"
+        stroke-dashoffset="${(-offset).toFixed(2)}"
+        transform="rotate(-90 100 100)"/>`;
+      offset += len;
+    });
+    svg.innerHTML = circles;
+
+    // Legend：按数值降序，平铺列出所有项目（不再合并"其他"）
+    const sorted = [...items].sort((a, b) => b.value - a.value);
+    let legendHtml = sorted.map(it => {
+      const pct = ((it.value / total) * 100).toFixed(1);
+      return `<div class="legend-item">
+        <span class="legend-dot" style="background:${it.color}"></span>
+        <span class="legend-name">${escapeHtml(it.name)}</span>
+        <span class="legend-value">${formatNumber(it.value)}<span class="legend-pct">${pct}%</span></span>
+      </div>`;
+    }).join('');
+    legend.innerHTML = legendHtml;
+  }
+
+  function renderAll() {
+    renderResources();
+    renderTotals();
+  }
+
+  // ===== 局部更新（避免输入失焦）=====
+  function updateCardPrediction(resource) {
+    const days = computeDays();
+    const mondays = countMondaysInRange();
+    const validDays = days > 0 ? days : 0;
+    const isExcluded = (resource.enabled === false);
+    const predicted = isExcluded ? 0 : getResourcePrediction(resource, validDays, mondays);
+
+    document.querySelectorAll(`.resource-card[data-id="${CSS.escape(resource.id)}"]`).forEach(card => {
+      const numEl = card.querySelector('.predicted-number');
+      if (numEl) numEl.textContent = formatNumber(predicted);
+      // 监狱有效天数更新
+      if (resource.isPrison) {
+        const effEl = card.querySelector('.effective-days-value');
+        if (effEl) effEl.textContent = getEffectiveDays(resource, validDays, mondays) + ' 天';
+      }
+      // 月总量的每日均量更新
+      if (resource.type === 'monthly') {
+        const avgEl = card.querySelector('.daily-avg-number');
+        if (avgEl) avgEl.textContent = formatNumber(getDailyAverage(resource));
+      }
+      // 军械箱的每日光元更新
+      if (resource.type === 'arsenal') {
+        const lightEl = card.querySelector('.arsenal-daily-light');
+        if (lightEl) lightEl.textContent = formatNumber(getArsenalDailyLight(resource));
+      }
+      // 循环签到的命中明细刷新（signDay 或日期窗口变化）
+      if (resource.type === 'signin') {
+        const detEl = card.querySelector('.signin-detail');
+        if (detEl) detEl.innerHTML = getSignInDetailHtml(resource.signDay, validDays);
+      }
+    });
+  }
+
+  // ===== 事件绑定 =====
+  function bindEvents() {
+    // 日期变化
+    document.getElementById('startDate').addEventListener('change', () => { renderAll(); saveState(); });
+    document.getElementById('endDate').addEventListener('change', () => { renderAll(); saveState(); });
+
+    // 氪金主开关：作为"全选/全不选"快捷键，批量设置每个氪金卡的 enabled
+    document.getElementById('payToggle').addEventListener('change', (e) => {
+      const on = e.target.checked;
+      state.resources.filter(r => r.isPay).forEach(r => { r.enabled = on; });
+      state.payEnabled = on;
+      renderAll();
+      saveState();
+      showToast(on ? '已批量纳入所有氪金项目' : '已批量排除所有氪金项目（仍可单卡开启）');
+    });
+
+    // 现有光元输入
+    document.getElementById('existingAmount').addEventListener('input', (e) => {
+      const val = e.target.value;
+      const num = val === '' ? 0 : Math.floor(Number(val));
+      state.existingAmount = isNaN(num) ? 0 : num;
+      renderTotals();
+      saveState();
+    });
+
+    // 资源网格事件委托
+    function handleGridEvent(gridId) {
+      const grid = document.getElementById(gridId);
+      grid.addEventListener('input', (e) => {
+        const t = e.target;
+        if (t.matches('input[data-action="edit-daily"]')) {
+          const id = t.dataset.id;
+          const resource = state.resources.find(r => r.id === id);
+          if (resource) {
+            const num = t.value === '' ? 0 : Math.floor(Number(t.value));
+            resource.daily = isNaN(num) ? 0 : num;
+            updateCardPrediction(resource);
+            renderTotals();
+            saveState();
+          }
+        }
+        if (t.matches('input[data-action="edit-monthly"]')) {
+          const id = t.dataset.id;
+          const resource = state.resources.find(r => r.id === id);
+          if (resource) {
+            const num = t.value === '' ? 0 : Math.floor(Number(t.value));
+            resource.monthlyTotal = isNaN(num) ? 0 : num;
+            updateCardPrediction(resource);
+            renderTotals();
+            saveState();
+          }
+        }
+        if (t.matches('input[data-action="edit-weekly"]')) {
+          const id = t.dataset.id;
+          const resource = state.resources.find(r => r.id === id);
+          if (resource) {
+            const num = t.value === '' ? 0 : Math.floor(Number(t.value));
+            resource.weeklyAmount = isNaN(num) ? 0 : num;
+            updateCardPrediction(resource);
+            renderTotals();
+            saveState();
+          }
+        }
+        if (t.matches('input[data-action="edit-fixed"]')) {
+          const id = t.dataset.id;
+          const resource = state.resources.find(r => r.id === id);
+          if (resource) {
+            const num = t.value === '' ? 0 : Math.floor(Number(t.value));
+            resource.fixedAmount = isNaN(num) ? 0 : num;
+            updateCardPrediction(resource);
+            renderTotals();
+            saveState();
+          }
+        }
+        if (t.matches('input[data-action="edit-sign-day"]')) {
+          const id = t.dataset.id;
+          const resource = state.resources.find(r => r.id === id);
+          if (resource) {
+            if (t.value === '') return;               // 清空/输入中间态不处理，避免误写
+            let v = Math.floor(Number(t.value));
+            if (isNaN(v)) return;
+            if (v < 1) v = 1;                         // clamp 1..30
+            if (v > 30) v = 30;
+            if (String(t.value) !== String(v)) t.value = v;   // 越界立即回写输入框
+            resource.signDay = v;
+            updateCardPrediction(resource);
+            renderTotals();
+            saveState();
+          }
+        }
+      });
+
+      grid.addEventListener('change', (e) => {
+        const t = e.target;
+        if (t.matches('input[data-action="toggle-daily-avg"]')) {
+          const id = t.dataset.id;
+          const resource = state.resources.find(r => r.id === id);
+          if (resource) {
+            resource.showDailyAvg = t.checked;
+            // 局部切换显示，避免重渲染
+            const card = t.closest('.resource-card');
+            if (card) {
+              const avgField = card.querySelector('.daily-avg-field');
+              if (avgField) {
+                if (t.checked) avgField.classList.add('visible');
+                else avgField.classList.remove('visible');
+              }
+            }
+            saveState();
+          }
+        }
+        if (t.matches('input[data-action="toggle-enabled"]')) {
+          const id = t.dataset.id;
+          const resource = state.resources.find(r => r.id === id);
+          if (resource) {
+            resource.enabled = t.checked;
+            // 局部更新：卡片变灰 + 预测清零 + 总和刷新
+            const card = t.closest('.resource-card');
+            if (card) {
+              if (t.checked) card.classList.remove('indiv-disabled');
+              else card.classList.add('indiv-disabled');
+              const label = card.querySelector('.pay-individual-toggle .toggle-label');
+              if (label) label.textContent = t.checked ? '计入总量' : '已排除';
+            }
+            // 同步氪金主开关 checkbox + header 徽章状态
+            const payCards = state.resources.filter(r => r.isPay);
+            const allPayOn = payCards.length > 0 && payCards.every(r => r.enabled !== false);
+            const anyPayOn = payCards.some(r => r.enabled !== false);
+            const ptEl = document.getElementById('payToggle');
+            if (ptEl) ptEl.checked = allPayOn;
+            const phEl = document.getElementById('paySectionHeader');
+            if (phEl) { if (anyPayOn) phEl.classList.remove('excluded'); else phEl.classList.add('excluded'); }
+            renderTotals();
+            saveState();
+            showToast(t.checked ? `已纳入：${resource.name}` : `已排除：${resource.name}`);
+          }
+        }
+      });
+
+      grid.addEventListener('click', (e) => {
+        const t = e.target;
+        if (t.matches('button[data-action="delete"]')) {
+          const id = t.dataset.id;
+          const resource = state.resources.find(r => r.id === id);
+          if (!resource) return;
+          if (confirm(`确定删除资源「${resource.name}」吗？`)) {
+            state.resources = state.resources.filter(r => r.id !== id);
+            renderAll();
+            saveState();
+            showToast(`已删除：${resource.name}`);
+          }
+        }
+      });
+    }
+
+    handleGridEvent('payGrid');
+    handleGridEvent('freeGrid');
+
+    // 添加自定义资源
+    document.getElementById('addBtn').addEventListener('click', () => {
+      const name = prompt('请输入资源名称：');
+      if (name === null) return;
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        showToast('资源名称不能为空', true);
+        return;
+      }
+      const typeChoice = confirm('点击「确定」添加为【每日量】资源\n点击「取消」添加为【月总量】资源');
+      const type = typeChoice ? 'daily' : 'monthly';
+      const valuePrompt = type === 'daily' ? '请输入每日固定获取量：' : '请输入月总量：';
+      const valueStr = prompt(valuePrompt);
+      if (valueStr === null) return;
+      const value = Math.floor(Number(valueStr));
+      if (isNaN(value) || value < 0) {
+        showToast('数值必须是有效的非负整数', true);
+        return;
+      }
+      const isPayChoice = confirm('点击「确定」归入【氪金项目】\n点击「取消」归入【游戏内产出】');
+      const newResource = {
+        id: 'custom-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+        name: trimmedName,
+        type: type,
+        daily: type === 'daily' ? value : 0,
+        monthlyTotal: type === 'monthly' ? value : 0,
+        note: '自定义资源',
+        isPay: isPayChoice,
+        showDailyAvg: false,
+        enabled: true
+      };
+      state.resources.push(newResource);
+      renderAll();
+      saveState();
+      showToast(`已添加：${trimmedName}`);
+    });
+
+    // 重置默认
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (confirm('确定要重置所有资源到默认状态吗？\n\n此操作将：\n• 恢复 16 个预设资源的默认数值与类型\n• 删除所有自定义资源\n• 清空现有光元数量\n• 重置氪金开关与每日均量开关\n• 重置日期为默认范围（今天往前 30 天 ~ 今天）')) {
+        state = getDefaultData();
+        const defaults = getDefaultDates();
+        document.getElementById('startDate').value = defaults.start;
+        document.getElementById('endDate').value = defaults.end;
+        document.getElementById('existingAmount').value = '';
+        document.getElementById('payToggle').checked = true;
+        renderAll();
+        saveState();
+        showToast('已重置为默认状态');
+      }
+    });
+  }
+
+  // ===== 初始化 =====
+  function init() {
+    const defaults = getDefaultDates();
+    document.getElementById('startDate').value = defaults.start;
+    document.getElementById('endDate').value = defaults.end;
+
+    document.getElementById('payToggle').checked = state.payEnabled;
+
+    const existingEl = document.getElementById('existingAmount');
+    if (state.existingAmount && state.existingAmount > 0) {
+      existingEl.value = state.existingAmount;
+    }
+
+    bindEvents();
+    renderAll();
+  }
+
+  init();
+
+  // ===== PWA Service Worker 注册 =====
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.log('SW registration failed:', err));
+    });
+  }
+</script>
+</body>
+</html>

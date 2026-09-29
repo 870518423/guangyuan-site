@@ -1,0 +1,15 @@
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+
+# EdgeOne 本地缓存
+.edgeone/
+
+# 打包产物（部署用，不纳入版本管理）
+deploy.zip
+
+# 依赖（当前无）
+node_modules/
