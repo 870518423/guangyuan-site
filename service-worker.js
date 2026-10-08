@@ -4,7 +4,9 @@
 //   页面（HTML）  → 网络优先，断网时回退缓存    ← 保证"改完刷新就能看到新版"
 //   其它静态资源  → 缓存优先，网络回退并写入缓存 ← 保证离线可用、二次打开快
 //
-const CACHE_NAME = 'guangyuan-forecast-v5';
+// v6：人间体数据更新（马东快斗 → 东马快斗；北斗星司/飞鸟信/真角大古/东马快斗
+//     新增「惊喜首充（30元档）vip3礼包」；迫水真吾新增「vip10礼包」）
+const CACHE_NAME = 'guangyuan-forecast-v6';
 const ASSETS = [
   './',
   './index.html',

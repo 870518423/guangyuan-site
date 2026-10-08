@@ -110,23 +110,35 @@ python pack_deploy.py
 
 ---
 
-## 六、日后切换到 Git CI/CD（可选）
+## 六、Git 自动部署（当前采用的方式）
 
-若以后想要"推送即自动部署"，无需重写配置：
+**仓库地址**：https://github.com/870518423/guangyuan-site （公开）
 
-1. 在 Gitee / GitHub / CODING 新建一个仓库
-2. 把本目录内容推上去（`.gitignore` 已就位）：
-   ```bash
-   git init
-   git add .
-   git commit -m "init: 光元收益预测器"
-   git remote add origin <你的仓库地址>
-   git push -u origin main
-   ```
-3. EdgeOne 控制台 → 新建项目 → **导入 Git 仓库** → 选刚推送的仓库
-4. `edgeone.json` 已含 `outputDirectory: "."`，会自动识别构建设置
-5. 之后每次 `git push` 自动触发构建部署（CI/CD 达成）
-6. 原 m78calc.com 域名可直接迁到新项目（或保留旧项目）
+已通过「导入 Git 仓库」接入 EdgeOne Pages。日常更新时：
+
+```bash
+git add -A
+git commit -m "说明这次改了什么"
+git push
+```
+
+推送后 EdgeOne 会在 1~2 分钟内自动重新发布，无需再手动打包上传。
+
+### 关于推送用的令牌
+
+推送走的是 Personal Access Token（写在 remote URL 里），**有效期 90 天**，到期后推送会报 401。
+续期办法：GitHub → Settings → Developer settings → Tokens 重新生成一个（勾 `repo`），然后：
+
+```bash
+git remote set-url origin https://870518423:<新令牌>@github.com/870518423/guangyuan-site.git
+```
+
+### 注意事项
+
+- `edgeone.json` 中 `buildCommand` 为空、`outputDirectory` 为 `.`，纯静态站点无需构建，接入后不要改这两项。
+- 旧的手动 `deploy.zip` 上传方式依然保留，作为网络不通时的备用方案（见第四节）。
+- **APK 不受 Git 影响**，安卓安装包仍需单独 `cap sync` + 构建。
+- 若本机 git 报 "over proxy 127.0.0.1" 连接失败，是全局配置里的 Clash 代理（`socks5://127.0.0.1:7890`）没启动；可开 Clash，或只对本仓库关掉代理：`git config --local http.proxy ""`。
 
 ---
 
