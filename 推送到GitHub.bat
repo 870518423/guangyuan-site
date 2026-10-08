@@ -25,9 +25,11 @@ echo.
 if %errorlevel%==0 (
     echo 推送成功！约 1~2 分钟后网站自动更新。
 ) else (
-    echo 推送失败。常见原因：
-    echo   1. Clash 没开（全局 git 代理写的是 127.0.0.1:7890）
-    echo   2. 令牌过期（90 天有效期，需重新生成并更新远程地址）
+echo 推送失败。常见原因：
+echo   1. 网络波动 —— 直接再双击一次重试（本仓库已设为"不走代理直连"）
+echo   2. 令牌过期（90 天有效期，约 2026-12-28 到期）
+echo      重新生成令牌后执行：
+echo      git remote set-url origin https://870518423:新令牌@github.com/870518423/guangyuan-site.git
 )
 echo.
 pause
