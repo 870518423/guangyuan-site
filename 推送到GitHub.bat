@@ -24,7 +24,9 @@ echo [1/3] 收集改动...
 git add -A
 
 echo [2/3] 提交：%msg%
-git commit -m "%msg%"
+rem i18n.commitEncoding=gb18030：告诉 git 命令行传来的是 GBK，让它自动转成 UTF-8 存
+rem （不加这行，中文提交说明在 GitHub 上会显示成乱码）
+git -c i18n.commitEncoding=gb18030 commit -m "%msg%"
 if errorlevel 1 echo   提示：没有需要提交的新改动，继续推送。
 
 echo.
