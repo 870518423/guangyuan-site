@@ -18,18 +18,38 @@ git add -A
 echo [2/3] 提交：%msg%
 git commit -m "%msg%"
 
-echo [3/3] 推送到 GitHub...
+echo [3/3] 推送到 GitHub（自动尝试多种网络方式）...
+echo.
+
+echo   尝试 1/3：使用当前 git 配置...
 git push
+if %errorlevel%==0 goto ok
+
+echo   失败。尝试 2/3：走 Clash 代理 127.0.0.1:7890...
+git -c http.proxy=socks5://127.0.0.1:7890 -c https.proxy=socks5://127.0.0.1:7890 push
+if %errorlevel%==0 goto ok
+
+echo   失败。尝试 3/3：不走代理，直连...
+git -c http.proxy= -c https.proxy= push
+if %errorlevel%==0 goto ok
 
 echo.
-if %errorlevel%==0 (
-    echo 推送成功！约 1~2 分钟后网站自动更新。
-) else (
-echo 推送失败。常见原因：
-echo   1. 网络波动 —— 直接再双击一次重试（本仓库已设为"不走代理直连"）
+echo ============================================
+echo   三次尝试全部失败
+echo ============================================
+echo 可能原因：
+echo   1. 网络暂时不通 —— 过几分钟再双击重试一次即可
 echo   2. 令牌过期（90 天有效期，约 2026-12-28 到期）
-echo      重新生成令牌后执行：
+echo      重新生成令牌后，在本文件夹执行这条命令（把"新令牌"换成实际字符）：
 echo      git remote set-url origin https://870518423:新令牌@github.com/870518423/guangyuan-site.git
-)
+echo.
+pause
+exit /b 1
+
+:ok
+echo.
+echo ============================================
+echo   推送成功！约 1~2 分钟后网站自动更新。
+echo ============================================
 echo.
 pause
