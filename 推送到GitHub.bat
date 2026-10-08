@@ -1,47 +1,62 @@
 @echo off
-chcp 65001 >nul
 cd /d "%~dp0"
 
 echo ============================================
-echo   å¥¥ç³»å…‰å…ƒå·¥å…·ç«™ - æŽ¨é€åˆ° GitHub
-echo   ï¼ˆæŽ¨é€åŽ EdgeOne ä¼šåœ¨ 1~2 åˆ†é’Ÿå†…è‡ªåŠ¨ä¸Šçº¿ï¼‰
+echo   °ÂÏµ¹âÔª¹¤¾ßÕ¾ - ÍÆËÍµ½ GitHub
+echo   ÍÆËÍºó EdgeOne »áÔÚ 1~2 ·ÖÖÓÄÚ×Ô¶¯¸üÐÂ
 echo ============================================
 echo.
 
-set /p msg=æœ¬æ¬¡æ›´æ–°è¯´æ˜Žï¼ˆç›´æŽ¥å›žè½¦åˆ™ç”¨é»˜è®¤è¯´æ˜Žï¼‰: 
-if "%msg%"=="" set msg=æ›´æ–°ç«™ç‚¹å†…å®¹
+git --version >nul 2>nul
+if errorlevel 1 (
+  echo Ã»ÓÐÕÒµ½ git£¬ÇëÏÈ°²×° Git for Windows
+  echo ÏÂÔØµØÖ·£ºhttps://git-scm.com/download/win
+  echo.
+  pause
+  exit /b 1
+)
+
+set /p msg=±¾´Î¸üÐÂËµÃ÷£¨Ö±½Ó»Ø³µÓÃÄ¬ÈÏËµÃ÷£©: 
+if "%msg%"=="" set msg=¸üÐÂÕ¾µãÄÚÈÝ
 
 echo.
-echo [1/3] æ”¶é›†æ”¹åŠ¨...
+echo [1/3] ÊÕ¼¯¸Ä¶¯...
 git add -A
 
-echo [2/3] æäº¤ï¼š%msg%
+echo [2/3] Ìá½»£º%msg%
 git commit -m "%msg%"
+if errorlevel 1 echo   ÌáÊ¾£ºÃ»ÓÐÐèÒªÌá½»µÄÐÂ¸Ä¶¯£¬¼ÌÐøÍÆËÍ¡£
 
-echo [3/3] æŽ¨é€åˆ° GitHubï¼ˆè‡ªåŠ¨å°è¯•å¤šç§ç½‘ç»œæ–¹å¼ï¼‰...
+echo.
+echo [3/3] ÍÆËÍµ½ GitHub£¨×Ô¶¯³¢ÊÔÈýÖÖÍøÂç·½Ê½£©
 echo.
 
-echo   å°è¯• 1/3ï¼šä½¿ç”¨å½“å‰ git é…ç½®...
+echo   ·½Ê½ 1£ºÊ¹ÓÃµ±Ç° git ÅäÖÃ
 git push
-if %errorlevel%==0 goto ok
+if not errorlevel 1 goto ok
 
-echo   å¤±è´¥ã€‚å°è¯• 2/3ï¼šèµ° Clash ä»£ç† 127.0.0.1:7890...
+echo   ·½Ê½ 1 Ê§°Ü£¬·½Ê½ 2£º×ß Clash ´úÀí 127.0.0.1:7890
 git -c http.proxy=socks5://127.0.0.1:7890 -c https.proxy=socks5://127.0.0.1:7890 push
-if %errorlevel%==0 goto ok
+if not errorlevel 1 goto ok
 
-echo   å¤±è´¥ã€‚å°è¯• 3/3ï¼šä¸èµ°ä»£ç†ï¼Œç›´è¿ž...
-git -c http.proxy= -c https.proxy= push
-if %errorlevel%==0 goto ok
+echo   ·½Ê½ 2 Ê§°Ü£¬·½Ê½ 3£º²»×ß´úÀí£¬Ö±Á¬
+git config --local http.proxy ""
+git config --local https.proxy ""
+git push
+set rc=%errorlevel%
+git config --local --unset http.proxy 2>nul
+git config --local --unset https.proxy 2>nul
+if "%rc%"=="0" goto ok
 
 echo.
 echo ============================================
-echo   ä¸‰æ¬¡å°è¯•å…¨éƒ¨å¤±è´¥
+echo   ÈýÖÖ·½Ê½¶¼Ê§°ÜÁË
 echo ============================================
-echo å¯èƒ½åŽŸå› ï¼š
-echo   1. ç½‘ç»œæš‚æ—¶ä¸é€š â€”â€” è¿‡å‡ åˆ†é’Ÿå†åŒå‡»é‡è¯•ä¸€æ¬¡å³å¯
-echo   2. ä»¤ç‰Œè¿‡æœŸï¼ˆ90 å¤©æœ‰æ•ˆæœŸï¼Œçº¦ 2026-12-28 åˆ°æœŸï¼‰
-echo      é‡æ–°ç”Ÿæˆä»¤ç‰ŒåŽï¼Œåœ¨æœ¬æ–‡ä»¶å¤¹æ‰§è¡Œè¿™æ¡å‘½ä»¤ï¼ˆæŠŠ"æ–°ä»¤ç‰Œ"æ¢æˆå®žé™…å­—ç¬¦ï¼‰ï¼š
-echo      git remote set-url origin https://870518423:æ–°ä»¤ç‰Œ@github.com/870518423/guangyuan-site.git
+echo ³£¼ûÔ­Òò£º
+echo   1. ÍøÂçÁÙÊ±²»Í¨ ¡ª¡ª ¹ý¼¸·ÖÖÓÔÙË«»÷ÖØÊÔÒ»´Î
+echo   2. ÁîÅÆ¹ýÆÚ£¨90 ÌìÓÐÐ§ÆÚ£¬Ô¼ 2026-12-28 µ½ÆÚ£©
+echo      ÖØÐÂÉú³ÉÁîÅÆºó£¬ÔÚ±¾ÎÄ¼þ¼Ð´ò¿ªÃüÁîÐÐÖ´ÐÐ£º
+echo      git remote set-url origin https://870518423:ÐÂÁîÅÆ@github.com/870518423/guangyuan-site.git
 echo.
 pause
 exit /b 1
@@ -49,7 +64,7 @@ exit /b 1
 :ok
 echo.
 echo ============================================
-echo   æŽ¨é€æˆåŠŸï¼çº¦ 1~2 åˆ†é’ŸåŽç½‘ç«™è‡ªåŠ¨æ›´æ–°ã€‚
+echo   ÍÆËÍ³É¹¦£¡Ô¼ 1~2 ·ÖÖÓºóÍøÕ¾×Ô¶¯¸üÐÂ¡£
 echo ============================================
 echo.
 pause
