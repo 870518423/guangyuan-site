@@ -94,7 +94,7 @@ window.AKP_IMAGES = {
     "portrait": "img/leiou-pifeng/角色图_v1.webp",
     "shots": [
       {
-        "label": "主动技 v1·v2（两版一致）",
+        "label": "主动技 v1v2",
         "src": "img/leiou-pifeng/主动技_v1v2.webp"
       },
       {
@@ -110,7 +110,7 @@ window.AKP_IMAGES = {
         "src": "img/leiou-pifeng/被动技_v1.webp"
       },
       {
-        "label": "被动技 v2（调整公告）",
+        "label": "被动技 v2",
         "src": "img/leiou-pifeng/被动技_v2.webp"
       },
       {
@@ -258,6 +258,146 @@ window.AKP_IMAGES = {
       {
         "label": "超越技 v1",
         "src": "img/jiebeibeiliya/超越技_v1.webp"
+      }
+    ]
+  },
+  "sailuo-wuxian": {
+    "portrait": "img/sailuo-wuxian/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/sailuo-wuxian/主动技_v1.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/sailuo-wuxian/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/sailuo-wuxian/被动技_v2.webp"
+      },
+      {
+        "label": "被动技 v3",
+        "src": "img/sailuo-wuxian/被动技_v3.webp"
+      },
+      {
+        "label": "被动技 v4",
+        "src": "img/sailuo-wuxian/被动技_v4.webp"
+      }
+    ]
+  },
+  "sailuo-wuxian-chaoxian": {
+    "portrait": "img/sailuo-wuxian-chaoxian/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/sailuo-wuxian-chaoxian/主动技_v1.webp"
+      },
+      {
+        "label": "主动技 v2",
+        "src": "img/sailuo-wuxian-chaoxian/主动技_v2.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/sailuo-wuxian-chaoxian/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/sailuo-wuxian-chaoxian/被动技_v2.webp"
+      },
+      {
+        "label": "被动技 v3",
+        "src": "img/sailuo-wuxian-chaoxian/被动技_v3.webp"
+      },
+      {
+        "label": "被动技 v4",
+        "src": "img/sailuo-wuxian-chaoxian/被动技_v4.webp"
+      }
+    ]
+  },
+  "aotewang-by": {
+    "portrait": "img/aotewang-by/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/aotewang-by/主动技_v1.webp"
+      },
+      {
+        "label": "主动技 v2",
+        "src": "img/aotewang-by/主动技_v2.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/aotewang-by/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/aotewang-by/被动技_v2.webp"
+      },
+      {
+        "label": "超越技 v1",
+        "src": "img/aotewang-by/超越技_v1.webp"
+      },
+      {
+        "label": "超越技 v2",
+        "src": "img/aotewang-by/超越技_v2.webp"
+      }
+    ]
+  },
+  "jiede-zhongji": {
+    "portrait": "img/jiede-zhongji/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/jiede-zhongji/主动技_v1.webp"
+      },
+      {
+        "label": "主动技 v2",
+        "src": "img/jiede-zhongji/主动技_v2.webp"
+      },
+      {
+        "label": "主动技 v3",
+        "src": "img/jiede-zhongji/主动技_v3.webp"
+      },
+      {
+        "label": "主动技 v4",
+        "src": "img/jiede-zhongji/主动技_v4.webp"
+      },
+      {
+        "label": "主动技 v5",
+        "src": "img/jiede-zhongji/主动技_v5.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/jiede-zhongji/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/jiede-zhongji/被动技_v2.webp"
+      },
+      {
+        "label": "被动技 v3",
+        "src": "img/jiede-zhongji/被动技_v3.webp"
+      },
+      {
+        "label": "被动技 v4",
+        "src": "img/jiede-zhongji/被动技_v4.webp"
+      },
+      {
+        "label": "被动技 v5",
+        "src": "img/jiede-zhongji/被动技_v5.webp"
+      },
+      {
+        "label": "超越技 v1",
+        "src": "img/jiede-zhongji/超越技_v1.webp"
+      },
+      {
+        "label": "超越技 v2",
+        "src": "img/jiede-zhongji/超越技_v2.webp"
+      },
+      {
+        "label": "超越技 v5",
+        "src": "img/jiede-zhongji/超越技_v5.webp"
       }
     ]
   }

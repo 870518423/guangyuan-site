@@ -96,7 +96,10 @@
 //      角色↔目标 三组同义词与标点/空白共用比较键；比较键相同即不标注，且显示
 //      采用当前版本写法；新增 AKP.__diff 调试探针供 tools/akp_diff_test.js 断言。
 //      passive/index.html 说明补「不算改动」一条。两者均在预缓存清单，按规矩升版。
-const CACHE_NAME = 'guangyuan-v35';
+// v36：新增 4 个角色 —— 赛罗无限形态、赛罗无限形态（超限）（上一批产出，站点此前漏同步，
+//      本次补齐）、奥特之王（BY）、捷德终极形态（本批新收录，逐字转录 + 图片采集）。
+//      四个数据文件与对应 img/ 全部进预缓存清单，按硬规矩升版。
+const CACHE_NAME = 'guangyuan-v36';
 const ASSETS = [
   './',
   './index.html',
@@ -150,6 +153,10 @@ const ASSETS = [
   './passive/data/泰迦三重斯特利姆.js',
   './passive/data/极恶贝利亚.js',
   './passive/data/奥美迦朱雀装甲.js',
+  './passive/data/sailuo-wuxian.js',
+  './passive/data/sailuo-wuxian-chaoxian.js',
+  './passive/data/aotewang-by.js',
+  './passive/data/jiede-zhongji.js',
   './passive/img/factions/star.png',
   './passive/img/factions/multiverse.png',
   './passive/img/factions/alien.png',

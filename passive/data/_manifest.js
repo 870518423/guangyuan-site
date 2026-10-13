@@ -25,4 +25,8 @@ window.AKP_MANIFEST = [
   { id: "zeta-delta", name: "泽塔德尔塔天爪", file: "data/泽塔德尔塔天爪.js", category: "奥特之星", tier: "UL" },
   { id: "jiebeibeiliya", name: "极恶贝利亚", file: "data/极恶贝利亚.js", category: "宇宙人", tier: "BY", ready: false },
   { id: "oumeijia-zhuque", name: "奥美迦朱雀装甲", file: "data/奥美迦朱雀装甲.js", category: "多宇宙", tier: "BY", ready: false },
+  { id: "sailuo-wuxian", name: "赛罗无限形态", file: "data/sailuo-wuxian.js", category: "奥特之星", tier: "UL" },
+  { id: "sailuo-wuxian-chaoxian", name: "赛罗无限形态（超限）", file: "data/sailuo-wuxian-chaoxian.js", category: "奥特之星", tier: "UL" },
+  { id: "aotewang-by", name: "奥特之王（BY）", file: "data/aotewang-by.js", category: "奥特之星", tier: "BY" },
+  { id: "jiede-zhongji", name: "捷德终极形态", file: "data/jiede-zhongji.js", category: "奥特之星", tier: "BY" },
 ];
