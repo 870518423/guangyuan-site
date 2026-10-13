@@ -54,6 +54,8 @@ def collect():
     for item in INCLUDES:
         full = os.path.join(SRC, item)
         if os.path.isfile(full):
+            if _is_dev_artifact(item):
+                continue
             got.append(item)
         elif os.path.isdir(full):
             for root, dirs, files in os.walk(full):
@@ -62,10 +64,21 @@ def collect():
                         continue
                     abs_path = os.path.join(root, f)
                     rel = os.path.relpath(abs_path, SRC).replace('\\', '/')
+                    if _is_dev_artifact(rel):
+                        continue
                     got.append(rel)
         else:
             missing.append(item)
     return got, missing
+
+
+def _is_dev_artifact(rel):
+    """开发/校对用的 `_*.html` 一律不进包（2026-10-13 加固）。
+    踩坑：同步 passive 时把 `_review.html`（校对预览）、`_大幅改动审核清单.html`
+    一起拷进站点，直接被递归收进包里。数据清单 `_manifest.js` / `_images.js`
+    是线上必需文件，按扩展名区分，不受本条影响。"""
+    name = os.path.basename(rel)
+    return name.startswith('_') and name.endswith('.html')
 
 
 def parse_sw_assets():
