@@ -1,0 +1,393 @@
+/* ============================================================
+   明日方舟风格 · 组件层 v2（ak-components.css）
+   ------------------------------------------------------------
+   加载顺序：本文件的 <link> 是各页 <head> 里的「最后一行」，
+   因此同权重时本文件优先 —— v2 新增的交互与覆盖都集中在此，
+   不再逐页散落到各自的 <style> 里。
+   仍只作用于「明日方舟风格测试」目录。
+   ============================================================ */
+
+/* ---------- 0. 双语标签（终末地式：英文小字 + 大字距） ---------- */
+.ak-label-en {
+  display: block;
+  font-family: var(--ak-mono);
+  font-size: .66rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ak-text-mute);
+  margin-top: 7px;
+  font-weight: 400;
+}
+
+/* ---------- 1. 编号（01 / 03） ---------- */
+.ak-no {
+  font-family: var(--ak-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: .7rem;
+  letter-spacing: 1px;
+  color: var(--ak-text-mute);
+}
+
+/* ---------- 2. 主按钮：琥珀填充反转（方舟官网签名交互） ----------
+   hover：填充块自左向右铺满 + 文字反黑；
+   active：轻缩 + 填充瞬满；
+   触屏无 hover：常显实心，保证可识别。 */
+.ak-btn-solid {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--ak-line-2);
+  border-radius: var(--ak-radius);
+  background: var(--ak-bg-2);
+  color: var(--ak-text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              transform var(--dur-press) var(--ease);
+}
+.ak-btn-solid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;                 /* 压在文字之下、背景之上 */
+  background: var(--ak-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 180ms var(--ease-in);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ak-btn-solid:hover { color: var(--ak-bg-0); border-color: var(--ak-accent); }
+  .ak-btn-solid:hover::before {
+    transform: scaleX(1);
+    transition: transform 220ms var(--ease-out);
+  }
+}
+.ak-btn-solid:active {
+  transform: scale(.97);
+  color: var(--ak-bg-0);
+}
+.ak-btn-solid:active::before {
+  transform: scaleX(1);
+  transition: transform 90ms var(--ease);
+}
+@media (hover: none) {
+  .ak-btn-solid {
+    background: var(--ak-accent);
+    border-color: var(--ak-accent);
+    color: var(--ak-bg-0);
+  }
+}
+/* 权重加固：与 `.<bar> button`（0,1,1）同权重，靠加载顺序取胜 */
+button.ak-btn-solid {
+  border: 1px solid var(--ak-line-2);
+  border-radius: var(--ak-radius);
+  background: var(--ak-bg-2);
+  color: var(--ak-text);
+  padding: 6px 16px;
+}
+button.ak-btn-solid:hover { color: var(--ak-bg-0); border-color: var(--ak-accent); }
+
+/* ---------- 3. 文字链接：下划线滑入 ---------- */
+.ak-link { position: relative; text-decoration: none; }
+.ak-link::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 160ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ak-link:hover::after { transform: scaleX(1); }
+}
+
+/* ---------- 4. 悬停微动效（方舟式：描边 / 位移，不上浮不阴影） ---------- */
+@media (hover: hover) and (pointer: fine) {
+  /* 卡片内图标轻放大 */
+  .card .ficon,
+  .entry .ico img { transition: transform 180ms var(--ease); }
+  .card:hover .ficon,
+  .entry:hover .ico img { transform: scale(1.08); }
+
+  /* 箭头右移 + 提亮 */
+  .card-hd .go,
+  .entry .go {
+    transition: transform 180ms var(--ease), opacity 180ms var(--ease);
+  }
+  .card:hover .card-hd .go,
+  .entry:hover .go { transform: translateX(3px); opacity: 1; }
+
+  /* 标签 / 筛选 chip：悬停换琥珀描边 */
+  .chip:hover,
+  .tag:hover,
+  .entry .meta span:hover {
+    border-color: var(--ak-accent);
+    color: var(--ak-accent);
+  }
+}
+
+/* ---------- 5. 表格行 hover（人间体表格视图） ---------- */
+tbody tr { transition: background-color var(--dur-fast) var(--ease); }
+tbody tr:hover { background: var(--ak-bg-2); }
+
+/* ---------- 6. 开关：直角块 + 实心琥珀（覆盖页面内胶囊开关） ---------- */
+.toggle-slider {
+  border-radius: var(--ak-radius);
+  background: var(--ak-bg-3);
+  border: 1px solid var(--ak-line-2);
+  transition: background-color var(--dur-base) var(--ease),
+              border-color var(--dur-base) var(--ease);
+}
+.toggle-slider::before {
+  border-radius: 1px;
+  background: var(--ak-text-mute);
+  transition: transform 180ms var(--ease), background-color var(--dur-base) var(--ease);
+}
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--ak-accent);
+  border-color: var(--ak-accent);
+}
+.toggle-switch input:checked + .toggle-slider::before { background: var(--ak-bg-0); }
+.toggle-switch.pay-toggle input:checked + .toggle-slider {
+  background: var(--pay-color);
+  border-color: var(--pay-color);
+}
+.toggle-switch.pay-toggle input:checked + .toggle-slider::before { background: #150726; }
+
+/* ---------- 7. 骨架卡（guides 首屏占位，纯 CSS 骨架） ---------- */
+.ak-skel-card { pointer-events: none; border-left-color: var(--ak-line); }
+.ak-skel-card .sk {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+  background: var(--ak-bg-2);
+}
+.ak-skel-card .sk::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--ak-bg-3) 50%, transparent);
+  transform: translateX(-100%);
+  animation: ak-shimmer var(--dur-decor) infinite linear;
+}
+.ak-skel-card .sk-hd { width: 46%; height: 14px; margin: 2px 0 12px; }
+.ak-skel-card .sk-row { height: 10px; margin-bottom: 9px; }
+.ak-skel-card .sk-row.w80 { width: 80%; }
+.ak-skel-card .sk-row.w60 { width: 60%; }
+.ak-skel-card .sk-row.w70 { width: 70%; }
+
+/* ---------- 8. 图片懒加载淡入 ---------- */
+.ak-img-fade { opacity: 0; transition: opacity 320ms var(--ease-out); }
+.ak-img-fade.ak-loaded { opacity: 1; }
+
+/* ---------- 9. 空状态图标（终端式，非 emoji）由各页覆写，此处仅兜底 ---------- */
+
+/* ---------- 10. 主题切换开关（右上角固定，亮/暗色通用） ---------- */
+.ak-theme-toggle {
+  position: fixed;
+  top: calc(9px + env(safe-area-inset-top, 0px));
+  right: calc(9px + env(safe-area-inset-right, 0px));
+  z-index: 9998;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--ak-line-2);
+  border-radius: var(--ak-radius);
+  background: var(--ak-bg-1);
+  color: var(--ak-text-dim);
+  font-family: inherit;
+  font-size: .72rem;
+  letter-spacing: .5px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              background-color var(--dur-fast) var(--ease),
+              transform var(--dur-press) var(--ease);
+}
+.ak-theme-toggle:hover {
+  color: var(--ak-accent);
+  border-color: var(--ak-accent);
+  background: var(--ak-bg-2);
+}
+.ak-theme-toggle:active { transform: scale(.96); }
+.ak-theme-toggle:focus-visible { outline: 1px solid var(--ak-accent); outline-offset: 2px; }
+
+.ak-tt-icon { display: inline-flex; }
+.ak-tt-icon svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+.ak-tt-icon .ak-tt-moon { fill: currentColor; stroke: none; }
+/* 当前暗色 → 显示太阳（点击切亮色）；当前亮色 → 显示月亮（点击切暗色） */
+.ak-tt-icon .ak-tt-moon { display: none; }
+.ak-tt-icon[data-mode="light"] .ak-tt-sun,
+.ak-tt-icon[data-mode="light"] .ak-tt-rays { display: none; }
+.ak-tt-icon[data-mode="light"] .ak-tt-moon { display: block; }
+
+/* ---------- 11. 为右上角开关让位（避免遮住吸顶工具条 / 页头） ---------- */
+.toolbar { padding-right: 80px; }   /* 人间体大全：吸顶工具条 */
+.header  { padding-right: 80px; }   /* 计算器：页头（右侧是副标题） */
+@media (max-width: 560px) {
+  .toolbar { padding-right: 72px; }
+  .header  { padding-right: 72px; }
+}
+
+/* ---------- 12. 收藏本站：页头提示 + 底部按钮 + 说明面板 + 提示条 ---------- */
+/* 12.1 页头一行小字提示 —— 【当前无人使用，留作备用】
+   按钮已挪到标题下方，这行说明被去掉；若以后想加回一句效果说明，直接复用这套类。
+   触屏自动换文案靠 @media (pointer: coarse)。 */
+.ak-savehint {
+  margin: 11px 0 0;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  font-size: .72rem; line-height: 1.5;
+  color: var(--ak-text-mute);
+}
+.ak-savehint::before {
+  content: ""; width: 4px; height: 4px; flex: 0 0 4px;
+  background: var(--ak-accent);
+}
+/* kbd 键帽：当前页头文案已不含快捷键，规则留作备用 */
+.ak-savehint kbd {
+  font-family: var(--ak-mono);
+  font-size: .68rem; padding: 1px 5px;
+  border: 1px solid var(--ak-line-2); border-radius: var(--ak-radius);
+  background: var(--ak-bg-2); color: var(--ak-text-dim);
+}
+.ak-savehint-mb { display: none; }
+@media (pointer: coarse) {
+  .ak-savehint-pc { display: none; }
+  .ak-savehint-mb { display: inline; }
+}
+
+/* 12.2 按钮（现在位于页头副标题下方，由 header 自身的下边距与卡片隔开）
+   【触摸目标】移动端最小舒适触摸目标为 44×44px（iOS HIG / Material 一致口径）。
+   本页所有可点元素（主按钮 / 关闭钮 / 复制钮）统一按此校齐。 */
+.ak-save { display: flex; justify-content: center; margin: 18px 0 0; }
+.ak-save-btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 11px 22px; font-size: .9rem;
+  min-height: 44px;            /* 触摸目标下限 */
+}
+.ak-save-ico { width: 15px; height: 15px; flex: 0 0 15px; display: block; fill: none;
+  stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+.ak-save-btn.is-done { color: var(--ak-accent); border-color: var(--ak-accent); }
+.ak-save-btn.is-done .ak-save-ico { opacity: .85; }
+
+/* 12.3 遮罩 + 面板（开合一律用 transition，禁用 keyframes）
+   【响应式三则 2026-10-11 第 3 轮补】
+   ① 宽度用 min(440px, 92vw)：320px 窄屏下留出 4vw 边距，绝不横向溢出
+      （原写法 calc(100vw - 28px) 在带滚动条的桌面端会差几个像素）。
+   ② max-height + 内部滚动：横屏手机 / 小窗口下，面板不会顶破视口。
+      dvh 优先、vh 兜底（dvh 理解移动端浏览器地址栏的收缩）。
+   ③ 开合仍用 transition（第 300-303 行），**绝不改 keyframes** ——
+      历史坑：`to{transform:none}` + `fill:both` 会覆盖 translate(-50%,-50%)，
+      弹层会偏向右下角。 */
+.ak-save-mask {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(6, 7, 10, .82);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease);
+}
+.ak-save-mask.on { opacity: 1; pointer-events: auto; }
+
+.ak-save-panel {
+  position: fixed; z-index: 10001;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -46%);
+  width: min(440px, 92vw);
+  max-height: min(86vh, 620px);
+  max-height: min(86dvh, 620px);
+  display: flex; flex-direction: column;
+  background: var(--ak-bg-1);
+  border: 1px solid var(--ak-line-2);
+  border-radius: var(--ak-radius-lg);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease);
+}
+.ak-save-panel.on { opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }
+
+.ak-sp-hd {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--ak-line);
+  flex: 0 0 auto;
+}
+.ak-sp-hd h3 { margin: 0; font-size: 1rem; font-weight: 500; letter-spacing: 1px; }
+/* 关闭钮：触摸热区 44×44，但**视觉上仍是原来的 26×26 小方块**——
+   用负外边距把热区撑出去（不改变标题栏高度与 ✕ 的落点），
+   再用 ::before 画那个 26px 方框（::before 用 z-index:-1 压在文字之下，
+   与 .ak-btn-solid::before 同一手法）。这样无障碍达标、观感不变。 */
+.ak-sp-close {
+  position: relative;
+  isolation: isolate;               /* 自建层叠上下文，否则 z-index:-1 的 ::before 会掉到页面底下 */
+  margin-left: auto;
+  margin-top: -9px; margin-bottom: -9px; margin-right: -9px;
+  width: 44px; height: 44px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .78rem; line-height: 1;
+  border: 0; background: none;      /* 盖掉 ak-theme.css 的全局 button 边框 */
+}
+.ak-sp-close::before {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 26px; height: 26px; z-index: -1;
+  border: 1px solid var(--ak-line-2);
+  border-radius: var(--ak-radius);
+  background: var(--ak-bg-2);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ak-sp-close:hover::before { border-color: var(--ak-accent); background: var(--ak-bg-3); }
+}
+.ak-sp-bd { padding: 14px 16px 4px; flex: 1 1 auto; overflow-y: auto; }
+.ak-sp-lead { margin: 0 0 10px; font-size: .84rem; line-height: 1.7; color: var(--ak-text-dim); }
+.ak-sp-list { margin: 0; padding-left: 20px; }
+.ak-sp-list li { font-size: .86rem; line-height: 1.85; color: var(--ak-text); }
+.ak-sp-list li::marker { color: var(--ak-accent); }
+/* 面板底部补充说明（多为"换 Chrome 可安装"类提示，空了自动不占位） */
+.ak-sp-hint { margin: 12px 0 0; font-size: .76rem; line-height: 1.7; color: var(--ak-text-mute); }
+.ak-sp-hint:empty { display: none; }
+.ak-sp-hint:not(:empty) {
+  padding: 8px 10px;
+  background: var(--ak-bg-2);
+  border-left: 2px solid var(--ak-accent);
+  border-radius: var(--ak-radius);
+}
+/* 底栏：按钮触摸热区 ≥44px；底部内边距避开刘海屏 / 手势条
+   （iPhone 横屏、全面屏手机底部有 home indicator，固定底栏要让它 44px 左右）。 */
+.ak-sp-ft {
+  display: flex; justify-content: flex-end;
+  padding: 14px 16px max(16px, env(safe-area-inset-bottom));
+  flex: 0 0 auto;
+}
+.ak-sp-ft .ak-btn { min-height: 44px; }
+
+/* 面板打开时锁背景滚动。overflow:hidden 在桌面与安卓 Chrome 均生效；
+   iOS Safari 对 body overflow 支持不完整，补 position:fixed 会打乱滚动位置，
+   故不做——面板本身已是 fixed 且内容不多，可接受。 */
+body.ak-save-open { overflow: hidden; }
+
+/* 12.4 轻提示条 */
+.ak-toast {
+  position: fixed; left: 50%; z-index: 10002;
+  bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 12px);
+  padding: 10px 18px; font-size: .84rem;
+  background: var(--ak-bg-2);
+  border: 1px solid var(--ak-line-2);
+  border-left: 3px solid var(--ak-accent);
+  border-radius: var(--ak-radius);
+  color: var(--ak-text);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease);
+}
+.ak-toast.on { opacity: 1; transform: translate(-50%, 0); }

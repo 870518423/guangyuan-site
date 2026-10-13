@@ -43,6 +43,27 @@ SEPS = "\n，、"
 COL_NAME, COL_FATE, COL_HOW, COL_PREQ = 0, 1, 2, 3
 TRAIT_RANGE = (4, 9)  # E~I
 
+# 「本命 / 前置要求」里同名但不是人间体、而是「角色卡」的特例
+# ------------------------------------------------------------------
+# B 列（本命）和 D 列（前置要求）里绝大多数写的是角色卡名（赛文、盖亚、
+# 雷欧、托雷基亚…），本来就不跟人间体重名、不会跳转；只有极少数会重名。
+# 凡重名但其实指「角色卡」的，在下面按 (人间体名, 该项原文) 登记一行，
+# 生成时会加「（角色卡）」后缀 → 名字不再等于任何人间体 → 自动失去跳转。
+#
+# 注意：E~I 列（特训所需）不在此列，特训那一栏本来就是指人间体。
+#
+# 新增例子：("某个间体", "某项本命或前置")
+CARD_ITEMS = {
+    ("斯菲亚虚体", "斯菲亚"),     # 前置：角色卡「斯菲亚」≠ 人间体「斯菲亚」
+    ("雷布朗多遗族", "贝利亚"),   # 本命 + 前置都是角色卡「贝利亚」≠ 人间体「贝利亚」
+    ("雾崎", "托雷基亚"),         # 本命：角色卡「托雷基亚」≠ 人间体「托雷基亚」
+    ("卡露蜜拉", "卡露蜜拉"),     # 本命：角色卡「卡露蜜拉」≠ 人间体（自身）
+    ("苏伊德", "苏伊德"),         # 本命：角色卡「苏伊德」≠ 人间体（自身）
+    ("天照女王", "天照女王"),     # 本命：角色卡「天照女王」≠ 人间体（自身）
+}
+CARD_SUFFIX = "（角色卡）"
+CARD_FIELDS = ("fate", "prereq")   # 生效的列：本命 + 前置要求
+
 
 def split_multi(value):
     """把一格里的多值拆成列表，去空、去重、保留顺序。"""
@@ -80,12 +101,29 @@ def load_entries(src):
                 for t in split_multi(cell):
                     if t not in traits:
                         traits.append(t)
+            # 本命 / 前置：命中 CARD_ITEMS 的加「（角色卡）」后缀，避免误链到人间体
+            def mark(values):
+                out = []
+                for v in values:
+                    if (name, v) in CARD_ITEMS:
+                        v = v + CARD_SUFFIX
+                    if v not in out:
+                        out.append(v)
+                return out
+
+            fate = split_multi(row[COL_FATE])
+            prereq = split_multi(row[COL_PREQ])
+            if "fate" in CARD_FIELDS:
+                fate = mark(fate)
+            if "prereq" in CARD_FIELDS:
+                prereq = mark(prereq)
+
             entries.append({
                 "name": name,
                 "faction": faction,
-                "fate": split_multi(row[COL_FATE]),
+                "fate": fate,
                 "how": split_multi(row[COL_HOW]),
-                "prereq": split_multi(row[COL_PREQ]),
+                "prereq": prereq,
                 "traits": traits,
             })
             got += 1

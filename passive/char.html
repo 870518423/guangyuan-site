@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>角色页 · 角色被动版本收录</title>
+<link rel="icon" href="data:,">
+
+<link rel="stylesheet" href="akp.css">
+<link rel="stylesheet" href="akp-list.css">
+</head>
+<body>
+
+<div class="akc-wrap">
+  <a class="akc-back" href="index.html">← 返回列表</a>
+
+  <header class="akc-char-hd">
+    <div class="akc-crumb" id="crumb">…</div>
+    <h2 id="name">载入中…</h2>
+  </header>
+
+  <!-- 立绘（页顶）：路径来自 data/_images.js -->
+  <div class="akc-portrait" id="portrait" hidden></div>
+</div>
+
+<!-- 组件挂载点：外层不加左右 padding，保证组件宽度仍是 440（与字号基准一致） -->
+<div class="akp-holder" id="holder">
+  <div class="akp" id="mount"></div>
+</div>
+
+<div class="akc-wrap">
+  <p class="akc-foot" id="foot"></p>
+</div>
+
+<script src="data/_manifest.js"></script>
+<script src="data/_images.js"></script>
+<script src="akp-ripple.js"></script>
+<script src="akp.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");   /* 2026-10-13 S4：补引号，防未来拼属性逃逸 */
+  }
+
+  var id = new URLSearchParams(location.search).get("id") || "";
+  var item = (window.AKP_MANIFEST || []).filter(function (m) { return m.id === id; })[0];
+  var mount = document.getElementById("mount");
+  var holder = document.getElementById("holder");
+
+  /* 返回按钮：回所属阵营页（category.html?f=阵营名） */
+  var back = document.querySelector(".akc-back");
+  if (item && item.category) {
+    back.href = "category.html?f=" + encodeURIComponent(item.category);
+    back.textContent = "← 返回「" + item.category + "」";
+  }
+
+  function fail(msg) {
+    holder.innerHTML = '<p class="akc-missing">' + msg +
+      '<br><a href="index.html">← 回到阵营目录</a></p>';
+  }
+
+  if (!item) { fail("没有找到这个角色（id = " + esc(id) + "）。"); return; }
+
+  /* 分类行：tier（UL / BY 等）用金色 —— 管理者 2026-10-12 指定 */
+  document.getElementById("crumb").innerHTML =
+    esc(item.category || "") +
+    (item.tier ? ' / <span style="color:var(--ak-accent);font-weight:700">' + esc(item.tier) + "</span>" : "");
+  document.getElementById("name").textContent = item.name;
+  document.title = item.name + " · 角色被动版本收录";
+
+  /* 立绘（页顶）：来自 data/_images.js 的 portrait */
+  var pic = (window.AKP_IMAGES || {})[id];
+  if (pic && pic.portrait) {
+    var box = document.getElementById("portrait");
+    var im = document.createElement("img");
+    im.src = pic.portrait;
+    im.alt = item.name + " 立绘";
+    im.loading = "lazy";
+    im.decoding = "async";
+    box.appendChild(im);
+    box.hidden = false;
+  }
+
+  /* 按 id 从清单里找到数据文件，只加载这一个（首页才需要全部） */
+  var s = document.createElement("script");
+  s.src = item.file;
+  s.onload = function () {
+    if (!window.AKP || !AKP.get(id)) { fail("角色数据载入失败。"); return; }
+    mount.innerHTML = "";
+    mount.setAttribute("data-akp-char", id);
+    AKP.init();
+    document.getElementById("foot").innerHTML =
+      "改动标注的颜色含义见<a href=\"index.html\" style=\"color:var(--ak-accent)\">列表页说明</a>。" +
+      "版本与对比按钮在<b>「被动」标题条下方</b>：左边那个切版本，右边那个开/关对比（切版本时主动技会一起变）。";
+  };
+  s.onerror = function () { fail("角色数据文件没能加载（" + esc(item.file) + "）。"); };
+  document.body.appendChild(s);
+})();
+</script>
+
+</body>
+</html>

@@ -13,6 +13,8 @@
 <meta name="apple-mobile-web-app-title" content="光元预测" />
 <meta name="mobile-web-app-capable" content="yes" />
 <title>光元收益预测器</title>
+<!-- 主题引导：首帧前定好亮/暗，避免闪色（早于样式表执行） -->
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
 <style>
   :root {
     --bg-1: #0a0e1a;
@@ -983,15 +985,112 @@
     .days-display .value { font-size: 1.1rem; }
   }
 </style>
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<script>document.documentElement.className+=(" ak-js");window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);</script>
+<noscript><style>[data-stagger]>*{opacity:1!important;transform:none!important}</style></noscript>
+<style>
+  /* ---------- 计算器专属覆盖 ---------- */
+  .resource-card {
+    border-radius: var(--ak-radius-lg);
+    border-color: var(--ak-line);
+    transition: border-color var(--dur-base) var(--ease),
+                background-color var(--dur-base) var(--ease);
+  }
+  .resource-card:hover { transform: none; border-color: var(--ak-line-2); }
+  .resource-card.pay-card:hover { border-color: var(--pay-color); }
+
+  .add-btn, .reset-btn, .delete-btn {
+    position: relative; overflow: hidden;
+    border-radius: var(--ak-radius);
+    transition: background-color var(--dur-fast) var(--ease),
+                border-color var(--dur-fast) var(--ease),
+                color var(--dur-fast) var(--ease),
+                transform var(--dur-press) var(--ease);
+  }
+  .add-btn {
+    background: var(--ak-bg-2);
+    border: 1px dashed var(--ak-line-2);
+    color: var(--ak-text-dim);
+  }
+  .add-btn:hover {
+    background: var(--ak-bg-3);
+    border-color: var(--ak-accent);
+    border-style: solid;
+    color: var(--ak-accent);
+  }
+  .reset-btn {
+    background: var(--ak-bg-2);
+    border: 1px solid var(--ak-line-2);
+    color: var(--ak-text-dim);
+  }
+  .reset-btn:hover {
+    background: var(--ak-bg-3);
+    border-color: var(--ak-accent);
+    color: var(--ak-accent);
+  }
+  .add-btn:active, .reset-btn:active, .delete-btn:active { transform: scale(.96); }
+
+  .type-tag, .badge { border-radius: var(--ak-radius); font-family: var(--ak-mono); letter-spacing: .5px; }
+
+  /* 开关：方舟式直角滑块，激活态琥珀 */
+  .toggle-slider {
+    border-radius: var(--ak-radius);
+    background: var(--ak-bg-3);
+    border: 1px solid var(--ak-line-2);
+    transition: background-color var(--dur-base) var(--ease),
+                border-color var(--dur-base) var(--ease);
+  }
+  .toggle-slider:before {
+    border-radius: 1px;
+    background: var(--ak-text-mute);
+    transition: background-color var(--dur-base) var(--ease),
+                transform var(--dur-base) var(--ease);
+  }
+  .toggle-switch input:checked + .toggle-slider {
+    background: rgba(255, 179, 0, .18);
+    border-color: var(--ak-accent);
+  }
+  .toggle-switch input:checked + .toggle-slider:before { background: var(--ak-accent); }
+
+  .toast { border-radius: var(--ak-radius); border-color: var(--ak-line-2); }
+  .donut-legend .legend-dot { border-radius: 1px; }
+
+  /* 环形图进场：整体轻旋 + 各段描边由 0 生长（描绘感） */
+  .donut-svg { animation: ak-donut-in 620ms var(--ease-out) both; }
+  @keyframes ak-donut-in {
+    from { opacity: 0; transform: rotate(-22deg) scale(.95); }
+  }
+  .donut-svg circle.ak-arc { animation: ak-arc-draw 620ms var(--ease-out) both; }
+  @keyframes ak-arc-draw {
+    from { stroke-width: 0; opacity: .25; }
+  }
+
+  /* 数值统一等宽 */
+  #totalPredicted, #grandTotal, #donutCenterValue, #mobileGrandTotal,
+  #daysValue, .predicted-value .value, .daily-avg-value .value,
+  .legend-value, .legend-pct {
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<script src="assets/ak/counter.js"></script>
+<style>
+  .header .ttl { min-width: 0; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-light.css">
 </head>
-<body>
+<body data-ak-progress>
 <div class="container">
   <!-- 顶部标题 -->
   <a class="back-home" href="index.html">← 返回首页</a>
 
   <div class="header">
     <img src="assets/guangyuan.png" alt="光元" class="title-icon" />
-    <h1>光元收益预测器</h1>
+    <div class="ttl">
+      <h1>光元收益预测器</h1>
+      <span class="ak-label-en">Forecast Terminal</span>
+    </div>
     <span class="subtitle">每日固定获取量 × 天数 = 预测总量</span>
   </div>
 
@@ -1134,6 +1233,13 @@
   function formatNumber(n) {
     if (n === null || n === undefined || isNaN(n)) return '0';
     return Math.floor(n).toLocaleString('zh-CN');
+  }
+
+  // 数字滚动：优先用 counter.js（ease-out 递增），未加载时直接落值
+  function setNum(el, v) {
+    if (!el) return;
+    if (window.akCount) window.akCount(el, v, 560);
+    else el.textContent = formatNumber(v);
   }
 
   function escapeHtml(str) {
@@ -1560,14 +1666,13 @@
       total += getResourcePrediction(r, validDays, mondays);
     });
 
-    document.getElementById('totalPredicted').textContent = formatNumber(total);
+    setNum(document.getElementById('totalPredicted'), total);
 
     const existing = Math.floor(Number(state.existingAmount) || 0);
     const grand = total + existing;
-    document.getElementById('grandTotal').textContent = formatNumber(grand);
+    setNum(document.getElementById('grandTotal'), grand);
     // 同步移动端固定底栏
-    const mtb = document.getElementById('mobileGrandTotal');
-    if (mtb) mtb.textContent = formatNumber(grand);
+    setNum(document.getElementById('mobileGrandTotal'), grand);
 
     // 渲染圆环图
     renderDonutChart(validDays, mondays);
@@ -1595,7 +1700,7 @@
       .filter(it => it.value > 0);
 
     const total = items.reduce((s, it) => s + it.value, 0);
-    centerVal.textContent = formatNumber(total);
+    setNum(centerVal, total);
 
     if (total <= 0) {
       svg.innerHTML = `<circle cx="100" cy="100" r="80" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="22"/>`;
@@ -1607,15 +1712,19 @@
     const C = 2 * Math.PI * R;
     let offset = 0;
     let circles = '';
-    items.forEach(it => {
+    items.forEach((it, i) => {
       const len = (it.value / total) * C;
-      circles += `<circle cx="100" cy="100" r="${R}" fill="none" stroke="${it.color}" stroke-width="22"
+      circles += `<circle class="ak-arc" style="animation-delay:${Math.min(i * 45, 360)}ms" cx="100" cy="100" r="${R}" fill="none" stroke="${it.color}" stroke-width="22"
         stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}"
         stroke-dashoffset="${(-offset).toFixed(2)}"
         transform="rotate(-90 100 100)"/>`;
       offset += len;
     });
     svg.innerHTML = circles;
+    // 重放整体进场动画（<svg> 元素被复用，需手动重启）
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      svg.style.animation = 'none'; void svg.offsetWidth; svg.style.animation = '';
+    }
 
     // Legend：按数值降序，平铺列出所有项目（不再合并"其他"）
     const sorted = [...items].sort((a, b) => b.value - a.value);
@@ -1908,5 +2017,9 @@
     });
   }
 </script>
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
 </body>
 </html>

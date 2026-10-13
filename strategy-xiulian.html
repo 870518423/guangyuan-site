@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>修炼数值表 · 奥系攻略</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="修炼数值表：6级词条的非完美属性数值，四维、全伤全免、高级属性、增幅与抗性">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" href="assets/favicon-32.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="奥系工具站">
+<!-- 主题引导：首帧前定好亮/暗，避免闪色（早于样式表执行） -->
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #101828; --panel2: #0d1526;
+    --border: #1e2a41; --border2: #263449;
+    --text: #e6ebf5; --muted: #8b98ad; --dim: #64748b;
+    --blue: #3b82f6; --gold: #fbbf24; --radius: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px; line-height: 1.6; min-height: 100vh;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  .back-home {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .82rem; color: var(--muted); text-decoration: none;
+    margin-bottom: 12px; padding: 5px 11px 5px 8px;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--panel2);
+    transition: color .15s, border-color .15s;
+  }
+  .back-home:hover { color: #93c5fd; border-color: var(--blue); }
+
+  header { text-align: center; padding: 8px 0 16px; }
+  header h1 {
+    margin: 0 0 6px; font-size: 1.7rem; font-weight: 700; letter-spacing: .5px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--dim); font-size: .8rem; letter-spacing: .3px; }
+  header .sub b { color: var(--gold); font-weight: 600; }
+
+  .author {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 9px;
+    background: linear-gradient(90deg, rgba(251,191,36,.10), rgba(251,191,36,.02));
+    border: 1px solid rgba(251,191,36,.30);
+    border-radius: var(--radius);
+    padding: 11px 14px; margin-bottom: 16px;
+  }
+  .author .lab { font-size: .72rem; color: var(--muted); letter-spacing: 1px; }
+  .author a {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--gold); font-size: .96rem; font-weight: 650;
+    text-decoration: none; border-bottom: 1px dashed rgba(251,191,36,.55);
+  }
+  .author a:hover { color: #fde68a; border-bottom-color: #fde68a; }
+  .author a::after { content: "↗"; font-size: .78rem; opacity: .8; }
+  .author .hint { margin-left: auto; font-size: .74rem; color: var(--dim); }
+  @media (max-width: 560px) { .author .hint { margin-left: 0; width: 100%; } }
+
+  .note {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 11px 14px; margin: 0 0 16px;
+    color: var(--muted); font-size: .84rem; line-height: 1.75;
+  }
+  .note .lv { color: var(--gold); font-weight: 700; }
+  .bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .bar button {
+    border: 1px solid var(--border2); background: var(--panel2); color: var(--muted);
+    font-size: .78rem; padding: 6px 13px; border-radius: 8px; cursor: pointer;
+    font-family: inherit; transition: all .15s;
+  }
+  .bar button:hover { color: var(--text); border-color: var(--blue); }
+  .bar .tip { margin-left: auto; font-size: .74rem; color: var(--dim); }
+
+  .blk {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px 16px; margin-bottom: 13px;
+  }
+  .blk > h2 {
+    margin: 0; font-size: 1.02rem; font-weight: 680; color: var(--gold);
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+    user-select: none; letter-spacing: .3px;
+  }
+  .blk > h2::before { content: "▾"; font-size: .8rem; opacity: .8; transition: transform .15s; }
+  .blk.folded > h2::before { transform: rotate(-90deg); }
+
+  .grp { margin-top: 12px; }
+  .grp > h3 {
+    margin: 0 0 8px; font-size: .78rem; font-weight: 600; letter-spacing: 2px;
+    color: var(--dim); text-transform: uppercase;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .grp > h3::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+  .sub { margin-bottom: 6px; }
+  .sub > h4 {
+    margin: 10px 0 6px; font-size: .82rem; font-weight: 600; color: #93c5fd;
+    padding-left: 9px; border-left: 2px solid rgba(59,130,246,.5);
+  }
+  .row { display: flex; gap: 10px; align-items: flex-start; padding: 5px 0; }
+  .row + .row { border-top: 1px dashed rgba(38,52,73,.5); }
+  .row .k {
+    flex: 0 0 96px; font-size: .84rem; color: var(--text);
+    padding-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .row .k em { font-style: normal; color: var(--dim); font-size: .72rem; margin-left: 3px; }
+  .row .vals { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 5px 7px; }
+  .row .vals .v {
+    color: var(--gold); font-size: .88rem; font-variant-numeric: tabular-nums;
+    background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.18);
+    border-radius: 6px; padding: 1px 7px; letter-spacing: .2px;
+  }
+  @media (max-width: 620px) {
+    .row { flex-direction: column; gap: 4px; }
+    .row .k { flex: none; }
+  }
+  footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: .76rem; line-height: 2; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<script>document.documentElement.className+=(" ak-js");window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);</script>
+<noscript><style>[data-stagger]>*{opacity:1!important;transform:none!important}</style></noscript>
+<style>
+  /* 明日方舟风格覆盖：直角、描边、扫描线、等宽数字 */
+  .card { background: var(--ak-bg-1); }
+  .card:hover { background: var(--ak-bg-2); }
+  header h1 { letter-spacing: 2px; }
+  .author { border-radius: var(--ak-radius); }
+  .q { background: var(--ak-bg-1); }
+  /* 折叠：grid-template-rows 方案（比 max-height / display 更平滑） */
+  .blk:not(.folded) .blk-inner { animation: ak-in var(--dur-base) var(--ease-out) both; }
+  .blk-fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 320ms var(--ease); }
+  .blk.folded .blk-fold { grid-template-rows: 0fr; transition: grid-template-rows 200ms var(--ease-in); }
+  .blk-fold > .blk-inner { overflow: hidden; min-height: 0; }
+  /* 答题：答案区开合双向过渡（开 220ms 慢于关 160ms）
+     注意：裁剪层 .qa-clip 不能带 padding —— border-box 下 padding 会把
+     折叠到 0 的行撑出一截，答案会"渗"出来。padding 留在深层 .qa 上。 */
+  .q .qa-fold { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 160ms var(--ease-in); }
+  .q.open .qa-fold { grid-template-rows: 1fr; transition: grid-template-rows 220ms var(--ease-out); }
+  .q .qa-fold > .qa-clip { overflow: hidden; min-height: 0; }
+  .card .tags span.cat { font-family: var(--ak-mono); }
+  footer { border-top: 0; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
+</head>
+<body data-ak-progress>
+<div class="wrap">
+  <a class="back-home" href="strategies.html">← 返回奥系攻略</a>
+
+  <header>
+    <h1>修炼数值表</h1>
+    <span class="ak-label-en">Cultivation Values</span>
+    <p class="sub">收录自玩家社区 · 内容版权归原作者所有</p>
+  </header>
+
+  <div class="author"><span class="lab">作者</span><a href="https://space.bilibili.com/505753055" target="_blank" rel="noopener noreferrer">故稔</a><span class="hint">点击前往作者的 B 站主页</span></div>
+
+  <p class="note">以下数值为 <b class="lv">6级</b> 词条的非完美属性数值，数值越大越接近完美。</p>
+
+  <div class="bar">
+    <button id="toggleAll" type="button">全部折叠</button>
+    <span class="tip">点击小标题可单独展开 / 收起</span>
+  </div>
+
+  <div id="body" data-stagger><section class="blk"><h2>修炼前两条</h2><div class="ak-fold blk-fold"><div class="blk-inner"><div class="grp"><div class="sub"><div class="row"><div class="k">攻击</div><div class="vals"><span class="v">3278</span><span class="v">3302</span><span class="v">3327</span><span class="v">3363</span><span class="v">3387</span><span class="v">3412</span><span class="v">3436</span><span class="v">3472</span><span class="v">3497</span><span class="v">3521</span></div></div><div class="row"><div class="k">特防</div><div class="vals"><span class="v">6241</span><span class="v">6287</span><span class="v">6333</span><span class="v">6403</span><span class="v">6449</span><span class="v">6495</span><span class="v">6541</span><span class="v">6611</span><span class="v">6657</span><span class="v">6703</span></div></div><div class="row"><div class="k">物防<em>（同特防）</em></div><div class="vals"><span class="v">6241</span><span class="v">6287</span><span class="v">6333</span><span class="v">6403</span><span class="v">6449</span><span class="v">6495</span><span class="v">6541</span><span class="v">6611</span><span class="v">6657</span><span class="v">6703</span></div></div><div class="row"><div class="k">生命</div><div class="vals"><span class="v">18419</span><span class="v">18556</span><span class="v">18692</span><span class="v">18897</span><span class="v">19033</span><span class="v">19170</span><span class="v">19306</span><span class="v">19511</span><span class="v">19647</span><span class="v">19784</span></div></div><div class="row"><div class="k">全伤增幅</div><div class="vals"><span class="v">3.78%</span><span class="v">3.8%</span><span class="v">3.83%</span><span class="v">3.87%</span><span class="v">3.9%</span><span class="v">3.93%</span><span class="v">3.96%</span><span class="v">4%</span><span class="v">4.02%</span><span class="v">4.03%</span><span class="v">4.05%</span></div></div><div class="row"><div class="k">全伤减免</div><div class="vals"><span class="v">4.05%</span><span class="v">4.08%</span><span class="v">4.11%</span><span class="v">4.15%</span><span class="v">4.18%</span><span class="v">4.21%</span><span class="v">4.24%</span><span class="v">4.29%</span><span class="v">4.32%</span><span class="v">4.34%</span></div></div></div><div class="sub"><h4>攻击类</h4><div class="row"><div class="k">暴击</div><div class="vals"><span class="v">5.4%</span><span class="v">5.44%</span><span class="v">5.48%</span><span class="v">5.54%</span><span class="v">5.58%</span><span class="v">5.62%</span><span class="v">5.66%</span><span class="v">5.72%</span><span class="v">5.76%</span><span class="v">5.8%</span></div></div><div class="row"><div class="k">命中</div><div class="vals"><span class="v">7.56%</span><span class="v">7.61%</span><span class="v">7.67%</span><span class="v">7.75%</span><span class="v">7.81%</span><span class="v">7.86%</span><span class="v">7.92%</span><span class="v">8%</span><span class="v">8.06%</span><span class="v">8.11%</span><span class="v">8.73%</span></div></div><div class="row"><div class="k">破挡<em>（同暴击）</em></div><div class="vals"><span class="v">5.4%</span><span class="v">5.44%</span><span class="v">5.48%</span><span class="v">5.54%</span><span class="v">5.58%</span><span class="v">5.62%</span><span class="v">5.66%</span><span class="v">5.72%</span><span class="v">5.76%</span><span class="v">5.8%</span></div></div></div><div class="sub"><h4>防御类</h4><div class="row"><div class="k">闪避</div><div class="vals"><span class="v">3.24%</span><span class="v">3.26%</span><span class="v">3.28%</span><span class="v">3.32%</span><span class="v">3.34%</span><span class="v">3.37%</span><span class="v">3.39%</span><span class="v">3.43%</span><span class="v">3.45%</span><span class="v">3.48%</span></div></div><div class="row"><div class="k">抗暴</div><div class="vals"><span class="v">6.48%</span><span class="v">6.52%</span><span class="v">6.57%</span><span class="v">6.64%</span><span class="v">6.69%</span><span class="v">6.74%</span><span class="v">6.79%</span><span class="v">6.86%</span><span class="v">6.91%</span><span class="v">6.96%</span></div></div><div class="row"><div class="k">格挡<em>（同全免）</em></div><div class="vals"><span class="v">4.05%</span><span class="v">4.08%</span><span class="v">4.11%</span><span class="v">4.15%</span><span class="v">4.18%</span><span class="v">4.21%</span><span class="v">4.24%</span><span class="v">4.29%</span><span class="v">4.32%</span><span class="v">4.34%</span></div></div></div></div></div></div></section><section class="blk"><h2>修炼第三条</h2><div class="ak-fold blk-fold"><div class="blk-inner"><div class="grp"><div class="sub"><div class="row"><div class="k">暴伤</div><div class="vals"><span class="v">4.86%</span><span class="v">4.89%</span><span class="v">4.93%</span><span class="v">4.98%</span><span class="v">5.02%</span><span class="v">5.05%</span><span class="v">5.09%</span><span class="v">5.14%</span><span class="v">5.18%</span><span class="v">5.22%</span></div></div><div class="row"><div class="k">韧性<em>（同暴伤）</em></div><div class="vals"><span class="v">4.86%</span><span class="v">4.89%</span><span class="v">4.93%</span><span class="v">4.98%</span><span class="v">5.02%</span><span class="v">5.05%</span><span class="v">5.09%</span><span class="v">5.14%</span><span class="v">5.18%</span></div></div><div class="row"><div class="k">重伤增幅</div><div class="vals"><span class="v">17.01%</span><span class="v">17.13%</span><span class="v">17.26%</span><span class="v">17.45%</span><span class="v">17.57%</span><span class="v">17.7%</span><span class="v">17.82%</span><span class="v">18.01%</span></div></div><div class="row"><div class="k">减能增幅</div><div class="vals"><span class="v">4.86%</span><span class="v">4.89%</span><span class="v">4.93%</span><span class="v">4.98%</span><span class="v">5.02%</span><span class="v">5.05%</span><span class="v">5.09%</span><span class="v">5.14%</span></div></div><div class="row"><div class="k">封技增幅<em>（同减能增幅）</em></div><div class="vals"><span class="v">4.86%</span><span class="v">4.89%</span><span class="v">4.93%</span><span class="v">4.98%</span><span class="v">5.02%</span><span class="v">5.05%</span><span class="v">5.09%</span><span class="v">5.12%</span><span class="v">5.14%</span><span class="v">5.18%</span></div></div><div class="row"><div class="k">混乱增幅</div><div class="vals"><span class="v">5.4%</span><span class="v">5.44%</span><span class="v">5.48%</span><span class="v">5.54%</span><span class="v">5.62%</span><span class="v">5.66%</span><span class="v">5.72%</span><span class="v">5.76%</span><span class="v">5.86%</span></div></div><div class="row"><div class="k">眩晕增幅<em>（同全免）</em></div><div class="vals"><span class="v">4.05%</span><span class="v">4.08%</span><span class="v">4.11%</span><span class="v">4.15%</span><span class="v">4.18%</span><span class="v">4.21%</span><span class="v">4.29%</span><span class="v">4.32%</span><span class="v">5.14%</span></div></div><div class="row"><div class="k">毒烧增幅<em>（同封技抗性）</em></div><div class="vals"><span class="v">9.72%</span><span class="v">9.79%</span><span class="v">9.86%</span><span class="v">9.97%</span><span class="v">10.04%</span><span class="v">10.11%</span><span class="v">10.12%</span><span class="v">10.29%</span></div></div><div class="row"><div class="k">封技抗性</div><div class="vals"><span class="v">9.72%</span><span class="v">9.79%</span><span class="v">9.86%</span><span class="v">9.97%</span><span class="v">10.04%</span><span class="v">10.11%</span><span class="v">10.18%</span><span class="v">10.29%</span><span class="v">10.36%</span><span class="v">10.44%</span></div></div><div class="row"><div class="k">减能抗性<em>（同封技抗性）</em></div><div class="vals"><span class="v">9.72%</span><span class="v">9.79%</span><span class="v">9.86%</span><span class="v">9.97%</span><span class="v">10.04%</span><span class="v">10.11%</span><span class="v">10.18%</span><span class="v">10.36%</span></div></div><div class="row"><div class="k">毒烧抗性</div><div class="vals"><span class="v">14.58%</span><span class="v">14.68%</span><span class="v">14.79%</span><span class="v">14.95%</span><span class="v">15.06%</span><span class="v">15.17%</span><span class="v">15.28%</span><span class="v">15.44%</span><span class="v">15.55%</span></div></div><div class="row"><div class="k">眩晕抗性</div><div class="vals"><span class="v">8.1%</span><span class="v">8.16%</span><span class="v">8.22%</span><span class="v">8.31%</span><span class="v">8.37%</span><span class="v">8.43%</span><span class="v">8.58%</span><span class="v">8.64%</span><span class="v">8.69%</span></div></div><div class="row"><div class="k">重伤抗性</div><div class="vals"><span class="v">23.22%</span><span class="v">23.39%</span><span class="v">23.56%</span><span class="v">23.82%</span><span class="v">23.99%</span><span class="v">24.16%</span><span class="v">24.33%</span><span class="v">24.59%</span><span class="v">24.76%</span><span class="v">24.94%</span></div></div><div class="row"><div class="k">混乱抗性</div><div class="vals"><span class="v">10.8%</span><span class="v">10.88%</span><span class="v">10.96%</span><span class="v">11.08%</span><span class="v">11.16%</span><span class="v">11.24%</span><span class="v">11.32%</span><span class="v">11.44%</span><span class="v">11.52%</span></div></div></div></div></div></div></section></div>
+
+  <footer>原文数据未作删改，以作者发布内容为准</footer>
+</div>
+
+<script>
+document.querySelectorAll('.blk > h2').forEach(h => {
+  h.addEventListener('click', () => h.parentElement.classList.toggle('folded'));
+});
+const btn = document.getElementById('toggleAll');
+let allFolded = false;
+btn.addEventListener('click', () => {
+  allFolded = !allFolded;
+  document.querySelectorAll('.blk').forEach(b => b.classList.toggle('folded', allFolded));
+  btn.textContent = allFolded ? '全部展开' : '全部折叠';
+});
+</script>
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
+</body>
+</html>

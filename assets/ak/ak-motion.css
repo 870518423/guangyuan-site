@@ -1,0 +1,182 @@
+/* ============================================================
+   明日方舟风格 · 动效库（ak-motion.css）
+   ------------------------------------------------------------
+   只放 keyframes 与可复用的动效工具类；具体页面用 class 调用。
+   ============================================================ */
+
+/* ---------- 按键涟漪 ---------- */
+.ak-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .32);
+  pointer-events: none;
+  transform: scale(0);
+  animation: ak-ripple 600ms var(--ease-out) forwards;
+}
+@keyframes ak-ripple {
+  to { transform: scale(2.5); opacity: 0; }
+}
+
+/* ---------- 标题扫描线 ---------- */
+@keyframes ak-scan-x {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+/* ---------- 进场：淡入 + 上移 ---------- */
+@keyframes ak-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes ak-out {
+  to { opacity: 0; transform: translateY(-8px); }
+}
+body.page-in { animation: ak-in var(--dur-slow) var(--ease-out) both; }
+
+/* ---------- 列表错峰入场（stagger） ----------
+   初始隐藏由 CSS 完成（首帧即生效，不会闪一下）；
+   显形交给 transitions.js 逐项设置 opacity / delay。
+   注意：只有 .ak-js 根类存在时才隐藏，避免 JS 失效导致内容永久不可见。 */
+.ak-js [data-stagger] > * {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+/* ---------- 左侧强调线生长（卡片悬停） ---------- */
+@keyframes ak-bar-grow {
+  from { transform: scaleY(.35); }
+  to   { transform: scaleY(1); }
+}
+
+/* ---------- 骨架屏微光 ---------- */
+.ak-skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--ak-bg-2);
+}
+.ak-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--ak-bg-3) 50%, transparent);
+  transform: translateX(-100%);
+  animation: ak-shimmer var(--dur-decor) infinite linear;
+}
+@keyframes ak-shimmer {
+  to { transform: translateX(100%); }
+}
+
+/* ---------- 顶部进度条 ---------- */
+#ak-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0;
+  background: var(--ak-accent);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: width var(--dur-slow) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+#ak-progress.on { opacity: .9; }
+#ak-progress.done { width: 100%; opacity: 0; }
+
+/* ---------- 四角括号（背景渐变实现，不占用伪元素） ---------- */
+.ak-corners {
+  --ak-corner: var(--ak-line-2);
+  background-image:
+    linear-gradient(var(--ak-corner), var(--ak-corner)),
+    linear-gradient(var(--ak-corner), var(--ak-corner)),
+    linear-gradient(var(--ak-corner), var(--ak-corner)),
+    linear-gradient(var(--ak-corner), var(--ak-corner)),
+    linear-gradient(var(--ak-corner), var(--ak-corner)),
+    linear-gradient(var(--ak-corner), var(--ak-corner)),
+    linear-gradient(var(--ak-corner), var(--ak-corner)),
+    linear-gradient(var(--ak-corner), var(--ak-corner));
+  background-repeat: no-repeat;
+  background-size:
+    14px 1px, 1px 14px,
+    14px 1px, 1px 14px,
+    14px 1px, 1px 14px,
+    14px 1px, 1px 14px;
+  background-position:
+    left top, left top,
+    right top, right top,
+    left bottom, left bottom,
+    right bottom, right bottom;
+}
+.ak-corners:hover { --ak-corner: var(--ak-accent); }
+
+/* ---------- 弹层：淡入 + 轻微放大 ---------- */
+.ak-pop { animation: ak-pop var(--dur-base) var(--ease-out) both; }
+@keyframes ak-pop {
+  from { opacity: 0; transform: scale(.96); }
+  to   { opacity: 1; transform: none; }
+}
+.ak-fade { animation: ak-in var(--dur-base) var(--ease-out) both; }
+
+/* ---------- 折叠展开（grid 方案，比 max-height 平滑） ---------- */
+.ak-fold {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--dur-slow) var(--ease);
+}
+.ak-fold.folded { grid-template-rows: 0fr; }
+.ak-fold > * { overflow: hidden; min-height: 0; }
+
+/* ---------- 统一缓动入口 ---------- */
+.ak-ease { transition-timing-function: var(--ease); }
+
+/* ============================================================
+   v2 · P0 页面切换（view-transition 专属动画）
+   ------------------------------------------------------------
+   transitions.js 在站内跳转时会调用 document.startViewTransition()；
+   下面两组伪元素规则负责「旧页上移淡出 → 新页下移淡入」，
+   否则浏览器只给一个无风格的默认交叉淡入淡出。
+   注意：::view-transition-* 不是普通元素，全局 reduce 规则（*）命中
+   不到它，须在此单独特判。
+   ============================================================ */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root) {
+    animation: ak-pt-out 180ms var(--ease-in) both;
+  }
+  ::view-transition-new(root) {
+    animation: ak-pt-in 320ms var(--ease-out) both;
+  }
+}
+@keyframes ak-pt-out { to { opacity: 0; transform: translateY(-8px); } }
+@keyframes ak-pt-in  { from { opacity: 0; transform: translateY(12px); } }
+
+/* 减少动态：切换瞬时完成*/
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-group(root) {
+    animation-duration: .001ms !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* ---------- 顶部切换扫描线（transitions.js 注入 #ak-scan） ---------- */
+#ak-scan {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--ak-accent);
+  z-index: 10000;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: ak-scan-x 320ms var(--ease-out) both;
+}
+
+/* ---------- 关闭方向：弹层收缩淡出 ----------
+   供 guides 弹层关闭时使用（先加 .closing，动画结束再移除 .on）。 */
+@keyframes ak-pop-out {
+  to { opacity: 0; transform: scale(.97); }
+}
+.ak-pop.closing { animation: ak-pop-out 160ms var(--ease-in) both; }
+
+/* ---------- 折叠：关闭方向也用过渡（grid 方案，见各页） ----------
+   ak-fold 默认展开；加 .folded 收起。关闭比展开更快（ease-in）。 */
+.ak-fold.folded { transition: grid-template-rows 200ms var(--ease-in); }

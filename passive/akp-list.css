@@ -1,0 +1,252 @@
+/* ============================================================
+   奥系角色被动版本收录 · 列表页（首页卡片）与角色页外壳
+   ------------------------------------------------------------
+   ⚠️ 这是**预览外壳**：首页卡片列表 + 角色页页头/返回按钮。
+      正式并入站点时应删掉本文件，改用站点自己的页面壳与列表组件。
+      组件本体（akp.css）不依赖本文件。
+   视觉全部沿用站点令牌（ak-theme.css :root 的 --ak-*），不自造外观：
+     卡片 = 深底 + 1px 线 + 直角 2px；悬停只做「边框变亮 + 底色微升」
+     （与站点 .card:hover 的克制程度一致），不加角标/斜条等装饰。
+   ============================================================ */
+
+html, body{ margin: 0; padding: 0; }
+*, *::before, *::after{ box-sizing: border-box; }
+
+body{
+  color: var(--ak-text);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+               "Microsoft YaHei", "Source Han Sans SC", "Noto Sans CJK SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 56px;
+
+  /* ---------- 专用背景（2026-10-12 管理者提供，仅本板块使用）----------
+     参考图：青绿城市概念图 → img/bg-cape.webp（81KB）。
+     淡化做法：叠一层深色遮罩，让背景隐约透出轮廓、不与正文抢视觉。
+     管理者 2026-10-12 反馈「偏暗」→ 遮罩由 87% 降到 74%（透出更多亮部）；
+     再亮就会让卡片间的空隙显得花，故停在这一档。
+     卡片/组件自身仍是不透明深底，正文阅读不受影响。
+     ⚠️ background-attachment: fixed 在 iOS Safari 不生效（回退为随页面滚动），
+        并入站点时如需可换伪元素方案。 */
+  background:
+    linear-gradient(rgba(11, 15, 22, .74), rgba(11, 15, 22, .74)),
+    url("img/bg-cape.webp") center / cover no-repeat fixed,
+    var(--ak-bg-0);
+}
+
+.akc-wrap{ width: min(440px, 100%); margin: 0 auto; padding: 0 16px; }
+
+/* ---------- 页头 ---------- */
+.akc-hd{ padding: 26px 0 2px; }
+
+/* ============================================================
+   阵营目录卡片（.entry）—— 照抄站点首页入口卡片
+   ------------------------------------------------------------
+   结构/尺寸/圆角/悬停位移/右上角光晕/左侧强调条 全部与
+   明日方舟风格测试\index.html 的 .entry 一致，方便日后并入站点直接复用。
+   站点用的是 --panel/--border/--muted 等变量，这里映射到本板块的 --ak-*。
+   ============================================================ */
+.akc-entries{ display: grid; grid-template-columns: 1fr; gap: 14px; }
+.entry {
+  position: relative;
+  display: block; text-decoration: none; color: inherit;
+  background: linear-gradient(160deg, var(--ak-bg-1), var(--ak-bg-2));
+  border: 1px solid var(--ak-line);
+  border-radius: 16px;
+  padding: 18px 16px 17px;
+  overflow: hidden;
+  transition: transform .18s, border-color .18s, box-shadow .18s;
+}
+.entry::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--accent, var(--ak-accent)); opacity: .85;
+}
+.entry::after {
+  content: ""; position: absolute; right: -60px; top: -60px;
+  width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, var(--accent, var(--ak-accent)), transparent 68%);
+  opacity: .1; transition: opacity .18s;
+}
+.entry:hover {
+  transform: translateY(-3px);
+  border-color: var(--ak-line-2);
+  box-shadow: 0 14px 34px rgba(0,0,0,.4);
+}
+.entry:hover::after { opacity: .18; }
+.entry:active { transform: translateY(-1px); }
+
+.entry .top { display: flex; align-items: center; gap: 13px; margin-bottom: 12px; position: relative; }
+.entry .ico {
+  width: 46px; height: 46px; flex: 0 0 46px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.045);
+  border: 1px solid var(--ak-line-2);
+  display: flex; align-items: center; justify-content: center;
+}
+.entry .ico img { width: 32px; height: 32px; object-fit: contain; }
+.entry .badge {
+  position: absolute; right: 0; top: 0;
+  font-size: .68rem; letter-spacing: 1px;
+  padding: 3px 9px; border-radius: 999px;
+  color: var(--accent, var(--ak-accent));
+  border: 1px solid currentColor; opacity: .85;
+}
+.entry h2 { margin: 0; font-size: 1.06rem; font-weight: 700; letter-spacing: .4px; }
+.entry .desc { margin: 0 0 14px; color: var(--ak-text-mute); font-size: .84rem; line-height: 1.7; }
+.entry .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.entry .meta span {
+  font-size: .72rem; padding: 2px 9px; border-radius: 6px;
+  background: rgba(255,255,255,.05); color: var(--ak-text-dim);
+}
+.entry .go {
+  margin-left: auto; color: var(--accent, var(--ak-accent));
+  font-size: 1.1rem; opacity: .55; transition: opacity .18s, transform .18s;
+}
+.entry:hover .go { opacity: 1; transform: translateX(3px); }
+
+/* 尚未收录任何角色的阵营：整体压暗、不响应点击 */
+.entry--empty{ opacity: .5; pointer-events: none; }
+.entry--empty::before{ background: var(--ak-line-2); }
+.akc-hd h1{
+  margin: 0;
+  font-size: 19px; font-weight: 700; letter-spacing: .1em;
+}
+.akc-hd h1::after{
+  content: ""; display: block; width: 36px; height: 2px;
+  margin-top: 10px; background: var(--ak-accent);
+}
+.akc-hd p{
+  margin: 11px 0 0;
+  font-size: 12px; line-height: 1.9; color: var(--ak-text-mute);
+}
+.akc-hd p b{ color: var(--ak-text-dim); font-weight: 400; }
+
+/* ---------- 分组标题 ---------- */
+.akc-group{
+  display: flex; align-items: baseline; gap: 10px;
+  margin: 26px 0 10px;
+  font-size: 12px; letter-spacing: .14em; color: var(--ak-text-mute);
+}
+.akc-group em{ font-style: normal; color: var(--ak-text-dim); }
+.akc-group::after{
+  content: ""; flex: 1 1 auto; height: 1px; background: var(--ak-line);
+}
+
+/* ---------- 角色卡片 ---------- */
+.akc-list{ display: flex; flex-direction: column; gap: 8px; }
+
+.akc-card{
+  padding: 13px 14px;
+  background: var(--ak-bg-1);
+  border: 1px solid var(--ak-line);
+  border-radius: var(--ak-radius);
+  color: inherit; text-decoration: none;
+  transition:
+    border-color var(--dur-base) var(--ease),
+    background-color var(--dur-base) var(--ease),
+    transform var(--dur-press) var(--ease);
+}
+.akc-card:hover{ border-color: var(--ak-line-2); background: var(--ak-bg-2); }
+.akc-card:active{ transform: scale(.985); }
+.akc-card:focus-visible{ outline: none; border-color: var(--ak-accent); }
+
+/* ---------- 角色卡片：立绘缩略图 ---------- */
+.akc-card{ display: flex; align-items: center; gap: 12px; }
+.akc-card .akc-body{ flex: 1 1 auto; min-width: 0; }
+.akc-thumb{
+  flex: 0 0 auto;
+  width: 72px; height: 58px;
+  object-fit: cover; object-position: center top;
+  background: var(--ak-bg-2);
+  border: 1px solid var(--ak-line);
+  border-radius: var(--ak-radius);
+}
+.akc-card:hover .akc-thumb{ border-color: var(--ak-line-2); }
+
+/* ---------- 角色页：页顶立绘 ---------- */
+.akc-portrait{ margin: 14px 0 0; }
+.akc-portrait img{
+  display: block; width: 100%; height: auto;
+  background: var(--ak-bg-1);
+  border: 1px solid var(--ak-line);
+  border-radius: var(--ak-radius);
+}
+
+.akc-card-hd{ display: flex; align-items: center; gap: 8px; }
+.akc-name{ font-size: 14.5px; letter-spacing: .04em; }
+/* tier 徽标（UL 等）：管理者 2026-10-12 指定改为金色 */
+.akc-tier{
+  flex: 0 0 auto; margin-left: auto;
+  padding: 1px 6px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .12em;
+  color: var(--ak-accent);
+  border: 1px solid rgba(255, 179, 0, .45);
+  border-radius: var(--ak-radius);
+}
+
+.akc-meta{
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 7px;
+  font-size: 11.5px; color: var(--ak-text-mute);
+}
+.akc-meta .sep{ color: var(--ak-line-2); }
+.akc-ver{ color: var(--akp-gold); }
+.akc-ver--none{ color: var(--ak-text-mute); }
+.akc-go{
+  margin-left: auto;
+  color: var(--ak-text-mute); font-size: 12px;
+  transition: color var(--dur-fast) var(--ease), transform var(--dur-base) var(--ease);
+}
+.akc-card:hover .akc-go{ color: var(--ak-accent); transform: translateX(3px); }
+
+/* ---------- 角色页：返回按钮（与站点 .ak-btn 同款） ---------- */
+.akc-back{
+  display: inline-flex; align-items: center; gap: .45em;
+  margin: 16px 0 0;
+  min-height: 44px; padding: .5em 1.05em;
+  font: inherit; font-size: 12.5px; letter-spacing: .08em;
+  color: var(--ak-text-dim);
+  background: var(--ak-bg-2);
+  border: 1px solid var(--ak-line-2);
+  border-radius: var(--ak-radius);
+  text-decoration: none; cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    transform var(--dur-press) var(--ease);
+}
+.akc-back:hover{ color: var(--ak-text); border-color: var(--ak-accent); background: var(--ak-bg-3); }
+.akc-back:active{ transform: scale(.96); }
+.akc-back:focus-visible{ outline: none; border-color: var(--ak-accent); }
+
+/* ---------- 角色页：角色头 ---------- */
+.akc-char-hd{ padding: 18px 0 0; }
+.akc-crumb{ font-size: 11.5px; letter-spacing: .12em; color: var(--ak-text-mute); }
+.akc-char-hd h2{
+  margin: 8px 0 0;
+  font-size: 17px; font-weight: 700; letter-spacing: .06em;
+}
+.akc-char-hd h2::after{
+  content: ""; display: block; width: 36px; height: 2px;
+  margin-top: 9px; background: var(--ak-accent);
+}
+
+.akc-missing{
+  padding: 50px 0; text-align: center;
+  color: var(--ak-text-mute); font-size: 13px; line-height: 2;
+}
+.akc-missing a{ color: var(--ak-accent); }
+
+/* ---------- 组件挂载容器 ----------
+   刻意**不加左右内边距** —— 组件宽度必须是 440（它的字号按容器宽 × 3.55% 算），
+   一旦被父容器 padding 挤窄，字号基准与实际宽度就对不上了。 */
+.akp-holder{ display: flex; justify-content: center; }
+
+/* ---------- 页脚说明 ---------- */
+.akc-foot{
+  margin-top: 26px;
+  font-size: 11px; line-height: 1.9; color: var(--ak-text-mute);
+  border-top: 1px solid var(--ak-line);
+  padding-top: 12px;
+}
+.akc-foot b{ color: var(--ak-text-dim); font-weight: 400; }

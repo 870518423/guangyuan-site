@@ -6,6 +6,14 @@
 <title>奥系人间体大全</title>
 <meta name="theme-color" content="#0a0e1a">
 <meta name="description" content="奥系人间体查询工具：按名称、本命、特训、获得方式、前置要求快速检索">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" href="assets/favicon-32.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="奥系工具站">
+<!-- 主题引导：首帧前定好亮/暗，避免闪色（早于样式表执行） -->
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
 <style>
   :root {
     --bg: #0a0e1a;
@@ -266,13 +274,63 @@
     .modal { max-height: 84vh; }
   }
 </style>
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<script>document.documentElement.className+=(" ak-js");window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);</script>
+<noscript><style>[data-stagger]>*{opacity:1!important;transform:none!important}</style></noscript>
+<style>
+  /* ---------- 人间体大全专属覆盖 ---------- */
+  .card { background: var(--ak-bg-1); }
+  .card:hover { background: var(--ak-bg-2); }
+
+  /* 弹层：去大阴影，改细描边 */
+  .mask { background: rgba(6, 7, 10, .82); }
+  .modal {
+    border-radius: var(--ak-radius-lg);
+    border-color: var(--ak-line-2);
+    box-shadow: none;
+    background: var(--ak-bg-1);
+    /* 开合统一走 transition（不用 keyframes，避免 transform 覆盖居中位移） */
+    transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out);
+  }
+  .mask { transition: opacity 220ms var(--ease-out); }
+  /* 关闭方向更快（ease-in） */
+  .modal.closing { transition: opacity 160ms var(--ease-in), transform 160ms var(--ease-in); }
+  .mask.closing { transition: opacity 160ms var(--ease-in); }
+
+  /* 空状态：CSS 画一个检索标记，不用 emoji */
+  #empty .big {
+    width: 34px; height: 34px; margin: 0 auto 12px;
+    border: 1px solid var(--ak-line-2); border-radius: var(--ak-radius);
+    position: relative;
+  }
+  #empty .big::before {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 10px; height: 10px; border: 1px solid var(--ak-accent);
+    transform: translate(-50%, -50%);
+  }
+  #empty .big::after {
+    content: ""; position: absolute; right: 5px; bottom: 6px;
+    width: 11px; height: 1px; background: var(--ak-accent);
+    transform: rotate(45deg);
+  }
+
+  /* 表格视图：行悬停提示 */
+  tbody tr { transition: background-color var(--dur-fast) var(--ease); }
+  tbody tr:hover { background: var(--ak-bg-2); }
+
+  .tag.nam { font-weight: 500; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
 </head>
-<body>
+<body data-ak-progress>
 <div class="wrap">
   <a class="back-home" href="index.html">← 返回首页</a>
 
   <header>
     <h1>奥系人间体大全</h1>
+    <span class="ak-label-en">Ultra Host Archive</span>
     <p class="sub">共 <b id="totalCount">0</b> 位人间体 · 数据更新于 <span id="genTime">—</span></p>
   </header>
 
@@ -292,7 +350,16 @@
   </div>
 
   <main>
-    <div id="cardView" class="cards"></div>
+    <!-- 骨架屏：浏览器首帧到内联数据脚本解析完之间显示，render() 一执行即移除 -->
+    <div id="skeleton" class="cards" aria-hidden="true">
+      <article class="card ak-skel-card"><div class="sk sk-hd"></div><div class="sk sk-row w80"></div><div class="sk sk-row w60"></div><div class="sk sk-row w70"></div><div class="sk sk-row w60"></div></article>
+      <article class="card ak-skel-card"><div class="sk sk-hd"></div><div class="sk sk-row w70"></div><div class="sk sk-row w60"></div><div class="sk sk-row w80"></div><div class="sk sk-row w60"></div></article>
+      <article class="card ak-skel-card"><div class="sk sk-hd"></div><div class="sk sk-row w60"></div><div class="sk sk-row w80"></div><div class="sk sk-row w60"></div><div class="sk sk-row w70"></div></article>
+      <article class="card ak-skel-card"><div class="sk sk-hd"></div><div class="sk sk-row w80"></div><div class="sk sk-row w70"></div><div class="sk sk-row w60"></div><div class="sk sk-row w60"></div></article>
+      <article class="card ak-skel-card"><div class="sk sk-hd"></div><div class="sk sk-row w60"></div><div class="sk sk-row w70"></div><div class="sk sk-row w80"></div><div class="sk sk-row w60"></div></article>
+      <article class="card ak-skel-card"><div class="sk sk-hd"></div><div class="sk sk-row w70"></div><div class="sk sk-row w60"></div><div class="sk sk-row w60"></div><div class="sk sk-row w80"></div></article>
+    </div>
+    <div id="cardView" class="cards hidden" data-stagger></div>
     <div id="tableView" class="tablewrap hidden">
       <table>
         <thead>
@@ -304,7 +371,7 @@
       </table>
     </div>
     <div id="empty" class="empty hidden">
-      <div class="big">🔍</div>
+      <div class="big" aria-hidden="true"></div>
       <div>没有匹配的人间体，换个关键词试试</div>
     </div>
   </main>
@@ -422,7 +489,7 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     const f = FAC[e.faction] || {};
     return `<article class="card" style="--fcolor:${f.color || "var(--border2)"}">
       <div class="card-hd">
-        <img class="ficon" src="${esc(f.icon || "")}" alt="${esc(e.faction)}" loading="lazy" decoding="async">
+        <img class="ficon ak-img-fade" src="${esc(f.icon || "")}" alt="${esc(e.faction)}" loading="lazy" decoding="async">
         <h3 class="link" data-goto="${esc(e.name)}">${hl(e.name)}</h3>
         <span class="fname">${hl(e.faction)}</span>
       </div>
@@ -449,6 +516,8 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
 
   // ---- 渲染 ----
   function render() {
+    const sk = $("skeleton");
+    if (sk) sk.remove();                 /* 真实内容就绪 → 移除骨架屏 */
     const list = results();
     const isCard = view === "card";
     const has = list.length > 0;
@@ -521,8 +590,10 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     $("mBody").scrollTop = 0;
   }
   function closeDetail() {
-    $("modal").classList.remove("on");
-    $("mask").classList.remove("on");
+    const m = $("modal"), k = $("mask");
+    m.classList.add("closing"); k.classList.add("closing");
+    m.classList.remove("on"); k.classList.remove("on");
+    setTimeout(() => { m.classList.remove("closing"); k.classList.remove("closing"); }, 180);
     stack.length = 0;
   }
 
@@ -542,7 +613,14 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     q = e.target.value.trim();
     $("clearQ").classList.toggle("on", q.length > 0);
     render();
+    softRefresh($("cardView"));    /* 筛选刷新：整层轻提示，不重放逐卡动画 */
   });
+  function softRefresh(el) {
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    el.style.transition = "opacity 120ms var(--ease-out)";
+    el.style.opacity = ".4";
+    requestAnimationFrame(() => { el.style.opacity = "1"; });
+  }
   $("clearQ").addEventListener("click", () => {
     $("q").value = ""; q = ""; $("clearQ").classList.remove("on"); render(); $("q").focus();
   });
@@ -564,9 +642,25 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
   $("totalCount").textContent = entries.length;
   $("genTime").textContent = GUIDE.generated;
   $("srcName").textContent = GUIDE.source;
+
+  // 图片懒加载淡入：加载完成才显形（load 不冒泡，用捕获监听）
+  document.addEventListener("load", ev => {
+    const img = ev.target;
+    if (img && img.classList && img.classList.contains("ak-img-fade")) img.classList.add("ak-loaded");
+  }, true);
+  // 兜底：已缓存、在脚本绑定前就 load 完的图片
+  document.querySelectorAll("img.ak-img-fade").forEach(img => {
+    if (img.complete) img.classList.add("ak-loaded");
+    else img.addEventListener("load", () => img.classList.add("ak-loaded"), { once: true });
+  });
+
   renderFacets();
   render();
 })();
 </script>
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
 </body>
 </html>

@@ -1,0 +1,231 @@
+/* ============================================================
+   明日方舟风格 · 皮肤层（ak-theme.css）
+   ------------------------------------------------------------
+   用法：把本文件 <link> 放在各页原有 <style> 之后，
+        旧变量会被重映射 → 既有规则自动换成方舟色板，
+        无需逐条改写原样式。
+   注意：仅作用于「明日方舟风格测试」目录，不影响主站。
+   ============================================================ */
+
+/* ---------- 1. 设计令牌 ---------- */
+:root {
+  /* 背景与表面：深空钢灰，不做纯黑 */
+  --ak-bg-0: #0c0d11;
+  --ak-bg-1: #14161c;
+  --ak-bg-2: #1c1f27;
+  --ak-bg-3: #252934;
+
+  /* 线条 */
+  --ak-line: #2a2e38;
+  --ak-line-2: #3a3f4d;
+
+  /* 文字 */
+  --ak-text: #e7e5e2;
+  --ak-text-dim: #9a988f;
+  --ak-text-mute: #6b6a64;
+
+  /* 强调（方舟琥珀系） */
+  --ak-accent: #ffb300;
+  --ak-accent-2: #ff7a18;
+  --ak-warn: #ff4d4d;
+  --ak-info: #2ec5b6;
+  --ak-ok: #7ed957;
+
+  /* 几何：几乎直角 */
+  --ak-radius: 2px;
+  --ak-radius-lg: 4px;
+
+  /* 动效时长 */
+  --dur-press: 100ms;
+  --dur-fast: 160ms;
+  --dur-base: 220ms;
+  --dur-slow: 320ms;
+  --dur-decor: 1200ms;
+
+  /* 缓动：机械感，唯一曲线 */
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --ease-out: cubic-bezier(0, 0, .2, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+
+  /* 等宽字体：数值 / 编号专用 */
+  --ak-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+
+  /* ---------- 2. 旧变量重映射（导航 / 人间体 / 攻略系） ---------- */
+  --bg: var(--ak-bg-0);
+  --panel: var(--ak-bg-1);
+  --panel2: var(--ak-bg-2);
+  --border: var(--ak-line);
+  --border2: var(--ak-line-2);
+  --text: var(--ak-text);
+  --muted: var(--ak-text-dim);
+  --dim: var(--ak-text-mute);
+  --gold: var(--ak-accent);
+  --blue: var(--ak-info);
+  --radius: var(--ak-radius-lg);
+
+  /* ---------- 3. 旧变量重映射（计算器系） ---------- */
+  --bg-1: var(--ak-bg-0);
+  --bg-2: var(--ak-bg-2);
+  --card-bg: rgba(20, 22, 28, .82);
+  --card-border: var(--ak-line);
+  --card-border-hover: var(--ak-accent);
+  --blue-light: #7fd8cd;
+  --gold-light: #ffc94d;
+  --text-main: var(--ak-text);
+  --danger: var(--ak-warn);
+  --pay-color: #b388ff;
+  --pay-color-light: #caa8ff;
+}
+
+/* ---------- 4. 底色与纹理（HUD 扫描线） ---------- */
+body {
+  background-color: var(--ak-bg-0);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .016) 0 1px, transparent 1px 3px),
+    radial-gradient(900px 380px at 50% -140px, rgba(255, 179, 0, .07), transparent 72%);
+  background-attachment: fixed, fixed;
+}
+.glow { display: none; }   /* 原多色光晕：方舟不用彩虹光晕，改用上面的单一琥珀洗色 */
+
+/* ---------- 5. 标题：实色 + 琥珀扫描线进场 ---------- */
+header h1 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+  color: var(--ak-text);
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+header h1::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 2px;
+  margin: 10px auto 0;
+  background: var(--ak-accent);
+  transform-origin: left center;
+  animation: ak-scan-x var(--dur-slow) var(--ease-out) both;
+}
+header .sub {
+  font-family: var(--ak-mono);
+  letter-spacing: 1px;
+  color: var(--ak-text-mute);
+}
+header .logo { filter: none; }
+
+/* ---------- 6. 按钮：直角 + 涟漪容器 + 缩放 ---------- */
+button,
+.bar button,
+.ak-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--ak-radius);
+  border: 1px solid var(--ak-line-2);
+  background: var(--ak-bg-2);
+  color: var(--ak-text-dim);
+  font-family: inherit;
+  transition:
+    transform var(--dur-press) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+button:hover,
+.bar button:hover,
+.ak-btn:hover {
+  color: var(--ak-text);
+  border-color: var(--ak-accent);
+  background: var(--ak-bg-3);
+}
+button:active,
+.bar button:active,
+.ak-btn:active { transform: scale(.96); }
+
+/* ---------- 7. 输入框：聚焦换描边，不用阴影 ---------- */
+input,
+.search-row input {
+  border-radius: var(--ak-radius);
+  border: 1px solid var(--ak-line-2);
+  background: var(--ak-bg-2);
+  color: var(--ak-text);
+  transition: border-color var(--dur-base) var(--ease), background-color var(--dur-base) var(--ease);
+}
+input:focus,
+.search-row input:focus {
+  outline: none;
+  border-color: var(--ak-accent);
+  box-shadow: none;
+  background: var(--ak-bg-3);
+}
+input::placeholder { color: var(--ak-text-mute); }
+
+/* ---------- 8. 返回按钮 / 标签 / 卡片：统一直角 ---------- */
+.back-home,
+.chip,
+.tag,
+.q,
+.blk,
+.card,
+.sub .k,
+.author {
+  border-radius: var(--ak-radius) !important;
+}
+.back-home { transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+.back-home:hover { color: var(--ak-accent); border-color: var(--ak-accent); }
+
+/* 卡片悬停：描边变色 + 左侧强调线生长（不抬升、不阴影） */
+.card {
+  transition: border-color var(--dur-base) var(--ease), background-color var(--dur-base) var(--ease) !important;
+}
+.card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--ak-line-2) !important;
+}
+.card::after { display: none !important; }   /* 去掉角部圆形光晕 */
+
+/* ---------- 9. 数字对齐：数值 / 日期 / 编号 ----------
+   只用 tabular-nums（等宽数字）保证逐位对齐，**不再套等宽字体** ——
+   数字一律沿用页面自身字体，全站保持一致（= 换肤前的原生观感）。 */
+.changelog time,
+.q .no,
+.count b,
+.resultCount b,
+#n,
+#genTime,
+.days-value,
+.grand-total,
+.donut-center-value,
+.row .vals .v,
+.meta-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 10. 终端分割线（标题右侧那条线加一个方块节点） ---------- */
+.changelog h3::after,
+.grp > h3::after {
+  background: var(--ak-line);
+  position: relative;
+}
+.changelog h3::before,
+.grp > h3::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  background: var(--ak-accent);
+  flex: 0 0 4px;
+  order: 2;
+}
+
+/* ---------- 11. 无障碍：尊重「减少动态」 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

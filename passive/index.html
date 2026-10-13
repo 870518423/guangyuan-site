@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>角色被动版本收录</title>
+<link rel="icon" href="data:,"><!-- 避免本地预览时 favicon 404 -->
+
+<!-- 1) 组件样式（正式并入站点时这两个都要拷过去） -->
+<link rel="stylesheet" href="akp.css">
+<!-- 2) 列表页外壳样式（并入站点时删掉，改用站点自己的页面壳） -->
+<link rel="stylesheet" href="akp-list.css">
+</head>
+<body>
+
+<div class="akc-wrap">
+
+  <!-- 返回站点主页：仅在并入站点（/passive/ 目录内）时显示，桌面独立预览时隐藏 -->
+  <a class="akc-back" id="back-home" href="../index.html" hidden>← 返回主页</a>
+
+  <header class="akc-hd">
+    <h1>角色被动版本收录</h1>
+    <p>按阵营浏览：进入后查看该阵营角色的主动技与被动，可切换版本并开启版本对比。</p>
+  </header>
+
+  <!-- 阵营目录卡片：与人间体 4 大阵营一致，图标沿用人间体阵营图标 -->
+  <div class="akc-entries" id="list"></div>
+
+  <!-- 改动标注说明：按管理者口径，**统一写在这一页（导航页）**，不写进角色页 -->
+  <section class="akc-foot">
+    <b>改动标注怎么看</b><br>
+    对比开启后，正文为<b>上一版本原文</b>，改动处按下面的颜色标出：<br>
+    · <span style="color:#FF4D4D">红色 = 增强</span>
+    · <span style="color:#3FD463">绿色 = 调整</span>
+    · <span style="color:#FF9A2E">橙色 = 新增</span>
+    · <span style="color:#8C96A0;text-decoration:line-through">灰色删除线 = 移除</span><br>
+    对比一律是<b>相邻的两个版本</b>（v3 比 v2、v4 比 v3），不是跟 v1 比。
+  </section>
+
+  <p class="akc-foot">
+    数据来源：游戏内角色被动界面截图逐字转录，若有出入以游戏内为准；
+    每个角色页底部都可以<b>下载该角色的技能截图原图</b>。
+  </p>
+
+</div>
+
+<!-- ============================================================
+     脚本：先组件与清单，再逐个引入角色数据。
+     新增角色 = 在 _manifest.js 加一行 + 在这里加一行 script（见 README）
+     ============================================================ -->
+<script src="data/_manifest.js"></script>
+<script src="data/_images.js"></script>
+<script src="akp-ripple.js"></script>
+<script src="akp.js"></script>
+
+<script src="data/奥特之父真之力（突破）.js"></script>
+<script src="data/奥特之王（UL）.js"></script>
+<script src="data/捷德尊皇形态（捷德之证）.js"></script>
+<script src="data/雷欧王者披风（突破）.js"></script>
+<script src="data/利布特.js"></script>
+<script src="data/梦比优斯凤凰勇气（突破）.js"></script>
+<script src="data/泰迦三重斯特利姆.js"></script>
+<script src="data/捷德银河初升.js"></script>
+<script src="data/泽塔德尔塔天爪.js"></script>
+<script src="data/极恶贝利亚.js"></script>
+<script src="data/奥美迦朱雀装甲.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");   /* 2026-10-13 S4：补引号，防未来拼属性逃逸 */
+  }
+
+  /* 四个阵营：**顺序与名称**都对齐人间体的 4 大阵营；
+     图标直接沿用人间体阵营图标（assets/factions 下那四张）。 */
+  var FACTIONS = [
+    { name: "奥特之星",  ico: "img/factions/star.png",        accent: "#fbbf24",
+      desc: "究极（UL）品质奥特曼角色的被动与版本改动收录。" },
+    { name: "多宇宙",    ico: "img/factions/multiverse.png", accent: "#38bdf8",
+      desc: "多宇宙阵营角色的被动与版本改动收录。" },
+    { name: "宇宙人",    ico: "img/factions/alien.png",      accent: "#a78bfa",
+      desc: "宇宙人阵营角色的被动与版本改动收录。" },
+    { name: "怪兽",      ico: "img/factions/monster.png",    accent: "#f87171",
+      desc: "怪兽阵营角色的被动与版本改动收录。" }
+  ];
+
+  /* 以清单为准（决定顺序与是否展示），统计从 AKP 注册的数据里实时取。
+     manifest 里 ready: false 的角色（还没做完）**不统计**，数据文件仍保留。 */
+  var chars = (window.AKP_MANIFEST || [])
+    .filter(function (m) { return m.ready !== false; })
+    .map(function (m) { return AKP.get(m.id); })
+    .filter(Boolean);
+
+  var stat = {};
+  chars.forEach(function (d) {
+    var c = (d.meta && d.meta.category) || "其他";
+    if (!stat[c]) stat[c] = { n: 0, ver: 0 };
+    stat[c].n++;
+    if ((d.versions || []).length > 1) stat[c].ver++;
+  });
+
+  var html = "";
+  FACTIONS.forEach(function (f) {
+    var s = stat[f.name] || { n: 0, ver: 0 };
+    var empty = s.n === 0;
+    html += '<a class="entry' + (empty ? " entry--empty" : "") + '"' +
+            (empty ? "" : ' href="category.html?f=' + encodeURIComponent(f.name) + '"') +
+            ' style="--accent:' + f.accent + '">' +
+      '<div class="top">' +
+        '<div class="ico"><img src="' + f.ico + '" alt=""></div>' +
+        '<h2>' + esc(f.name) + "</h2>" +
+        '<span class="badge">' + (empty ? "待收录" : "已收录") + "</span>" +
+      "</div>" +
+      '<p class="desc">' + esc(f.desc) + "</p>" +
+      '<div class="meta">' +
+        "<span>" + s.n + " 位角色</span>" +
+        (s.ver ? "<span>含版本改动 " + s.ver + " 位</span>" : "") +
+        '<span class="go">→</span>' +
+      "</div>" +
+    "</a>";
+  });
+  document.getElementById("list").innerHTML = html;
+
+  // 并入站点后才显示返回主页（桌面独立预览时 ../index.html 不存在，保持隐藏）
+  if (/\/passive\//.test(location.pathname)) {
+    document.getElementById("back-home").hidden = false;
+  }
+})();
+</script>
+
+</body>
+</html>

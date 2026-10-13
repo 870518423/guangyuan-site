@@ -1,12 +1,19 @@
 {
-  "name": "光元收益预测器",
-  "short_name": "光元预测",
-  "description": "预测游戏资源的固定每日收益 × 天数总量",
+  "name": "奥系工具站",
+  "short_name": "奥系工具站",
+  "description": "奥系光元工具站：光元收益预测器 + 奥系人间体大全 + 奥系攻略",
+  "lang": "zh-CN",
+  "dir": "ltr",
   "start_url": "./index.html",
+  "scope": "./",
+  "id": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#0a0e1a",
   "theme_color": "#0a0e1a",
+  "categories": ["utilities", "games"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "assets/icon-192.png",

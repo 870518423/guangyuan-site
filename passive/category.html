@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>阵营 · 角色被动版本收录</title>
+<link rel="icon" href="data:,"><!-- 避免本地预览时 favicon 404 -->
+
+<link rel="stylesheet" href="akp.css">
+<link rel="stylesheet" href="akp-list.css">
+</head>
+<body>
+
+<div class="akc-wrap">
+
+  <a class="akc-back" href="index.html">← 返回阵营目录</a>
+
+  <header class="akc-char-hd">
+    <div class="akc-crumb" id="crumb">…</div>
+    <h2 id="name">载入中…</h2>
+  </header>
+
+  <!-- 该阵营的角色卡片列表 -->
+  <div id="list"></div>
+
+</div>
+
+<script src="data/_manifest.js"></script>
+<script src="data/_images.js"></script>
+<script src="akp-ripple.js"></script>
+<script src="akp.js"></script>
+
+<script src="data/奥特之父真之力（突破）.js"></script>
+<script src="data/奥特之王（UL）.js"></script>
+<script src="data/捷德尊皇形态（捷德之证）.js"></script>
+<script src="data/雷欧王者披风（突破）.js"></script>
+<script src="data/利布特.js"></script>
+<script src="data/梦比优斯凤凰勇气（突破）.js"></script>
+<script src="data/泰迦三重斯特利姆.js"></script>
+<script src="data/捷德银河初升.js"></script>
+<script src="data/泽塔德尔塔天爪.js"></script>
+<script src="data/极恶贝利亚.js"></script>
+<script src="data/奥美迦朱雀装甲.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");   /* 2026-10-13 S4：补引号，防未来拼属性逃逸 */
+  }
+
+  /* 阵营图标（与首页目录卡片一致，沿用人间体阵营图标） */
+  var ICO = {
+    "奥特之星": "img/factions/star.png",
+    "多宇宙":   "img/factions/multiverse.png",
+    "宇宙人":   "img/factions/alien.png",
+    "怪兽":     "img/factions/monster.png"
+  };
+  var ACCENT = {
+    "奥特之星": "#fbbf24", "多宇宙": "#38bdf8",
+    "宇宙人":   "#a78bfa", "怪兽":   "#f87171"
+  };
+
+  /* 2026-10-13 S3（审查 A-2）：畸形百分号编码（如 ?f=%）会让
+     decodeURIComponent 抛 URIError 中断整个脚本 → 包一层容错，
+     失败时回退原始字符串（列表页会按「未知阵营」正常提示，不再白屏）。 */
+  var f = (function (raw) {
+    try { return decodeURIComponent(raw); }
+    catch (e) { return raw; }
+  })((location.search.match(/[?&]f=([^&]*)/) || [])[1] || "");
+  var listBox = document.getElementById("list");
+
+  function fail(msg) {
+    listBox.innerHTML = '<p class="akc-missing">' + msg +
+      '<br><a href="index.html">← 回到阵营目录</a></p>';
+  }
+
+  if (!f) { fail("没有指定阵营。"); return; }
+
+  document.getElementById("name").textContent = f;
+  document.title = f + " · 角色被动版本收录";
+  document.getElementById("crumb").innerHTML =
+    '<img src="' + (ICO[f] || "img/factions/star.png") + '" alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:5px">' +
+    '<span style="color:' + (ACCENT[f] || "var(--ak-text-mute)") + '">' + esc(f) + "</span>";
+
+  /* 只取这一个阵营的角色（清单里 ready:false 的仍未做完，不列出） */
+  var chars = (window.AKP_MANIFEST || [])
+    .filter(function (m) { return m.ready !== false; })
+    .map(function (m) { return AKP.get(m.id); })
+    .filter(function (d) { return d && d.meta && d.meta.category === f; });
+
+  if (!chars.length) {
+    fail("「" + esc(f) + "」还没有收录任何角色。<br>素材准备好后就会出现在这一页。");
+    return;
+  }
+
+  var IMGS = window.AKP_IMAGES || {};
+  var html = "";
+  chars.forEach(function (d) {
+    var vs = (d.versions || []).map(function (v) { return v.id; });
+    var verTxt = vs.length > 1 ? vs.join(" / ") : "仅 v1";
+    var nS = pick(d, "skill").length, nP = pick(d, "passive").length;
+    var meta = ['<span class="' + (vs.length > 1 ? "akc-ver" : "akc-ver--none") + '">版本 ' + esc(verTxt) + "</span>"];
+    if (nS) meta.push('<span class="sep">·</span><span>主动技 ' + nS + " 条</span>");
+    if (nP) meta.push('<span class="sep">·</span><span>被动 ' + nP + " 条</span>");
+
+    var thumb = (IMGS[d.id] && IMGS[d.id].portrait)
+      ? '<img class="akc-thumb" src="' + IMGS[d.id].portrait + '" alt="" loading="lazy" decoding="async">'
+      : "";
+
+    html += '<a class="akc-card" href="char.html?id=' + encodeURIComponent(d.id) + '">' +
+      thumb +
+      '<div class="akc-body">' +
+      '<div class="akc-card-hd"><span class="akc-name">' + esc(d.name) + "</span>" +
+      ((d.meta && d.meta.tier) ? '<span class="akc-tier">' + esc(d.meta.tier) + "</span>" : "") +
+      "</div>" +
+      '<div class="akc-meta">' + meta.join("") +
+      '<span class="akc-go">查看 →</span></div>' +
+      "</div></a>";
+  });
+  listBox.innerHTML = html;
+
+  function pick(d, type) {
+    var hit = (d.sections || []).filter(function (s) { return s.type === type; })[0];
+    return hit ? (hit.items || hit.entries || []) : [];
+  }
+})();
+</script>
+
+</body>
+</html>

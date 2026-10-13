@@ -1,0 +1,501 @@
+/* ============================================================
+   奥系角色被动收录 · 组件样式（akp.css）
+   ------------------------------------------------------------
+   一套样式同时供「奥系角色被动版本收录」板块的所有角色使用。
+   与主网站保持一致的三个来源：
+     1. 设计令牌  —— 直接沿用站点 ak-theme.css :root 的 --ak-* 变量
+     2. 按钮语言  —— ak-theme.css §6（直角 + 1px 描边 + 悬停三变 + 缩放）
+                     ak-components.css §2（.ak-btn-solid 琥珀填充反转）
+                     ak-motion.css .ak-ripple（点击涟漪）
+                     ※ 2026-10-12 拍板：不再自加四角括号等装饰，严格照抄站点
+     3. 缓动/时长 —— 站点 --ease / --ease-out / --dur-* 令牌
+
+   参考图实测的排版规格（勿凭感觉改）：
+     字号 = 容器宽 × 3.55%（页面上可四档自选）
+     行高 1.18；标题条高度 = 图宽 × 5.3%
+     配色见下方「参考图实测色板」
+
+   术语约定：【普通技】【能量技】为固定术语，不要改名。
+   ============================================================ */
+
+/* ---------- 站点令牌兜底 ----------
+   若页面已经引入站点 ak-theme.css，这段会被同值覆盖，无副作用；
+   独立预览（未引入站点样式）时靠它保证观感一致。 */
+:root{
+  --ak-bg-0:#0c0d11; --ak-bg-1:#14161c; --ak-bg-2:#1c1f27; --ak-bg-3:#252934;
+  --ak-line:#2a2e38;  --ak-line-2:#3a3f4d;
+  --ak-text:#e7e5e2;  --ak-text-dim:#9a988f; --ak-text-mute:#6b6a64;
+  --ak-accent:#ffb300; --ak-accent-2:#ff7a18; --ak-warn:#ff4d4d; --ak-info:#2ec5b6;
+  --ak-radius:2px;    --ak-radius-lg:4px;
+  --dur-press:100ms;  --dur-fast:160ms; --dur-base:220ms; --dur-slow:320ms;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --ease-out:cubic-bezier(0,0,.2,1);
+  --ease-in:cubic-bezier(.4,0,1,1);
+}
+
+/* ---------- 参考图实测色板 ---------- */
+.akp{
+  --akp-red:#7A1015;        /* 标题条主红块（原图实测 #771217 取整） */
+  --akp-bar-fg:#FAD33C;     /* 标题条文字：饱和金黄 + 深色描边（原图实测；
+                               旧记录写的 #FAF0AA 淡金是错的，以图为准） */
+  --akp-gold:#FAF0AA;       /* 【普通技】标签与技能名 */
+  --akp-cyan:#82DCE6;       /* 【能量技】标签与技能名 */
+  --akp-green:#2ED42E;      /* 被动 +N 编号（是绿色，不是金色） */
+  --akp-green-bd:#32A03C;   /* 超越技右上角徽标 */
+  --akp-text:#D2D2D2;       /* 正文 */
+  --akp-name:#DCDCE6;       /* 条目名称 / 大标题 */
+  --akp-bg:#1E2A41;         /* 深蓝底 */
+  --akp-line-red:rgba(122,16,16,.85);
+
+  /* 改动标注：红=增强 / 绿=调整 / 橙=新增 / 灰删除线=移除 */
+  --akp-buff:#FF4D4D;
+  --akp-adj:#3FD463;
+  --akp-new:#FF9A2E;
+  --akp-del:#8C96A0;
+
+  /* 尺寸：字号 = 容器宽 × 3.55%，--akp-scale 由四档按钮切换。
+     ⚠️ 字号基准必须用 vw（length）而不是 %：% 用在 font-size 上表示
+        「相对父元素字号」，会让字号塌成 0.5px（2026-10-12 踩过）。
+     宽度则在 .akp 里单独写 min(440px, 100%)，避免 100vw 含竖向滚动条
+     宽度（桌面预览比 clientWidth 宽约 15px）导致整页横向溢出。 */
+  --akp-wv: min(440px, 100vw);
+  --akp-scale: 1;
+  --akp-fs: calc(var(--akp-wv) * 0.0355 * var(--akp-scale));
+  --akp-lh: 1.18;
+  --akp-pad: calc(var(--akp-fs) * 1.0);
+
+  /* 标题条「三梯形缎带」几何 —— 全部由原图 PIL 采样
+     （超越技_v1.webp，1280 宽）：条高 5.6%W／主块宽 23.4%W／
+     斜切 4.7%W／斜条1 视觉宽 1.2%W／斜条2 0.4%W。
+     1 图宽 = 1/0.0355 fs ≈ 28.2 fs，故换算为 fs 的倍数。 */
+  --akp-bar-h:   calc(var(--akp-fs) * 1.50);   /* 条高（实测 5.25~5.6%W） */
+  --akp-bar-w:   calc(var(--akp-fs) * 6.80);   /* 主块宽（实测 24%W，两图一致） */
+  --akp-bar-sk:  calc(var(--akp-fs) * 1.20);   /* 斜切量（斜率 0.8 × 条高） */
+  --akp-tail1-l: calc(var(--akp-fs) * 5.90);   /* 斜条1 元素左端 */
+  --akp-tail1-w: calc(var(--akp-fs) * 1.62);   /* 斜条1 元素宽（视觉宽 0.42） */
+  --akp-tail2-l: calc(var(--akp-fs) * 6.70);   /* 斜条2 元素左端 */
+  --akp-tail2-w: calc(var(--akp-fs) * 1.46);   /* 斜条2 元素宽（视觉宽 0.26） */
+}
+
+/* ============================================================
+   1. 按钮 —— 严格沿用站点 .ak-btn / .ak-btn-solid
+   ------------------------------------------------------------
+   2026-10-12 管理者拍板「方向一：按钮回站点语言」。
+   上一版自加的三处装饰（四角括号 / 左侧强调条 / 连体分段选择器）
+   已全部删除 —— 站点原生按钮根本没这些，属于「加戏」。
+
+   站点 ak-theme.css §6 的原生按钮就是：
+     直角(radius 2px) + 1px 灰边框 + 深底，
+     悬停 = 文字变亮 / 边框转琥珀 / 底色微升，
+     按下 = scale(.96)。就这么简单。
+   主按钮用 ak-components.css §2 的 .ak-btn-solid（琥珀填充自左滑入）。
+   保留：涟漪、focus-visible 焦点、触摸目标 ≥44px。
+   ============================================================ */
+
+.akp-btn{
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;               /* 让 ::before(z-index:-1) 留在按钮内 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45em;
+
+  min-height: 44px;                 /* 移动端触摸目标下限，站内既有口径 */
+  padding: .58em 1.15em;
+  font: inherit;
+  font-size: .95em;
+  line-height: 1.15;
+  letter-spacing: .08em;
+
+  color: var(--ak-text-dim);
+  background: var(--ak-bg-2);
+  border: 1px solid var(--ak-line-2);
+  border-radius: var(--ak-radius);
+  cursor: pointer;
+
+  transition:
+    transform var(--dur-press) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.akp-btn:hover{
+  color: var(--ak-text);
+  border-color: var(--ak-accent);
+  background: var(--ak-bg-3);
+}
+.akp-btn:active{ transform: scale(.96); }
+
+/* 键盘可达性：站点原本没做，这里补上（不影响鼠标观感） */
+.akp-btn:focus-visible{
+  outline: none;
+  border-color: var(--ak-accent);
+}
+
+/* 对比开关的「已开启」态：实心琥珀（与字号选中态同一套做法，不新造外观） */
+.akp-btn[aria-pressed="true"],
+.akp-btn[aria-pressed="true"]:hover{
+  color: var(--ak-bg-0);
+  background: var(--ak-accent);
+  border-color: var(--ak-accent);
+  font-weight: 700;
+}
+
+/* 禁用态：v1 没有上一版，无处可比 */
+.akp-btn:disabled,
+.akp-btn:disabled:hover{
+  color: var(--ak-text-mute);
+  border-color: var(--ak-line);
+  background: var(--ak-bg-1);
+  opacity: .6;
+  cursor: not-allowed;
+}
+.akp-btn:disabled:active{ transform: none; }
+
+/* ---------- 主按钮：照抄站点 .ak-btn-solid（琥珀填充自左滑入） ---------- */
+.akp-btn--solid{ color: var(--ak-text); font-weight: 700; }
+.akp-btn--solid::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;                                   /* 压在文字之下、背景之上 */
+  background: var(--ak-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 180ms var(--ease-in);
+}
+@media (hover: hover) and (pointer: fine){
+  .akp-btn--solid:hover{ color: var(--ak-bg-0); border-color: var(--ak-accent); }
+  .akp-btn--solid:hover::before{ transform: scaleX(1); transition: transform 220ms var(--ease-out); }
+}
+.akp-btn--solid:active{ color: var(--ak-bg-0); transform: scale(.97); }
+.akp-btn--solid:active::before{ transform: scaleX(1); transition: transform 90ms var(--ease); }
+@media (hover: none){
+  /* 触屏没有 hover：常显实心，否则用户看不出这是主操作 */
+  .akp-btn--solid{
+    background: var(--ak-accent);
+    border-color: var(--ak-accent);
+    color: var(--ak-bg-0);
+  }
+}
+
+/* ---------- 字号四档：一行 4 个独立小按钮 ----------
+   2026-10-12 拍板：连体分段选择器站点没有先例 → 改回独立按钮。
+   未选中 = 站点普通按钮态（.ak-btn）；选中 = 实心琥珀（同主按钮静默实心态）。 */
+.akp-seg{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45em;
+}
+.akp-seg-i{
+  min-height: 44px;
+  padding: .55em 1em;
+  font: inherit;
+  font-size: .92em;
+  letter-spacing: .06em;
+
+  color: var(--ak-text-dim);
+  background: var(--ak-bg-2);
+  border: 1px solid var(--ak-line-2);
+  border-radius: var(--ak-radius);
+  cursor: pointer;
+
+  transition:
+    transform var(--dur-press) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.akp-seg-i:hover{
+  color: var(--ak-text);
+  border-color: var(--ak-accent);
+  background: var(--ak-bg-3);
+}
+.akp-seg-i:active{ transform: scale(.96); }
+.akp-seg-i:focus-visible{ outline: none; border-color: var(--ak-accent); }
+.akp-seg-i[aria-pressed="true"]{
+  color: var(--ak-bg-0);
+  background: var(--ak-accent);
+  border-color: var(--ak-accent);
+  font-weight: 700;
+}
+
+/* ============================================================
+   2. 模块外壳与排版
+   ============================================================ */
+.akp{
+  width: min(440px, 100%);
+  background: var(--akp-bg);
+  color: var(--akp-text);
+  font-size: var(--akp-fs);
+  line-height: var(--akp-lh);
+  padding: var(--akp-pad) 0 calc(var(--akp-pad) * 1.6);
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;   /* 用户不要等宽数字：沿用页面字体 */
+}
+
+/* 顶部工具条：字号 + 折叠 */
+.akp-tools{
+  display: flex; align-items: center; gap: .6em; flex-wrap: wrap;
+  padding: 0 var(--akp-pad) calc(var(--akp-pad) * 1.1);
+  border-bottom: 1px solid var(--akp-line-red);
+  margin-bottom: calc(var(--akp-pad) * 1.1);
+}
+.akp-tools-label{
+  color: var(--ak-text-mute);
+  font-size: .9em;
+  letter-spacing: .08em;
+  margin-right: .1em;
+}
+.akp-tools-push{ margin-left: auto; }
+
+/* ---------- 标题条：主红块 + 两条平行斜条（共 3 个梯形） ----------
+   2026-10-12 按原图重新采样重做（此前只做了 1 个梯形，管理者指出「不止一个」）。
+   结构（原图核实，主动技/被动技/超越技/简介 四块同构）：
+     ① 主红块：右边斜切（约 40°），块内标题字 = 饱和金黄 + 深色描边
+     ② 第 1 条斜条：紧邻主块右侧，较宽（同色 72% 不透明）
+     ③ 第 2 条斜条：再往右，更细更暗（同色 45% 不透明）
+   三者同角度平行。尺寸变量见 .akp 上的 --akp-bar-*（单位 = --akp-fs）。 */
+.akp-bar{
+  position: relative;
+  height: var(--akp-bar-h);
+  display: flex; align-items: center; justify-content: flex-end; gap: .6em;
+  margin: 0 0 calc(var(--akp-pad) * .85);
+}
+
+/* 斜条 1 / 2 —— 挂在容器伪元素上（主块有 clip-path，挂它会被裁掉） */
+.akp-bar::before,
+.akp-bar::after{
+  content: "";
+  position: absolute; top: 0; height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  clip-path: polygon(var(--akp-bar-sk) 0, 100% 0, calc(100% - var(--akp-bar-sk)) 100%, 0 100%);
+  -webkit-clip-path: polygon(var(--akp-bar-sk) 0, 100% 0, calc(100% - var(--akp-bar-sk)) 100%, 0 100%);
+}
+.akp-bar::before{
+  left: var(--akp-tail1-l);
+  width: var(--akp-tail1-w);
+  background: rgba(122,16,21,.72);
+}
+.akp-bar::after{
+  left: var(--akp-tail2-l);
+  width: var(--akp-tail2-w);
+  background: rgba(122,16,21,.45);
+}
+
+/* 主块 */
+.akp-bar-label{
+  position: absolute; left: 0; top: 0; z-index: 2;
+  width: var(--akp-bar-w);
+  height: 100%;
+  box-sizing: border-box;
+  display: flex; align-items: center;
+  padding: 0 var(--akp-bar-sk) 0 calc(var(--akp-fs) * .5);
+  background: var(--akp-red);
+  color: var(--akp-bar-fg);
+  font-weight: 700;
+  font-size: 1.1em;
+  line-height: 1;
+  letter-spacing: .03em;
+  white-space: nowrap;
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--akp-bar-sk)) 100%, 0 100%);
+  -webkit-clip-path: polygon(0 0, 100% 0, calc(100% - var(--akp-bar-sk)) 100%, 0 100%);
+  /* 游戏字描边：四向深红 + 下投影（实测描边为深红黑，不是纯黑） */
+  text-shadow:
+    0 0 1px #6B0F16, 0 1px 0 #6B0F16, 0 -1px 0 #6B0F16,
+    1px 0 0 #6B0F16, -1px 0 0 #6B0F16,
+    0 2px 3px rgba(0,0,0,.55);
+}
+.akp-badge{
+  flex: 0 0 auto; align-self: center;
+  color: var(--akp-green-bd);
+  font-weight: 700; font-size: 1em; letter-spacing: .02em;
+  margin-left: auto;
+}
+
+/* 版本徽标 */
+.akp-ver{
+  flex: 0 0 auto; align-self: center;
+  font-size: .9em; font-weight: 700; letter-spacing: .04em;
+  margin-left: auto; white-space: nowrap;
+}
+/* 版本徽标：非对比态显当前版本（金），对比态显「v2 → v3 对比」（绿） */
+.akp-ver--cur{ color: var(--akp-gold); }
+.akp-ver--diff{ color: var(--akp-adj); }
+/* 日期（标题条右端，原版本徽标位）：与版本号同字体，金色 */
+.akp-ver--date{ color: var(--akp-gold); }
+/* 版本徽标移入操作条后：靠左（「被动」正下方），按钮保持靠右 */
+.akp-actions .akp-ver{ margin-left: 0; margin-right: auto; }
+
+/* ---------- 操作条（版本切换等），右对齐 ---------- */
+.akp-actions{
+  display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center;
+  gap: .55em;
+  padding: 0 var(--akp-pad) calc(var(--akp-pad) * 1.0);
+}
+
+/* ---------- 正文 ---------- */
+.akp-body{ padding: 0 var(--akp-pad); }
+.akp-sec + .akp-sec{ margin-top: calc(var(--akp-pad) * 1.7); }
+
+.akp-item{ margin: 0 0 1.05em; }
+.akp-item:last-child{ margin-bottom: 0; }
+
+/* 条目标题（被动 /+N、超越技大标题用它） */
+.akp-h{
+  margin: 0 0 .18em;
+  font-weight: 700;
+  font-size: 1.28em;
+  line-height: 1.25;
+  color: var(--akp-name);
+}
+.akp-plus{ color: var(--akp-green); margin-right: .35em; }
+
+/* 主动技标题行：【普通技】【能量技】标签 + 技能名
+   · 标签：与被动条目名（+N 名称）同字号同字重 —— 1.28em / 700，
+     颜色跟类型（普通技淡金 / 能量技青蓝）。
+     （2026-10-12 用户指定「改回更大字号，和被动名字一样大」）
+   · 技能名：仍与描述正文同字号同字重 —— 上一轮用户的要求，未变。
+   两处都是用户明确指定过的，改动前先确认是哪一处。 */
+.akp-h--skill{
+  font-weight: 400;
+  font-size: 1em;
+  line-height: var(--akp-lh);
+  margin: 0 0 .1em;
+}
+.akp-h--skill .akp-tag{
+  font-weight: 700;
+  font-size: 1.28em;      /* = .akp-h（被动条目名）的字号 */
+  margin-right: .4em;
+}
+.akp-h--skill--gold,
+.akp-h--skill--gold .akp-tag,
+.akp-h--skill--gold .akp-skill-name{ color: var(--akp-gold); }
+.akp-h--skill--cyan,
+.akp-h--skill--cyan .akp-tag,
+.akp-h--skill--cyan .akp-skill-name{ color: var(--akp-cyan); }
+
+/* 超越技大标题 */
+.akp-big{
+  margin: 0 0 .3em;
+  font-weight: 700;
+  font-size: 1.5em;
+  line-height: 1.25;
+  color: var(--akp-name);
+}
+
+/* 描述正文：两端对齐（参考图即为两端对齐） */
+.akp-d{
+  margin: 0;
+  text-align: justify;
+  text-justify: inter-ideograph;
+  color: var(--akp-text);
+}
+.akp-d + .akp-d{ margin-top: .18em; }
+/* 被动技的描述块整体左缩进约 0.55em（主动技/超越技不缩进）。
+   注意是整块缩进，不是首行缩进。 */
+.akp-sec--passive .akp-d{ padding-left: .55em; }
+
+/* 从略说明 */
+.akp-omit{ color: var(--ak-text-mute); font-size: .92em; }
+
+/* ---------- 技能截图原图（底部下载链接） ---------- */
+.akp-shots{
+  margin: calc(var(--akp-pad) * 2) var(--akp-pad) 0;
+  padding-top: calc(var(--akp-pad) * 1.15);
+  border-top: 1px solid var(--akp-line-red);
+}
+.akp-shots-hd{
+  display: flex; align-items: baseline; gap: .7em;
+  margin-bottom: .8em;
+}
+.akp-shots-label{
+  font-size: 1.05em; font-weight: 700; letter-spacing: .06em;
+  color: var(--akp-name);
+}
+.akp-shots-hint{ font-size: .85em; color: var(--ak-text-mute); }
+.akp-shots-list{ display: flex; flex-wrap: wrap; gap: .5em; }
+.akp-shot{
+  font-size: .86em;
+  letter-spacing: .04em;
+  text-decoration: none;          /* 它是 <a>，但外观完全沿用站点按钮 */
+}
+
+/* ---------- 对比态标注 ---------- */
+/* ---------- 对比态标注 ----------
+   2026-10-12 管理者要求「高亮清晰可见、易于辨认」：
+   颜色字 + 同色系淡底 + 底部 1px 同色线，三重信号。
+   底色用 color-mix 调 18% 透明度，深浅主题都成立。 */
+.akp-diff{
+  font-style: normal;
+  font-weight: 700;
+  padding: 0 .12em;
+  border-radius: 2px;
+  -webkit-box-decoration-break: clone;
+          box-decoration-break: clone;   /* 跨行时每一段都有底色 */
+}
+.akp-diff--buff{
+  color: var(--akp-buff);
+  background: rgba(255, 77, 77, .14);
+  box-shadow: inset 0 -1px 0 rgba(255, 77, 77, .55);
+}
+.akp-diff--adj{
+  color: var(--akp-adj);
+  background: rgba(63, 212, 99, .13);
+  box-shadow: inset 0 -1px 0 rgba(63, 212, 99, .5);
+}
+.akp-diff--new{
+  color: var(--akp-new);
+  background: rgba(255, 154, 46, .15);
+  box-shadow: inset 0 -1px 0 rgba(255, 154, 46, .55);
+}
+.akp-diff--del{
+  color: var(--akp-del);
+  background: rgba(140, 150, 160, .12);
+  text-decoration: line-through;
+}
+.akp-item--new .akp-h,
+.akp-item--new .akp-d{ color: var(--akp-new); }
+
+/* ---------- 折叠（grid 方案，与站点 .ak-fold 同源） ---------- */
+.akp-fold{
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--dur-slow) var(--ease);
+}
+.akp-fold.is-folded{ grid-template-rows: 0fr; transition: grid-template-rows 200ms var(--ease-in); }
+.akp-fold > .akp-fold-inner{ overflow: hidden; min-height: 0; }
+
+/* ============================================================
+   3. 点击涟漪（与站点 ak-motion.css .ak-ripple 同款，仅换类名）
+   ============================================================ */
+.akp-ripple{
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .32);
+  pointer-events: none;
+  transform: scale(0);
+  animation: akp-ripple 600ms var(--ease-out) forwards;
+}
+@keyframes akp-ripple{
+  to { transform: scale(2.5); opacity: 0; }
+}
+
+/* ---------- 脚注 ---------- */
+.akp-note{
+  color: var(--ak-text-mute);
+  font-size: .86em;
+  padding: .9em var(--akp-pad) 0;
+  line-height: 1.7;
+}
+
+/* ---------- 减少动态 ---------- */
+@media (prefers-reduced-motion: reduce){
+  .akp-btn, .akp-btn--solid::before, .akp-fold, .akp-seg-i{
+    transition-duration: .001ms !important;
+  }
+}
