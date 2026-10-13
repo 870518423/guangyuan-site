@@ -1,7 +1,7 @@
 {
   "name": "奥系工具站",
   "short_name": "奥系工具站",
-  "description": "奥系光元工具站：光元收益预测器 + 奥系人间体大全 + 奥系攻略",
+  "description": "奥系光元工具站：光元收益预测器 + 奥系人间体大全 + 奥系攻略 + 角色被动版本收录",
   "lang": "zh-CN",
   "dir": "ltr",
   "start_url": "./index.html",

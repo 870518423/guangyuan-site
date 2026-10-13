@@ -77,7 +77,15 @@
 //      S5 缓存名去 test 残留：guangyuan-ak-test-v31 → guangyuan-v32（本次起用新名）；
 //      S2 对账自检在 pack_deploy.py（不改 SW 内容但属同批发布）。
 //      akp.js / index.html / category.html / char.html 均在预缓存清单，按硬规矩升版。
-const CACHE_NAME = 'guangyuan-v32';
+// v33：中期整改 M1–M4（审查报告第三部分）——
+//      M1 新增 tools/akp_lint.py 数据体检，并挂进 pack_deploy.py 第五项自检
+//         （manifest↔数据↔图片↔SW 清单四层一致性；脚本本身不进包）；
+//      M2 install 由 cache.addAll 改为逐条 add+catch（单条失败不再拖垮整次安装）；
+//      M3 passive 三页补 theme-color/manifest/apple-touch-icon/favicon 等 PWA meta，
+//         manifest.json 描述补「角色被动版本收录」；
+//      M4 新角色数据文件 ASCII 命名规则落档（_模板.js / _manifest.js 注释）。
+//      passive 三页与 manifest.json 均在预缓存清单，SW 自身亦有改动，按硬规矩升版。
+const CACHE_NAME = 'guangyuan-v33';
 const ASSETS = [
   './',
   './index.html',
@@ -147,10 +155,20 @@ function isDocumentRequest(request) {
 }
 
 // 安装：预缓存核心资源
+// 2026-10-13 M2（审查 D-1）：原来用 cache.addAll(ASSETS) —— 它是「全有或全无」，
+// 任何一条资源 404 都会让整个 install 失败，老用户被永久卡在旧版本（且静默）。
+// 现在改成逐条 add + 单条 catch：个别资源取不到只打印警告，其余照常入缓存、
+// install 照常完成。发布前的对账（pack_deploy.py 第四项自检 + akp_lint.py 第五项）
+// 仍然是第一道防线，这里只是纵深防御。
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+      return Promise.all(ASSETS.map((url) =>
+        cache.add(url).catch((e) => {
+          console.warn('[SW] 预缓存失败（其余照常，不影响本次安装）:', url, e && e.message);
+          return null;
+        })
+      ));
     }).then(() => self.skipWaiting())
   );
 });

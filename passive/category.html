@@ -4,7 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>阵营 · 角色被动版本收录</title>
-<link rel="icon" href="data:,"><!-- 避免本地预览时 favicon 404 -->
+<!-- ===== PWA 安装与主题元数据（与站点主页保持一致；2026-10-13 M3）===== -->
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="角色被动版本收录 · 阵营目录：按奥特之星 / 多宇宙 / 宇宙人 / 怪兽浏览角色">
+<link rel="manifest" href="../manifest.json">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="../assets/favicon-32.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="阵营 · 角色被动版本收录">
+<meta name="mobile-web-app-capable" content="yes">
 
 <link rel="stylesheet" href="akp.css">
 <link rel="stylesheet" href="akp-list.css">
@@ -130,5 +139,17 @@
 })();
 </script>
 
+<!-- Service Worker 注册（2026-10-13 M3）：被动页此前不注册 SW，
+     Chrome 无法判定「可安装」，补 manifest 也不会有独立主屏图标。
+     作用域默认 = 脚本所在目录 = 站点根，与主页注册的是同一个 SW。 -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('../service-worker.js')
+      .then(function () {})
+      .catch(function () { /* 独立预览或离线时静默忽略 */ });
+  });
+}
+</script>
 </body>
 </html>

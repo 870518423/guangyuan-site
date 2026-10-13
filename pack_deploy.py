@@ -15,6 +15,7 @@ import zipfile
 import os
 import re
 import sys
+import importlib.util
 
 # 以脚本所在目录为站点根
 SRC = os.path.dirname(os.path.abspath(__file__))
@@ -84,6 +85,30 @@ def parse_sw_assets():
     return items
 
 
+def run_akp_lint():
+    """2026-10-13 M1（审查 C-3）：跑被动板块数据体检 tools/akp_lint.py。
+    返回 (通过?, 摘要行列表)。lint 脚本缺失或 __main__ 未执行 → 视为不通过。"""
+    path = os.path.join(SRC, 'tools', 'akp_lint.py')
+    if not os.path.isfile(path):
+        return False, ['  找不到 tools/akp_lint.py（数据体检无法运行）']
+    spec = importlib.util.spec_from_file_location('akp_lint', path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    lines = []
+    # 借用 lint 的内部检查流程（不重复实现），只收集结论
+    import io as _io
+    manifest = mod.parse_manifest(mod.read(os.path.join(mod.DATA, '_manifest.js')))
+    ids = mod.check_files(manifest)
+    mod.check_data(manifest)
+    mod.check_images(manifest, ids)
+    mod.check_sw(manifest)
+    for l in mod.warns:
+        lines.append('  WARN %s' % l)
+    for l in mod.errors:
+        lines.append('  ERROR %s' % l)
+    return (not mod.errors), lines
+
+
 def main():
     got, missing = collect()
 
@@ -128,7 +153,13 @@ def main():
               % (len(sw_assets), ('缺 %s' % lost) if lost else '全部在包内'))
         sw_fail = bool(lost)
 
-    return 0 if not (bad or absent or missing or sw_fail) else 1
+    # 数据体检（M1，第五项自检）：manifest/数据/图片/SW 清单四层一致性
+    lint_ok, lint_lines = run_akp_lint()
+    print('  数据体检（被动板块）: %s' % ('通过' if lint_ok else '未通过'))
+    for l in lint_lines[:12]:
+        print(l)
+
+    return 0 if not (bad or absent or missing or sw_fail or not lint_ok) else 1
 
 
 if __name__ == '__main__':
