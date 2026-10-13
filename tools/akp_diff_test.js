@@ -5,6 +5,8 @@
      2. 标点/空白差异不计改动，且显示采用**当前版本**写法
      3. 真实改动仍要标出（含数值替换不误切字符的旧 bug 防线）
      4. 同义词与真实数值混在一段时，只标真实变动部分
+     5. 语义分档（2026-10-13）：L1 措辞调整带淡色原文小注、L2 自动写「A调整为B」、
+        「减免」不归入「减少」（减少只与降低同义）、完全相同不标注
    依赖：akp.js 暴露的 AKP.__diff（调试探针）。 */
 const fs = require("fs");
 const path = require("path");
@@ -38,11 +40,13 @@ const chk = (name, cond, extra) => {
   if (!cond) fails++;
 };
 const plain = (h) => h.replace(/<[^>]+>/g, "");
+/* 主文案 = 去掉「（原：…）」淡色小注后的正文（L1 措辞调整会带旧文案小注） */
+const main = (h) => h.replace(/<span class="akp-was">[\s\S]*?<\/span>/g, "").replace(/<[^>]+>/g, "");
 
 /* —— 1. 同义改写：不标改动，且显示当前版本写法 —— */
 let h = diff("造成的所有伤害增加25%", "造成的所有伤害提高25%");
 chk("增加→提高 不标注", !has(h), h);
-chk("增加→提高 显示当前写法（提高）", plain(h).includes("提高") && !plain(h).includes("增加"), plain(h));
+chk("增加→提高 主文案用当前写法（提高）", main(h).includes("提高") && !main(h).includes("增加"), main(h));
 
 h = diff("使目标受到的伤害降低50%", "使目标受到的伤害减少50%");
 chk("降低→减少 不标注", !has(h), h);
@@ -54,7 +58,7 @@ chk("角色→目标 不标注", !has(h), h);
 /* —— 2. 标点 / 空白 —— */
 h = diff("造成伤害，持续2回合", "造成伤害。持续2回合");
 chk("逗号→句号 不标注", !has(h), h);
-chk("标点差异显示当前版本（句号）", plain(h).includes("。") && !plain(h).includes("，"), plain(h));
+chk("标点差异主文案用当前版本（句号）", main(h).includes("。") && !main(h).includes("，"), main(h));
 h = diff("攻击+1000，命中率+10%", "攻击+1000 命中率+10%");
 chk("增删标点 不标注", !has(h), h);
 
@@ -72,6 +76,26 @@ const t = plain(h);
 const spans = h.match(/<span class="akp-diff[^>]*">[^<]*<\/span>/g) || [];
 chk("混合段：同义词部分不标（不出现「增加（提高）」）", !/增加（含?提高/.test(t) && !/增加（/.test(t), t);
 chk("混合段：只 1 处标注且为 40%", spans.length === 1 && spans[0].includes("40%"), JSON.stringify(spans));
+
+/* —— 5. 语义分档（2026-10-13 管理者口径） —— */
+h = diff("受到的所有伤害降低5%", "受到的所有伤害减少5%");
+chk("L1 措辞调整：不标色 + 带淡色原文小注",
+  !has(h) && /akp-dlv--1/.test(h) && /akp-was/.test(h), h);
+
+h = diff("使自身暴击率增加20%，持续2回合", "使自身暴击率增加50%，持续2回合");
+chk("L2 数值调整：自动写「20%调整为50%」",
+  /20%调整为50%/.test(h) && /akp-dlv--2/.test(h), h);
+
+h = diff("使目标免伤率减少20%", "使目标免伤率减免20%");
+chk("「减免」不属于「减少」（仍算改动）", has(h), h);
+
+h = diff("每次攻击时，提升自身伤害10%，持续2回合", "每次攻击时，提升自身伤害10%，持续2回合");
+chk("完全相同 → 不标注", !has(h) && !/akp-dlv/.test(h), h);
+
+h = diff("免疫<眩晕>效果。每回合第一次受能量技攻击时，使自身破挡率和命中率均增加50%，持续2回合",
+         "免疫<眩晕>效果。受到的所有伤害减少50%");
+chk("官方同款：后半段调整为（整块替换，不是逐字涂抹）",
+  /后半段/.test(h) && /akp-diff--del/.test(h) && !/均增加到的所有伤害/.test(plain(h)), plain(h));
 
 const total = checks;
 console.log(fails ? "\n比对规则测试：" + fails + " 项失败" : "\n比对规则测试：全部通过 " + total + "/" + total);

@@ -251,21 +251,229 @@
   /* 直接按 token 流生成对比 HTML。
      不用「字符串 replace」是因为原文里可能有重复子串，会替错位置；
      token 流自带顺序，天然不会错位。 */
-  function diffHtml(prev, cur) {
-    var ops = alignTokens(tokenize(prev), tokenize(cur));
-    if (!ops) {                                    /* 超长兜底：整条替换 */
-      return esc(prev) + '（<span class="akp-diff akp-diff--new">' + esc(cur) + "</span>）";
+  /* ============ 语义分档对比（2026-10-13 管理者口径） ============
+     参照官方公告「角色调整」段的写法：条目级、只说变动点、动词固定
+     （调整为 / 新增 / 移除 / 重做），**不做逐字涂抹** —— 逐字会把新旧文字
+     交错成读不通的混种句（实测「使自身破挡率和命中率均增加到的所有伤害
+     减少50%」「暴击伤害增加20%25%」）。
+     方向保持我们自己的：**老版本 → 新版本**（官方是新比旧，不照搬）。
+
+     分档：
+       L0 完全相同 → 淡色带过
+       L1 措辞调整：骨架与数值都一样，只是换了说法 → 显示新文案 + 淡色原文小注，不标色
+       L2 数值调整：骨架一样、数值变了 → 自动写「由 20% 调整为 50%」
+       L3 内容调整：骨架变了 → 老整块划掉 + 新整块给出（调整/新增/移除）
+       L4 重做：整条换掉 → 删除线老全文 + 橙色新全文（沿用现有样式） */
+
+  /* 语义词典：方向词归一，等价词归一。
+     ⚠️ 口径铁律：↑ 增加/提高/增强/提升 同义；↓ **只有** 减少/降低 同义
+        —— 「减免」「减轻」等不在此列（管理者 2026-10-13）。 */
+  var UP_WORDS   = ["增加", "提高", "增强", "提升"];
+  var DOWN_WORDS = ["减少", "降低"];
+  var EQ_GROUPS  = [
+    ["解除", "驱散", "清除", "移除"],
+    ["角色", "目标"],
+    ["持续", "维持"],
+    ["每回合", "每个回合"],
+    ["上阵出场时", "上场时", "入场时"],
+    ["受击时", "受到攻击时", "受到主动技攻击时", "受到能量技攻击时"]
+  ];
+  var W2T = {};
+  UP_WORDS.forEach(function (w) { W2T[w] = "↑"; });
+  DOWN_WORDS.forEach(function (w) { W2T[w] = "↓"; });
+  EQ_GROUPS.forEach(function (g) {
+    g.forEach(function (w) { if (!W2T[w]) W2T[w] = g[0]; });
+  });
+  /* 长词优先，避免「增加」被单字切走 */
+  var DICT_WORDS = Object.keys(W2T).sort(function (a, b) { return b.length - a.length; });
+  var STOPW = "的了和与在将把被并且则若如每各其之中后前内外均都还就才";
+  /* 标点/空白：不参与语义比较（管理者口径：标点增删不算改动） */
+  var SEM_PUNCT = /^[\s，。、；：？！,,\.?!;:·…—～~\-_"“”‘’'()（）\[\]【】《》「」『』]$/;
+
+  /* 分词：数字整体、词典词整体、其余逐字 */
+  function semTokenize(s) {
+    var src = String(s == null ? "" : s), out = [], i = 0, k, m, hit;
+    while (i < src.length) {
+      hit = null;
+      for (k = 0; k < DICT_WORDS.length; k++) {
+        if (src.substr(i, DICT_WORDS[k].length) === DICT_WORDS[k]) { hit = DICT_WORDS[k]; break; }
+      }
+      m = src.slice(i).match(/^\d+(?:\.\d+)?%?/);
+      if (m) { out.push(m[0]); i += m[0].length; continue; }
+      if (hit) { out.push(hit); i += hit.length; continue; }
+      out.push(src[i]); i++;
     }
-    return refineChunks(chunkOps(ops), 3).map(function (s) {
-      if (s.same != null) return esc(s.same);
-      /* 兜底：比较键已把「同义词 / 标点」归一，这里再兜一层（个别不在表内的符号）
-         —— 判定「其实没变」时显示**当前版本**的写法，不标注、不回退旧写法。 */
-      if (canonKey(s.old) === canonKey(s.new)) return esc(s.new);
-      var t = changeType(s.old, s.new);
-      if (t === "del") return '<span class="akp-diff akp-diff--del">' + esc(s.old) + "</span>";
-      if (t === "new") return '<span class="akp-diff akp-diff--new">' + esc(s.new) + "</span>";
-      return esc(s.old) + '（<span class="akp-diff akp-diff--' + t + '">' + esc(s.new) + "</span>）";
-    }).join("");
+    return out;
+  }
+  function semOf(t) {
+    return SEM_PUNCT.test(t) ? null : (W2T[t] || t);
+  }
+  /* 语义 token：方向词归一、等价词归一、丢标点与虚词、丢数字 */
+  function semTokens(s) {
+    return semTokenize(s).map(semOf).filter(function (t) {
+      return t && !/^\d/.test(t) && STOPW.indexOf(t) < 0;
+    });
+  }
+  function skel(s) { return semTokens(s).join(""); }
+  function tokSet(s) { return semTokens(s).slice().sort(); }
+  /* 词集 Jaccard：语序调换、虚词增删不影响判定
+     （「为目标解除」↔「解除目标」是同一种描述） */
+  function jac(a, b) {
+    var A = tokSet(a), B = tokSet(b), i = 0, j = 0, hit = 0;
+    while (i < A.length && j < B.length) {
+      if (A[i] === B[j]) { hit++; i++; j++; }
+      else if (A[i] < B[j]) i++; else j++;
+    }
+    return hit / ((A.length + B.length - hit) || 1);
+  }
+  function lcsRatio(a, b) {
+    var A = skel(a), B = skel(b), m = A.length, n = B.length, i, j, best = 0, prev = [];
+    for (j = 0; j <= n; j++) prev.push(0);
+    for (i = 1; i <= m; i++) {
+      var cur = [0];
+      for (j = 1; j <= n; j++) {
+        if (A[i - 1] === B[j - 1]) { cur[j] = prev[j - 1] + 1; if (cur[j] > best) best = cur[j]; }
+        else cur[j] = 0;
+      }
+      prev = cur;
+    }
+    return best / (Math.min(m, n) || 1);
+  }
+  /* 切子句：先按「。」切句，再按「；」切分点 */
+  function clauses(s) {
+    var out = [];
+    (String(s == null ? "" : s).match(/[^。]*。|[^。]+$/g) || []).forEach(function (sent) {
+      var parts = sent.split("；");
+      parts.forEach(function (p, i) {
+        if (p) out.push(i < parts.length - 1 ? p + "；" : p);
+      });
+    });
+    return out;
+  }
+  function nums(s) { return String(s == null ? "" : s).match(/\d+(?:\.\d+)?%?/g) || []; }
+  /* 新版里出现一段「与旧版任何一句都不像」的长效果块 → 也是重做
+     （短句不触发，避免把「后半段调整为：受到的所有伤害减少50%」误判成重做） */
+  function hasNewBlock(A, B) {
+    return B.some(function (b) {
+      var cn = (b.match(/[\u4e00-\u9fa5]/g) || []).length;
+      if (cn < 30) return false;
+      return A.every(function (a) { return jac(a, b) < 0.5; });
+    });
+  }
+  function isRedo(o, w) {
+    if (lcsRatio(o, w) < 0.15) return true;
+    return hasNewBlock(clauses(o), clauses(w));
+  }
+  /* 子句配对：① 词集相似度 ≥0.9 先锚定；② 剩下按出现顺序兜底 */
+  function pairClauses(A, B) {
+    var usedB = [], mapA = [], i, j;
+    for (j = 0; j < B.length; j++) usedB.push(false);
+    for (i = 0; i < A.length; i++) mapA.push(null);
+    for (i = 0; i < A.length; i++) {
+      var bj = -1, bv = 0;
+      for (j = 0; j < B.length; j++) {
+        if (usedB[j]) continue;
+        var v = jac(A[i], B[j]);
+        if (v >= 0.9 && v > bv) { bv = v; bj = j; }
+      }
+      if (bj >= 0) { usedB[bj] = true; mapA[i] = bj; }
+    }
+    var free = [];
+    for (j = 0; j < B.length; j++) if (!usedB[j]) free.push(j);
+    var k = 0;
+    for (i = 0; i < A.length; i++) {
+      if (mapA[i] === null && k < free.length) { mapA[i] = free[k]; k++; }
+    }
+    var pairs = [];
+    for (i = 0; i < A.length; i++) pairs.push({ a: A[i], b: mapA[i] === null ? null : B[mapA[i]], i: i });
+    for (; k < free.length; k++) pairs.push({ a: null, b: B[free[k]], i: -1 });
+    return pairs;
+  }
+  function classify(a, b) {
+    if (!a) return { lv: 3, kind: "new" };
+    if (!b) return { lv: 3, kind: "del" };
+    if (a === b) return { lv: 0 };
+    if (jac(a, b) >= 0.9) {
+      var na = nums(a), nb = nums(b);
+      var same = na.length === nb.length && na.every(function (v, i) { return v === nb[i]; });
+      return same ? { lv: 1 } : { lv: 2, na: na, nb: nb };
+    }
+    return { lv: 3, na: nums(a), nb: nums(b) };
+  }
+  function numNote(c) {
+    if (!c.na || !c.nb) return "";
+    var n = Math.min(c.na.length, c.nb.length), parts = [];
+    for (var i = 0; i < n; i++) if (c.na[i] !== c.nb[i]) parts.push(c.na[i] + "→" + c.nb[i]);
+    return parts.length ? '<span class="akp-was">（数值：' + parts.join("、") + "）</span>" : "";
+  }
+  /* 重做样式（L4）：删除线老全文 + 橙色新全文 */
+  function redoHtml(prev, cur) {
+    return '<span class="akp-dline"><span class="akp-dlv akp-dlv--4">重做</span></span>' +
+      '<span class="akp-dline"><span class="akp-diff akp-diff--del">' + esc(prev) + "</span></span>" +
+      '<span class="akp-dline"><span class="akp-diff akp-diff--new">' + esc(cur) + "</span></span>";
+  }
+  function renderSemDiff(prev, cur) {
+    if (prev === cur) return esc(cur);
+
+    /* 整条级快速通道：语义骨架相同（已丢标点、已归同义词、已过滤虚词）
+       → 只是措辞或数值差异，**不要切子句**。
+       切子句是按「。」切句的，标点一变就把句子拆开，反而把「逗号→句号」
+       这种纯标点差异放大成结构变化（2026-10-13 实测踩到）。 */
+    if (skel(prev) === skel(cur)) {
+      var n0 = nums(prev), m0 = nums(cur);
+      var same0 = n0.length === m0.length && n0.every(function (v, i) { return v === m0[i]; });
+      if (same0) {
+        return '<span class="akp-dline"><span class="akp-dlv akp-dlv--1">措辞调整</span>' +
+          esc(cur) + '<span class="akp-was">（原：' + esc(prev) + "）</span></span>";
+      }
+      var segs0 = [], q;
+      for (q = 0; q < Math.min(n0.length, m0.length); q++) {
+        if (n0[q] !== m0[q]) segs0.push(n0[q] + "调整为" + m0[q]);
+      }
+      return '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">数值调整</span>' +
+        '<span class="akp-diff akp-diff--' + changeType(prev, cur) + '">' + esc(cur) + "</span>" +
+        '<span class="akp-was">（' + segs0.join("、") + "）</span></span>";
+    }
+
+    if (isRedo(prev, cur)) return redoHtml(prev, cur);
+    var A = clauses(prev), B = clauses(cur);
+    var out = "";
+    pairClauses(A, B).forEach(function (p) {
+      var c = classify(p.a, p.b);
+      var pos = "";
+      if (c.lv !== 0 && A.length > 1 && p.i >= 0) {
+        pos = p.i === 0 ? "前半段" : (p.i === A.length - 1 ? "后半段" : "中段");
+      }
+      if (c.lv === 0) {
+        out += '<span class="akp-dline akp-ctx">' + esc(p.b) + "</span>";
+      } else if (c.lv === 1) {
+        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--1">' + pos +
+          "措辞调整</span>" + esc(p.b) +
+          '<span class="akp-was">（原：' + esc(p.a) + "）</span></span>";
+      } else if (c.lv === 2) {
+        var n = Math.min(c.na.length, c.nb.length), segs = [];
+        for (var i = 0; i < n; i++) if (c.na[i] !== c.nb[i]) segs.push(c.na[i] + "调整为" + c.nb[i]);
+        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">' + pos +
+          '数值调整</span><span class="akp-diff akp-diff--' + changeType(p.a, p.b) + '">' +
+          esc(p.b) + '</span><span class="akp-was">（' + segs.join("、") + "）</span></span>";
+      } else if (c.kind === "new") {
+        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">新增</span>' +
+          '<span class="akp-diff akp-diff--new">' + esc(p.b) + "</span></span>";
+      } else if (c.kind === "del") {
+        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">移除</span>' +
+          '<span class="akp-diff akp-diff--del">' + esc(p.a) + "</span></span>";
+      } else {
+        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">' + pos +
+          '调整为</span><span class="akp-diff akp-diff--del">' + esc(p.a) +
+          '</span><span class="akp-diff akp-diff--' + changeType(p.a, p.b) + '">' +
+          esc(p.b) + "</span>" + numNote(c) + "</span>";
+      }
+    });
+    return out;
+  }
+
+  function diffHtml(prev, cur) {
+    return renderSemDiff(prev, cur);
   }
 
   /* 对比态：以「上一版本」正文为底，把本版落地的改动标出来。
@@ -280,6 +488,13 @@
     /* 一、数据里手写了 diffs → 按手写标注（子串定位，indexOf+slice，
        不用 String.replace，避免正文里的特殊字符被当成替换模式）。 */
     if (entry.diffs && entry.diffs.length) {
+      /* 手工标注 t:"redo"：机器分不清「真·重做」和「整条描述统一」时，
+         在数据里写一行指定（{ to: "v3", t: "redo" }），直接走重做样式。 */
+      var marked = entry.diffs.some(function (d) {
+        return (!d.to || d.to === verId) && d.t === "redo";
+      });
+      if (marked) return redoHtml(tp, tc);
+
       var html = esc(tp);
       entry.diffs.filter(function (d) { return !d.to || d.to === verId; }).forEach(function (d) {
         var o = esc(d.old || "");
@@ -305,18 +520,7 @@
 
     if (!prevId || tp === tc) return esc(tp);
 
-    /* 二、一方是另一方的前缀（常见于「原句 + 追加效果」）→ 逐字标更好读，
-       否则会整句划掉、再把整句连同新内容抄一遍。 */
-    if (tc.indexOf(tp) === 0 || tp.indexOf(tc) === 0) return diffHtml(tp, tc);
-
-    /* 三、整段重写（相似度低）→ 整条划掉 + 橙色新全文。
-       逐字标注会把句子切成一堆看不懂的小括号（2026-10-12 实测踩过）。 */
-    if (simRatio(tp, tc) < 0.72) {
-      return '<span class="akp-diff akp-diff--del">' + esc(tp) + "</span>" +
-             '（<span class="akp-diff akp-diff--new">' + esc(tc) + "</span>）";
-    }
-
-    /* 四、小改 → token 级逐块标注 */
+    /* 语义分档（L0–L4）：不再逐字涂抹，也不再按「前缀 / 相似度」分支处理 */
     return diffHtml(tp, tc);
   }
 

@@ -458,6 +458,28 @@
   background: rgba(140, 150, 160, .12);
   text-decoration: line-through;
 }
+
+/* ---------- 语义分档（2026-10-13 管理者口径） ----------
+   参照官方公告：条目级、只说变动点、动词固定（调整为/新增/移除/重做）。
+   一行一个变动点；未变的原文淡色带过；重做 = 删除线老全文 + 橙色新全文。
+   ⚠️ 用 span + display:block 而不是 div：正文容器是 <p>，div 会被浏览器拆出 p。 */
+.akp-dline{ display: block; margin: .18em 0; }
+.akp-dlv{
+  display: inline-block;
+  font-size: .76em; font-weight: 700; line-height: 1.6;
+  padding: 0 .34em; margin-right: .4em;
+  border: 1px solid currentColor; border-radius: 3px;
+  vertical-align: .06em; white-space: nowrap;
+}
+.akp-dlv--1{ color: #7FB2FF; }              /* 措辞调整：中性蓝，不标色 */
+.akp-dlv--2{ color: var(--akp-buff); }      /* 数值调整：红 */
+.akp-dlv--3{ color: var(--akp-adj); }       /* 内容调整：绿 */
+.akp-dlv--4{ color: var(--akp-new); }       /* 重做：橙 */
+.akp-was{                                   /* 淡色原文小注 */
+  color: var(--akp-del);
+  font-size: .88em; font-weight: 400;
+}
+.akp-ctx{ color: var(--akp-del); }          /* 未变动的上下文 */
 .akp-item--new .akp-h,
 .akp-item--new .akp-d{ color: var(--akp-new); }
 
