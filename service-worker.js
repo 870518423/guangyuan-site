@@ -91,7 +91,12 @@
 //      内联块 3（3 行微调）与两个引导脚本（主题首帧 / ak-js 兜底）保持内联：
 //      抽取会推迟执行，破坏防闪色与兜底时机。三者均入预缓存，按硬规矩升版。
 //      验收：tools/calc_regress.js 20/20 一致 + 双主题全页截图 0 差异像素。
-const CACHE_NAME = 'guangyuan-v34';
+// v35：比对口径调整（管理者 2026-10-13）——同义改写与标点差异不再算改动。
+//      akp.js 的 tokenize 改为「原文 t + 比较键 c」双字段：增加↔提高、降低↔减少、
+//      角色↔目标 三组同义词与标点/空白共用比较键；比较键相同即不标注，且显示
+//      采用当前版本写法；新增 AKP.__diff 调试探针供 tools/akp_diff_test.js 断言。
+//      passive/index.html 说明补「不算改动」一条。两者均在预缓存清单，按规矩升版。
+const CACHE_NAME = 'guangyuan-v35';
 const ASSETS = [
   './',
   './index.html',

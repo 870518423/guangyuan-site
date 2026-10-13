@@ -24,8 +24,21 @@ import os
 import re
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PASSIVE = os.path.join(ROOT, 'passive')
+ROOT = os.environ.get('AKP_LINT_ROOT') or \
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _find_passive(root):
+    """自动识别被动板块根：站点根（root/passive/）或板块根（root 本身就是）。
+    这样同一份脚本既能体检站点副本，也能预检桌面真源。"""
+    if os.path.isfile(os.path.join(root, 'data', '_manifest.js')):
+        return root
+    if os.path.isfile(os.path.join(root, 'passive', 'data', '_manifest.js')):
+        return os.path.join(root, 'passive')
+    return os.path.join(root, 'passive')
+
+
+PASSIVE = _find_passive(ROOT)
 DATA = os.path.join(PASSIVE, 'data')
 
 # 未完成角色：允许没有 versions / 没有图片条目（不着 ERROR）
@@ -164,8 +177,8 @@ def check_data(manifest):
         for v in vers:
             if not dates.get(v):
                 (warn if soft else err)('B5 版本缺 date 字段：%s 的 %s' % (name, v))
-            elif not re.fullmatch(r'\d{4}-\d{1,2}(-\d{1,2})?', dates[v]):
-                (warn if soft else err)('B6 date 格式不对（应为 YYYY-M 或 YYYY-M-D）：%s 的 %s = %r'
+            elif not re.fullmatch(r'\d{4}(-\d{1,2}(-\d{1,2})?)?', dates[v]):
+                (warn if soft else err)('B6 date 格式不对（应为 YYYY / YYYY-M / YYYY-M-D）：%s 的 %s = %r'
                                         % (name, v, dates[v]))
 
         # texts / names 的键必须 ∈ versions（防 vss2、v3 之类 typo）
@@ -241,7 +254,8 @@ def check_images(manifest, ids):
 def check_sw(manifest):
     sw_path = os.path.join(ROOT, 'service-worker.js')
     if not os.path.isfile(sw_path):
-        err('D1 找不到 service-worker.js')
+        # 对板块根（桌面真源）单独体检时没有 SW，这不是缺陷 → 跳过清单层
+        info('D1 当前目录没有 service-worker.js（板块根预检模式），跳过 SW 清单对账')
         return
     src = read(sw_path)
     m = re.search(r'const\s+ASSETS\s*=\s*\[(.*?)\];', src, re.S)

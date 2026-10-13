@@ -113,12 +113,48 @@
        「2」单独判成删除、把「0」判成新增，渲染出来就成了「末尾凭空多一个
        （0）」—— 2026-10-12 管理者实测撞到（尊皇 +4 明明是 23→30）。
        把数字（含小数与 %）整体当作一个 token 后，这类数值替换自然变成
-       一个整块，显示为「降低23%（30%）」。 */
+       一个整块，显示为「降低23%（30%）」。
+
+     2026-10-13 管理者口径补充：**同义改写与标点差异都不算改动**——
+       · 增加 ↔ 提高、降低 ↔ 减少、角色 ↔ 目标（同一个意思，换了个说法）
+       · 逗号、句号等标点与空白（排版差异）
+     实现：每个 token 除原文 t 之外带一个「比较键」c；**比较键相同即视为没变**。
+     展示永远用原文，且这类「没变但写法不同」的 token 统一显示**当前版本**的写法
+     （v2 里写成「提高」就显示「提高」，不会退回 v1 的「增加」）。 */
+  var SYN = [["增加", "提高"], ["降低", "减少"], ["角色", "目标"]];
+  var PUNCT_RE = /[\s，。、；：？！,\.\?\!;:·…—～~\-_"“”‘’'()（）\[\]【】<>《》「」『』]/;
+
   function tokenize(s) {
-    return String(s == null ? "" : s).match(/\d+(?:\.\d+)?%?|[\s\S]/g) || [];
+    var str = String(s == null ? "" : s);
+    var out = [], i = 0;
+    while (i < str.length) {
+      var hit = null, k, w;
+      for (k = 0; k < SYN.length && !hit; k++) {
+        for (w = 0; w < SYN[k].length; w++) {
+          if (str.substr(i, SYN[k][w].length) === SYN[k][w]) {
+            hit = { t: SYN[k][w], c: "\u0000syn" + k };   /* 同义词组内比较键相同 */
+            break;
+          }
+        }
+      }
+      if (hit) { out.push(hit); i += hit.t.length; continue; }
+      var num = str.slice(i).match(/^\d+(?:\.\d+)?%?/);
+      if (num) { out.push({ t: num[0], c: num[0] }); i += num[0].length; continue; }
+      var ch = str.charAt(i);
+      if (PUNCT_RE.test(ch)) { out.push({ t: ch, c: "\u0000punct" }); i++; continue; }
+      out.push({ t: ch, c: ch });
+      i++;
+    }
+    return out;
   }
 
-  /* 两个 token 数组的 LCS → 操作序列（same / del / ins，按原文顺序） */
+  /* 整段「比较键」串：用于判断一段文字是否其实没变（同义词 / 标点归一后相同） */
+  function canonKey(s) {
+    return tokenize(s).map(function (k) { return k.c; }).join("\u0001");
+  }
+
+  /* 两个 token 数组的 LCS → 操作序列（same / del / ins，按原文顺序）。
+     比较用比较键 c；same 操作同时带回两边原文，便于取「当前版本」的写法。 */
   function alignTokens(a, b) {
     var n = a.length, m = b.length;
     if (n * m > 4000000) return null;              /* 太长不硬算，避免卡顿 */
@@ -126,14 +162,14 @@
     for (var i = 0; i <= n; i++) dp.push(new Uint32Array(m + 1));
     for (var r = 1; r <= n; r++) {
       for (var c = 1; c <= m; c++) {
-        dp[r][c] = a[r - 1] === b[c - 1]
+        dp[r][c] = a[r - 1].c === b[c - 1].c
           ? dp[r - 1][c - 1] + 1
           : Math.max(dp[r - 1][c], dp[r][c - 1]);
       }
     }
     var ops = [], x = n, y = m;
     while (x > 0 && y > 0) {
-      if (a[x - 1] === b[y - 1]) { ops.push(["same", a[x - 1]]); x--; y--; }
+      if (a[x - 1].c === b[y - 1].c) { ops.push(["same", a[x - 1], b[y - 1]]); x--; y--; }
       else if (dp[x - 1][y] >= dp[x][y - 1]) { ops.push(["del", a[x - 1]]); x--; }
       else { ops.push(["ins", b[y - 1]]); y--; }
     }
@@ -149,12 +185,13 @@
     while (i < ops.length) {
       if (ops[i][0] === "same") {
         var s = "";
-        while (i < ops.length && ops[i][0] === "same") { s += ops[i][1]; i++; }
+        /* 公共段取**当前版本**的写法（比较键相同、原文可能不同：增加→提高、，→。） */
+        while (i < ops.length && ops[i][0] === "same") { s += (ops[i][2] || ops[i][1]).t; i++; }
         segs.push({ same: s });
       } else {
         var od = "", nw = "";
         while (i < ops.length && ops[i][0] !== "same") {
-          if (ops[i][0] === "del") od += ops[i][1]; else nw += ops[i][1];
+          if (ops[i][0] === "del") od += ops[i][1].t; else nw += ops[i][1].t;
           i++;
         }
         segs.push({ old: od, new: nw });
@@ -214,12 +251,6 @@
   /* 直接按 token 流生成对比 HTML。
      不用「字符串 replace」是因为原文里可能有重复子串，会替错位置；
      token 流自带顺序，天然不会错位。 */
-  /* 去掉标点/空白后比较 —— 2026-10-12 管理者口径：
-     逗号、句号等标点的增删**不算改动**，不进 diff。 */
-  function stripPunct(s) {
-    return String(s).replace(/[\s，。、；：？！,,\.\?\!;:·…—～~\-_"“”‘’'()（）\[\]【】<>《》「」『』]/g, "");
-  }
-
   function diffHtml(prev, cur) {
     var ops = alignTokens(tokenize(prev), tokenize(cur));
     if (!ops) {                                    /* 超长兜底：整条替换 */
@@ -227,8 +258,9 @@
     }
     return refineChunks(chunkOps(ops), 3).map(function (s) {
       if (s.same != null) return esc(s.same);
-      /* 纯标点差异（去掉标点后两边一样）→ 不标注，保持上一版原文 */
-      if (stripPunct(s.old) === stripPunct(s.new)) return esc(s.old);
+      /* 兜底：比较键已把「同义词 / 标点」归一，这里再兜一层（个别不在表内的符号）
+         —— 判定「其实没变」时显示**当前版本**的写法，不标注、不回退旧写法。 */
+      if (canonKey(s.old) === canonKey(s.new)) return esc(s.new);
       var t = changeType(s.old, s.new);
       if (t === "del") return '<span class="akp-diff akp-diff--del">' + esc(s.old) + "</span>";
       if (t === "new") return '<span class="akp-diff akp-diff--new">' + esc(s.new) + "</span>";
@@ -583,7 +615,10 @@
     init: init,
     mount: mount,
     get: function (id) { return REG[id]; },
-    list: function () { return ORDER.map(function (id) { return REG[id]; }); }
+    list: function () { return ORDER.map(function (id) { return REG[id]; }); },
+    /* 仅供自动化测试使用（tools/akp_diff_test.js）：比对引擎的输出探针。
+       规则变化（同义词/标点不计改动）靠它做断言，改引擎时务必重跑。 */
+    __diff: diffHtml
   };
 
   global.AKP = AKP;
