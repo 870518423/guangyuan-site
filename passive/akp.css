@@ -479,12 +479,12 @@
   color: var(--akp-del);
   font-size: .88em; font-weight: 400;
 }
-/* 条目名称变更：旧名灰色删除线 + 新名，**不标色**（管理者 2026-10-14） */
+/* 条目名称变更：旧名跟在**右侧**，灰色删除线，**不标色**（管理者 2026-10-14） */
 .akp-namedel{
   color: var(--akp-del);
   text-decoration: line-through;
   text-decoration-thickness: 1px;
-  margin-right: .35em;
+  margin-left: .35em;
   font-weight: 400;
 }
 .akp-ctx{ color: var(--akp-del); }          /* 未变动的上下文 */

@@ -627,7 +627,17 @@
       var pvId = vi > 0 ? vs[vi - 1] : null;
       var pvNm = pvId ? nameOf(entry, pvId) : null;
       if (pvNm && pvNm !== nm) {
-        nameHtml = '<del class="akp-namedel">' + esc(pvNm) + "</del>" + esc(nm);
+        var strip = function (s) { return s.replace(/\d+/g, ""); };
+        if (strip(pvNm) === strip(nm) && /\d/.test(pvNm) && /\d/.test(nm)) {
+          /* 只是数字变了（防御屏障6 → 防御屏障8）：文字照常，只把旧数字划掉 */
+          var iA = pvNm.search(/\d/), iB = nm.search(/\d/);
+          nameHtml = esc(nm.slice(0, iB)) +
+            '<del class="akp-namedel">' + esc(pvNm.slice(iA)) + "</del>" +
+            esc(nm.slice(iB));
+        } else {
+          /* 整个改名：新名在前，**旧名放在右侧**（灰色删除线），保持条目头左对齐美观 */
+          nameHtml = esc(nm) + '<del class="akp-namedel">' + esc(pvNm) + "</del>";
+        }
       }
     }
 
