@@ -512,8 +512,9 @@
       var n0 = nums(prev), m0 = nums(cur);
       var same0 = n0.length === m0.length && n0.every(function (v, i) { return v === m0[i]; });
       if (same0) {
-        return '<span class="akp-dline"><span class="akp-dlv akp-dlv--1">措辞调整</span>' +
-          esc(cur) + '<span class="akp-was">（原：' + esc(prev) + "）</span></span>";
+        /* 只有标点 / 虚词 / 同义词的差异（增加↔提高、减少↔降低…）
+           → 按管理者口径「这种可以不用管」：直接显示当前版本文案，不标注、不加小注 */
+        return esc(cur);
       }
       return '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">数值调整</span>' +
         inlineTokDiff(prev, cur) + "</span>";
@@ -531,9 +532,8 @@
       if (c.lv === 0) {
         out += '<span class="akp-dline akp-ctx">' + esc(p.b) + "</span>";
       } else if (c.lv === 1) {
-        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--1">' + pos +
-          "措辞调整</span>" + esc(p.b) +
-          '<span class="akp-was">（原：' + esc(p.a) + "）</span></span>";
+        /* 同义反复（骨架数值都相同）→ 不标注，直接显示当前版本文案 */
+        out += esc(p.b);
       } else if (c.lv === 2) {
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">' + pos +
           "数值调整</span>" + inlineTokDiff(p.a, p.b) + "</span>";
@@ -617,14 +617,28 @@
     var wrap = mk("div", "akp-item");
     var head;
 
+    /* 条目名称：对比态下若上一版名字不同 → 旧名灰色删除线 + 新名
+       （管理者 2026-10-14：名称变更要显示出来，但**不标色**，只用灰色删除线） */
+    var nm = nameOf(entry, verId);
+    var nameHtml = esc(nm);
+    if (state.kind === "diff" && entry.__versions) {
+      var vs = entry.__versions.map(function (v) { return v.id; });
+      var vi = vs.indexOf(verId);
+      var pvId = vi > 0 ? vs[vi - 1] : null;
+      var pvNm = pvId ? nameOf(entry, pvId) : null;
+      if (pvNm && pvNm !== nm) {
+        nameHtml = '<del class="akp-namedel">' + esc(pvNm) + "</del>" + esc(nm);
+      }
+    }
+
     if (entry.tag) {                     /* 主动技：标签 + 技能名（术语原样输出） */
       var tone = entry.tone === "cyan" ? "cyan" : "gold";
       head = mk("p", "akp-h akp-h--skill akp-h--skill--" + tone,
         '<span class="akp-tag">' + esc(entry.tag) + "</span>" +
-        '<span class="akp-skill-name">' + esc(nameOf(entry, verId)) + "</span>");
+        '<span class="akp-skill-name">' + nameHtml + "</span>");
     } else {                             /* 被动：+N + 名称 */
       head = mk("p", "akp-h",
-        (entry.no ? '<span class="akp-plus">' + esc(entry.no) + "</span>" : "") + esc(nameOf(entry, verId)));
+        (entry.no ? '<span class="akp-plus">' + esc(entry.no) + "</span>" : "") + nameHtml);
     }
     wrap.appendChild(head);
 
