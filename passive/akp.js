@@ -406,6 +406,34 @@
     for (var i = 0; i < n; i++) if (c.na[i] !== c.nb[i]) parts.push(c.na[i] + "→" + c.nb[i]);
     return parts.length ? '<span class="akp-was">（数值：' + parts.join("、") + "）</span>" : "";
   }
+  /* 数值调整（L2）专用：骨架相同 = 只有数值不同 → **就地只标数值**，
+     其余文字照常显示。这正是官方的写法（「造成450%（原为：350-400%）的伤害」），
+     也是管理者 2026-10-14 的要求：没必要整段标红，标在数值上就够了。
+     —— 只有骨架相同才敢这么标；骨架不同时逐字标会把句子搅成混种句（走 L3 整块替换）。 */
+  function inlineNumDiff(a, b) {
+    var A = semTokenize(a), B = semTokenize(b);
+    var out = "", i = 0, j = 0, ta, tb, na, nb;
+    while (i < A.length || j < B.length) {
+      ta = A[i]; tb = B[j];
+      na = ta !== undefined && /^\d/.test(ta);
+      nb = tb !== undefined && /^\d/.test(tb);
+      if (na && nb) {                                  /* 数值对数值 */
+        if (ta === tb) out += esc(tb);
+        else out += '<span class="akp-diff akp-diff--del">' + esc(ta) + "</span>" +
+                    '<span class="akp-diff akp-diff--' + changeType(ta, tb) + '">' + esc(tb) + "</span>";
+        i++; j++; continue;
+      }
+      if (!na && !nb && ta !== undefined && tb !== undefined) {
+        out += esc(tb);                                /* 未变文字：采用当前版本写法 */
+        i++; j++; continue;
+      }
+      /* 理论上不会发生（骨架相同则非数字 token 一一对应）；兜底不吞字 */
+      if (na) { out += '<span class="akp-diff akp-diff--del">' + esc(ta) + "</span>"; i++; }
+      else { out += '<span class="akp-diff akp-diff--new">' + esc(tb) + "</span>"; j++; }
+    }
+    return out;
+  }
+
   /* 重做样式（L4）：删除线老全文 + 橙色新全文 */
   function redoHtml(prev, cur) {
     return '<span class="akp-dline"><span class="akp-dlv akp-dlv--4">重做</span></span>' +
@@ -426,13 +454,8 @@
         return '<span class="akp-dline"><span class="akp-dlv akp-dlv--1">措辞调整</span>' +
           esc(cur) + '<span class="akp-was">（原：' + esc(prev) + "）</span></span>";
       }
-      var segs0 = [], q;
-      for (q = 0; q < Math.min(n0.length, m0.length); q++) {
-        if (n0[q] !== m0[q]) segs0.push(n0[q] + "调整为" + m0[q]);
-      }
       return '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">数值调整</span>' +
-        '<span class="akp-diff akp-diff--' + changeType(prev, cur) + '">' + esc(cur) + "</span>" +
-        '<span class="akp-was">（' + segs0.join("、") + "）</span></span>";
+        inlineNumDiff(prev, cur) + "</span>";
     }
 
     if (isRedo(prev, cur)) return redoHtml(prev, cur);
@@ -451,11 +474,8 @@
           "措辞调整</span>" + esc(p.b) +
           '<span class="akp-was">（原：' + esc(p.a) + "）</span></span>";
       } else if (c.lv === 2) {
-        var n = Math.min(c.na.length, c.nb.length), segs = [];
-        for (var i = 0; i < n; i++) if (c.na[i] !== c.nb[i]) segs.push(c.na[i] + "调整为" + c.nb[i]);
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">' + pos +
-          '数值调整</span><span class="akp-diff akp-diff--' + changeType(p.a, p.b) + '">' +
-          esc(p.b) + '</span><span class="akp-was">（' + segs.join("、") + "）</span></span>";
+          "数值调整</span>" + inlineNumDiff(p.a, p.b) + "</span>";
       } else if (c.kind === "new") {
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">新增</span>' +
           '<span class="akp-diff akp-diff--new">' + esc(p.b) + "</span></span>";

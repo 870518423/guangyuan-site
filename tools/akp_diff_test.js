@@ -74,8 +74,10 @@ chk("实质内容改写 仍标注", has(h), h);
 h = diff("造成的所有伤害增加25%，持续3回合", "造成的所有伤害提高40%，持续3回合");
 const t = plain(h);
 const spans = h.match(/<span class="akp-diff[^>]*">[^<]*<\/span>/g) || [];
+/* 2026-10-14 起 L2 只标数值：旧值划掉 + 新值标色 = 两处标注，不含文字部分 */
 chk("混合段：同义词部分不标（不出现「增加（提高）」）", !/增加（含?提高/.test(t) && !/增加（/.test(t), t);
-chk("混合段：只 1 处标注且为 40%", spans.length === 1 && spans[0].includes("40%"), JSON.stringify(spans));
+chk("混合段：只标数值（25%划掉 + 40%标红）",
+  spans.length === 2 && spans[0].includes("25%") && spans[1].includes("40%"), JSON.stringify(spans));
 
 /* —— 5. 语义分档（2026-10-13 管理者口径） —— */
 h = diff("受到的所有伤害降低5%", "受到的所有伤害减少5%");
@@ -83,8 +85,10 @@ chk("L1 措辞调整：不标色 + 带淡色原文小注",
   !has(h) && /akp-dlv--1/.test(h) && /akp-was/.test(h), h);
 
 h = diff("使自身暴击率增加20%，持续2回合", "使自身暴击率增加50%，持续2回合");
-chk("L2 数值调整：自动写「20%调整为50%」",
-  /20%调整为50%/.test(h) && /akp-dlv--2/.test(h), h);
+chk("L2 数值调整：只在数值位置标注（不整段标色）",
+  /akp-dlv--2/.test(h) &&
+  /akp-diff--buff">50%</.test(h) &&
+  !/akp-diff--buff">[^<]*暴击率/.test(h), h);
 
 h = diff("使目标免伤率减少20%", "使目标免伤率减免20%");
 chk("「减免」不属于「减少」（仍算改动）", has(h), h);
