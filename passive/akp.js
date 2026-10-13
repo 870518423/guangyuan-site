@@ -396,6 +396,12 @@
          · 版本按钮（主按钮）：在当前版本上循环 v1 → v2 → … → vN → v1
          · 对比按钮：开启 / 关闭「与上一版对比」（v1 没有上一版 → 禁用） */
     var list = sec.items || sec.entries || [];
+    /* 板块渲染模式（2026-10-13 扩展）：超越技原本是静态文本（heading + paras），
+       不参与版本对比；现在若数据里写成 `entries`（带 texts），即与被动一样
+       按版本渲染并支持对比。旧的静态写法继续兼容。
+       prose 恒为静态。 */
+    var listMode = sec.type === "prose" ? false
+                 : (sec.type === "exceed" ? !!list.length : true);
     var hasVer = !!(versions && sec.type === "passive" &&
                     list.some(function (e) { return !!e.texts; }));
     var verBtn = null, cmpBtn = null;
@@ -420,7 +426,7 @@
     if (VS.cmp == null) VS.cmp = false;
     var registry = opts.registry || null;
 
-    if (sec.type === "exceed" || sec.type === "prose") {
+    if (!listMode) {
       if (sec.heading) body.appendChild(mk("p", "akp-big", esc(sec.heading)));
       (sec.paras || []).forEach(function (p) { body.appendChild(mk("p", "akp-d", esc(p))); });
     }
@@ -434,9 +440,11 @@
       var inDiff = !!(prevId && VS.cmp);            /* v1 没有上一版 → 永远不是对比态 */
 
       /* 正文 */
-      if (sec.type !== "exceed" && sec.type !== "prose") {
+      if (listMode) {
         var st = inDiff ? { kind: "diff", i: vi } : { kind: "ver", i: vi };
         body.innerHTML = "";
+        /* 超越技板块可带 heading（如技能名 / 激活条件），按版本重绘时一并重建 */
+        if (sec.heading) body.appendChild(mk("p", "akp-big", esc(sec.heading)));
         if (versions) list.forEach(function (e) { e.__versions = versions; });
         list.forEach(function (e) {
           var n = itemEl(e, st, curId);

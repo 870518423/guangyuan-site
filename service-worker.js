@@ -103,7 +103,11 @@
 //      究极（UL）在下，每组标题即一键折叠按钮（触摸目标 44px、aria-expanded 同步）；
 //      首页阵营卡描述改为「究极（UL）/超越（BY）品质奥特之星角色的被动与版本改动收录」。
 //      category.html / index.html / akp-list.css 均在预缓存清单，按硬规矩升版。
-const CACHE_NAME = 'guangyuan-v37';
+// v38：超越技支持版本对比（管理者 2026-10-13）—— akp.js 的板块渲染改为 listMode：
+//      超越技数据写成 entries + texts 即与被动一样按版本渲染并参与对比，旧静态写法仍兼容；
+//      奥特之王（BY）与捷德终极形态的超越技已改为多版本（含 v1/v2 历史文案）。
+//      akp.js 与两个数据文件均在预缓存清单，按硬规矩升版。
+const CACHE_NAME = 'guangyuan-v38';
 const ASSETS = [
   './',
   './index.html',
