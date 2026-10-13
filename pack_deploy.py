@@ -40,7 +40,9 @@ INCLUDES = [
 
 # 即便落在 INCLUDES 目录内也一律排除（按文件名后缀/名称判断）
 EXCLUDE_SUFFIX = ('.bak', '~', '.tmp', '.swp', '.orig', '.rej')
-EXCLUDE_NAMES = {'Thumbs.db', 'desktop.ini', '.DS_Store'}
+# _模板.js 是开发用空白模板（只在真源 passive/data/ 里），不该随包发布；
+# 万一被误拷进站点目录，这里兜底拦住（2026-10-13 M4 顺带加固）
+EXCLUDE_NAMES = {'Thumbs.db', 'desktop.ini', '.DS_Store', '_模板.js'}
 
 # 这些扩展名属于「站点会实际请求的资源」，逐个校验存在性（缺了要报警）
 EXPECTED_HTML = [n for n in INCLUDES if n.endswith('.html')]
