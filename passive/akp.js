@@ -339,16 +339,40 @@
     }
     return best / (Math.min(m, n) || 1);
   }
-  /* 切子句：先按「。」切句，再按「；」切分点 */
+  /* 切子句：先按「。」切句（括号未闭合时不切），再按「；」切分点。
+     ⚠️ 为什么要在意括号：被动正文里大量用「（<效果名>：…。）」包裹效果说明，
+        括号常常跨句。若按「。」硬切，右括号会被切到下一句末尾，
+        变成「…每场战斗限触发1次。）」这种错位，甚至留下孤立的「）」
+        被当成一条独立的新增内容标出来（管理者 2026-10-14）。 */
   function clauses(s) {
+    var src = String(s == null ? "" : s);
+    var OPEN = "（([", CLOSE = "）)]";
+    var sents = [], depth = 0, start = 0, i, ch;
+    for (i = 0; i < src.length; i++) {
+      ch = src[i];
+      if (OPEN.indexOf(ch) >= 0) depth++;
+      else if (CLOSE.indexOf(ch) >= 0) depth = (depth > 0) ? depth - 1 : 0;
+      else if (ch === "。" && depth === 0) { sents.push(src.slice(start, i + 1)); start = i + 1; }
+    }
+    if (start < src.length) sents.push(src.slice(start));
+
     var out = [];
-    (String(s == null ? "" : s).match(/[^。]*。|[^。]+$/g) || []).forEach(function (sent) {
+    sents.forEach(function (sent) {
       var parts = sent.split("；");
-      parts.forEach(function (p, i) {
-        if (p) out.push(i < parts.length - 1 ? p + "；" : p);
+      parts.forEach(function (p, idx) {
+        if (p) out.push(idx < parts.length - 1 ? p + "；" : p);
       });
     });
-    return out;
+    /* 合并「只含括号/标点」的碎片子句到前一条。
+       按「。」切句时会把跨句的括号切碎，留下孤立的「）」，
+       它被当成一条独立的新增内容标出来，纯属噪音（管理者 2026-10-14）。 */
+    var cleaned = [];
+    out.forEach(function (c) {
+      var bare = c.replace(/[\s，。、；：？！,,\.?!;:·…—～~\-_"“”‘’'()（）\[\]【】《》「」『』]/g, "");
+      if (!bare && cleaned.length) cleaned[cleaned.length - 1] += c;
+      else cleaned.push(c);
+    });
+    return cleaned;
   }
   function nums(s) { return String(s == null ? "" : s).match(/\d+(?:\.\d+)?%?/g) || []; }
   /* 新版里出现一段「与旧版任何一句都不像」的长效果块 → 也是重做
@@ -519,9 +543,8 @@
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">' + pos +
           "调整为</span>" + inlineTokDiff(p.a, p.b) + "</span>";
       } else if (c.kind === "new") {
-        /* 纯新增：不单独列一行标「新增」，直接按橙色标出即可
-           —— 管理者 2026-10-14：新增没必要单独列出来 */
-        out += '<span class="akp-diff akp-diff--new">' + esc(p.b) + "</span>";
+        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">新增</span>' +
+          '<span class="akp-diff akp-diff--new">' + esc(p.b) + "</span></span>";
       } else if (c.kind === "del") {
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">移除</span>' +
           '<span class="akp-diff akp-diff--del">' + esc(p.a) + "</span></span>";
