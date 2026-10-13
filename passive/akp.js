@@ -400,12 +400,8 @@
     }
     return { lv: 3, na: nums(a), nb: nums(b) };
   }
-  function numNote(c) {
-    if (!c.na || !c.nb) return "";
-    var n = Math.min(c.na.length, c.nb.length), parts = [];
-    for (var i = 0; i < n; i++) if (c.na[i] !== c.nb[i]) parts.push(c.na[i] + "→" + c.nb[i]);
-    return parts.length ? '<span class="akp-was">（数值：' + parts.join("、") + "）</span>" : "";
-  }
+  /* ⚠️ 数值类小注（「（数值：80%→40%）」）已于 2026-10-14 移除：
+     管理者要求小字只保留文字类的（如 L1 的「（原：…）」），数值变化靠就地标色表达。 */
   /* 数值调整（L2）专用：骨架相同 = 只有数值不同 → **就地只标数值**，
      其余文字照常显示。这正是官方的写法（「造成450%（原为：350-400%）的伤害」），
      也是管理者 2026-10-14 的要求：没必要整段标红，标在数值上就够了。
@@ -486,7 +482,7 @@
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">' + pos +
           '调整为</span><span class="akp-diff akp-diff--del">' + esc(p.a) +
           '</span><span class="akp-diff akp-diff--' + changeType(p.a, p.b) + '">' +
-          esc(p.b) + "</span>" + numNote(c) + "</span>";
+          esc(p.b) + "</span></span>";
       }
     });
     return out;
