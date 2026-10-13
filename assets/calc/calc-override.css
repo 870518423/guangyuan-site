@@ -1,0 +1,90 @@
+/* ============================================================
+   calculator.html · 覆盖层样式（M6 拆分，2026-10-13）
+   ------------------------------------------------------------
+   原内联 <style> 第二块（原第 993–1074 行），逐字节搬出。
+   级联位置：ak-theme.css + ak-motion.css 之后、ak-components.css 之前
+   —— 这一层是「计算器专属覆盖」，靠位置压过通用组件样式，**不可前移**。
+   ============================================================ */
+
+  /* ---------- 计算器专属覆盖 ---------- */
+  .resource-card {
+    border-radius: var(--ak-radius-lg);
+    border-color: var(--ak-line);
+    transition: border-color var(--dur-base) var(--ease),
+                background-color var(--dur-base) var(--ease);
+  }
+  .resource-card:hover { transform: none; border-color: var(--ak-line-2); }
+  .resource-card.pay-card:hover { border-color: var(--pay-color); }
+
+  .add-btn, .reset-btn, .delete-btn {
+    position: relative; overflow: hidden;
+    border-radius: var(--ak-radius);
+    transition: background-color var(--dur-fast) var(--ease),
+                border-color var(--dur-fast) var(--ease),
+                color var(--dur-fast) var(--ease),
+                transform var(--dur-press) var(--ease);
+  }
+  .add-btn {
+    background: var(--ak-bg-2);
+    border: 1px dashed var(--ak-line-2);
+    color: var(--ak-text-dim);
+  }
+  .add-btn:hover {
+    background: var(--ak-bg-3);
+    border-color: var(--ak-accent);
+    border-style: solid;
+    color: var(--ak-accent);
+  }
+  .reset-btn {
+    background: var(--ak-bg-2);
+    border: 1px solid var(--ak-line-2);
+    color: var(--ak-text-dim);
+  }
+  .reset-btn:hover {
+    background: var(--ak-bg-3);
+    border-color: var(--ak-accent);
+    color: var(--ak-accent);
+  }
+  .add-btn:active, .reset-btn:active, .delete-btn:active { transform: scale(.96); }
+
+  .type-tag, .badge { border-radius: var(--ak-radius); font-family: var(--ak-mono); letter-spacing: .5px; }
+
+  /* 开关：方舟式直角滑块，激活态琥珀 */
+  .toggle-slider {
+    border-radius: var(--ak-radius);
+    background: var(--ak-bg-3);
+    border: 1px solid var(--ak-line-2);
+    transition: background-color var(--dur-base) var(--ease),
+                border-color var(--dur-base) var(--ease);
+  }
+  .toggle-slider:before {
+    border-radius: 1px;
+    background: var(--ak-text-mute);
+    transition: background-color var(--dur-base) var(--ease),
+                transform var(--dur-base) var(--ease);
+  }
+  .toggle-switch input:checked + .toggle-slider {
+    background: rgba(255, 179, 0, .18);
+    border-color: var(--ak-accent);
+  }
+  .toggle-switch input:checked + .toggle-slider:before { background: var(--ak-accent); }
+
+  .toast { border-radius: var(--ak-radius); border-color: var(--ak-line-2); }
+  .donut-legend .legend-dot { border-radius: 1px; }
+
+  /* 环形图进场：整体轻旋 + 各段描边由 0 生长（描绘感） */
+  .donut-svg { animation: ak-donut-in 620ms var(--ease-out) both; }
+  @keyframes ak-donut-in {
+    from { opacity: 0; transform: rotate(-22deg) scale(.95); }
+  }
+  .donut-svg circle.ak-arc { animation: ak-arc-draw 620ms var(--ease-out) both; }
+  @keyframes ak-arc-draw {
+    from { stroke-width: 0; opacity: .25; }
+  }
+
+  /* 数值统一等宽 */
+  #totalPredicted, #grandTotal, #donutCenterValue, #mobileGrandTotal,
+  #daysValue, .predicted-value .value, .daily-avg-value .value,
+  .legend-value, .legend-pct {
+    font-variant-numeric: tabular-nums;
+  }

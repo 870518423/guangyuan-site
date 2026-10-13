@@ -85,7 +85,13 @@
 //         manifest.json 描述补「角色被动版本收录」；
 //      M4 新角色数据文件 ASCII 命名规则落档（_模板.js / _manifest.js 注释）。
 //      passive 三页与 manifest.json 均在预缓存清单，SW 自身亦有改动，按硬规矩升版。
-const CACHE_NAME = 'guangyuan-v33';
+// v34：M6 执行——calculator.html 拆分（2025 行 → 148 行）。三个产物逐字节搬出：
+//      assets/calc/calc-base.css（页面基础样式）、assets/calc/calc-override.css
+//      （对 ak-components 的覆盖层，级联位置敏感）、assets/calc/calc.js（826 行逻辑）。
+//      内联块 3（3 行微调）与两个引导脚本（主题首帧 / ak-js 兜底）保持内联：
+//      抽取会推迟执行，破坏防闪色与兜底时机。三者均入预缓存，按硬规矩升版。
+//      验收：tools/calc_regress.js 20/20 一致 + 双主题全页截图 0 差异像素。
+const CACHE_NAME = 'guangyuan-v34';
 const ASSETS = [
   './',
   './index.html',
@@ -142,7 +148,11 @@ const ASSETS = [
   './passive/img/factions/star.png',
   './passive/img/factions/multiverse.png',
   './passive/img/factions/alien.png',
-  './passive/img/factions/monster.png'
+  './passive/img/factions/monster.png',
+  /* —— 计算器页面拆分产物（M6，v34）：从 calculator.html 内联块逐字节搬出 —— */
+  './assets/calc/calc-base.css',
+  './assets/calc/calc-override.css',
+  './assets/calc/calc.js'
 ];
 
 const OFFLINE_PAGE = './index.html';
