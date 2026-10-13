@@ -326,7 +326,7 @@
       <p class="desc">按阵营收录角色的主动技与被动：支持版本切换与相邻版本对比，改动处按「增强 / 调整 / 新增 / 移除」着色标注，角色页底部可下载技能截图原图。</p>
       <div class="meta">
         <span>4 大阵营</span>
-        <span>9 位角色</span>
+        <span data-akp-count>13 位角色</span>
         <span>版本对比</span>
         <span class="go">→</span>
       </div>
@@ -375,6 +375,17 @@ if ('serviceWorker' in navigator) {
       .catch(function (err) { console.log('SW registration failed:', err); });
   });
 }
+</script>
+
+<!-- 被动板块的角色数：从清单实时统计，避免新增角色后首页数字对不上
+     （2026-10-14 修：此前硬编码「9 位角色」，实际已 13 位） -->
+<script src="passive/data/_manifest.js"></script>
+<script>
+(function () {
+  var list = (window.AKP_MANIFEST || []).filter(function (x) { return x.ready !== false; });
+  var el = document.querySelector('[data-akp-count]');
+  if (el && list.length) el.textContent = list.length + ' 位角色';
+})();
 </script>
 </body>
 </html>

@@ -393,11 +393,16 @@
     if (!a) return { lv: 3, kind: "new" };
     if (!b) return { lv: 3, kind: "del" };
     if (a === b) return { lv: 0 };
-    if (jac(a, b) >= 0.9) {
+    var jv = jac(a, b);
+    if (jv >= 0.9) {
       var na = nums(a), nb = nums(b);
       var same = na.length === nb.length && na.every(function (v, i) { return v === nb[i]; });
       return same ? { lv: 1 } : { lv: 2, na: na, nb: nb };
     }
+    /* 0.7 ≤ 相似度 < 0.9：只换了几个字的小改动（如「每当」改「每次」）
+       → 就地标注差异处即可，不整段划掉重写（管理者 2026-10-14）。
+         低于 0.7 才是真·重写，走整块替换。 */
+    if (jv >= 0.7) return { lv: 3, kind: "inline" };
     return { lv: 3, na: nums(a), nb: nums(b) };
   }
   /* ⚠️ 数值类小注（「（数值：80%→40%）」）已于 2026-10-14 移除：
@@ -406,28 +411,64 @@
      其余文字照常显示。这正是官方的写法（「造成450%（原为：350-400%）的伤害」），
      也是管理者 2026-10-14 的要求：没必要整段标红，标在数值上就够了。
      —— 只有骨架相同才敢这么标；骨架不同时逐字标会把句子搅成混种句（走 L3 整块替换）。 */
-  function inlineNumDiff(a, b) {
+  /* 「就地标注」：两段文字大部分相同 → 只把真正不同的地方标出来，
+     相同部分照常显示（采用当前版本写法），**不整段划掉重写**。
+     用于两类场景：
+       · L2 数值调整：骨架相同，差异只在数值 → 自然只标数值
+       · 小改动（词集相似度 ≥0.7）：只换了几个字 → 只标那几个字
+     —— 只有「大部分相同」时才敢这么标；差别大时逐字标会把句子搅成
+        读不通的混种句，那种情况走整块替换（见 renderSemDiff L3）。 */
+  function inlineTokDiff(a, b) {
     var A = semTokenize(a), B = semTokenize(b);
-    var out = "", i = 0, j = 0, ta, tb, na, nb;
-    while (i < A.length || j < B.length) {
-      ta = A[i]; tb = B[j];
-      na = ta !== undefined && /^\d/.test(ta);
-      nb = tb !== undefined && /^\d/.test(tb);
-      if (na && nb) {                                  /* 数值对数值 */
-        if (ta === tb) out += esc(tb);
-        else out += '<span class="akp-diff akp-diff--del">' + esc(ta) + "</span>" +
-                    '<span class="akp-diff akp-diff--' + changeType(ta, tb) + '">' + esc(tb) + "</span>";
-        i++; j++; continue;
-      }
-      if (!na && !nb && ta !== undefined && tb !== undefined) {
-        out += esc(tb);                                /* 未变文字：采用当前版本写法 */
-        i++; j++; continue;
-      }
-      /* 理论上不会发生（骨架相同则非数字 token 一一对应）；兜底不吞字 */
-      if (na) { out += '<span class="akp-diff akp-diff--del">' + esc(ta) + "</span>"; i++; }
-      else { out += '<span class="akp-diff akp-diff--new">' + esc(tb) + "</span>"; j++; }
+    var ka = A.map(function (t) { var s = semOf(t); return s === null ? "\u0000P" : s; });
+    var kb = B.map(function (t) { var s = semOf(t); return s === null ? "\u0000P" : s; });
+    var n = A.length, m = B.length, dp = [], i, j;
+    for (i = 0; i <= n; i++) dp.push(new Uint32Array(m + 1));
+    for (i = 1; i <= n; i++) for (j = 1; j <= m; j++)
+      dp[i][j] = (ka[i - 1] === kb[j - 1]) ? dp[i - 1][j - 1] + 1
+                                           : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    var ops = [], x = n, y = m;
+    while (x > 0 && y > 0) {
+      if (ka[x - 1] === kb[y - 1]) { ops.push(["s", B[y - 1]]); x--; y--; }
+      else if (dp[x - 1][y] >= dp[x][y - 1]) { ops.push(["d", A[x - 1]]); x--; }
+      else { ops.push(["i", B[y - 1]]); y--; }
     }
-    return out;
+    while (x > 0) { ops.push(["d", A[x - 1]]); x--; }
+    while (y > 0) { ops.push(["i", B[y - 1]]); y--; }
+    ops.reverse();
+
+    var segs = [], k = 0;
+    while (k < ops.length) {
+      if (ops[k][0] === "s") {
+        var s = "";
+        while (k < ops.length && ops[k][0] === "s") { s += ops[k][1]; k++; }
+        segs.push({ same: s });
+      } else {
+        var o = "", w = "";
+        while (k < ops.length && ops[k][0] !== "s") {
+          if (ops[k][0] === "d") o += ops[k][1]; else w += ops[k][1];
+          k++;
+        }
+        segs.push({ old: o, "new": w });
+      }
+    }
+    /* 相邻碎块合并（合计 <3 字符），避免出现一堆单字小括号 */
+    var merged = [];
+    segs.forEach(function (sg) {
+      var p = merged[merged.length - 1];
+      if (p && p.old != null && sg.old != null &&
+          (p.old + p["new"] + sg.old + sg["new"]).replace(/\s/g, "").length < 3) {
+        p.old += sg.old; p["new"] += sg["new"];
+      } else merged.push(sg);
+    });
+    return merged.map(function (sg) {
+      if (sg.same != null) return esc(sg.same);
+      var r = "";
+      if (sg.old) r += '<span class="akp-diff akp-diff--del">' + esc(sg.old) + "</span>";
+      if (sg["new"]) r += '<span class="akp-diff akp-diff--' + changeType(sg.old, sg["new"]) + '">' +
+        esc(sg["new"]) + "</span>";
+      return r;
+    }).join("");
   }
 
   /* 重做样式（L4）：删除线老全文 + 橙色新全文 */
@@ -451,7 +492,7 @@
           esc(cur) + '<span class="akp-was">（原：' + esc(prev) + "）</span></span>";
       }
       return '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">数值调整</span>' +
-        inlineNumDiff(prev, cur) + "</span>";
+        inlineTokDiff(prev, cur) + "</span>";
     }
 
     if (isRedo(prev, cur)) return redoHtml(prev, cur);
@@ -471,10 +512,16 @@
           '<span class="akp-was">（原：' + esc(p.a) + "）</span></span>";
       } else if (c.lv === 2) {
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">' + pos +
-          "数值调整</span>" + inlineNumDiff(p.a, p.b) + "</span>";
+          "数值调整</span>" + inlineTokDiff(p.a, p.b) + "</span>";
+      } else if (c.kind === "inline") {
+        /* 小改动（只换了几个字）：就地标注差异处，不整段划掉重写
+           —— 管理者 2026-10-14：「每当」改「每次」这种区别没必要整段重写 */
+        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">' + pos +
+          "调整为</span>" + inlineTokDiff(p.a, p.b) + "</span>";
       } else if (c.kind === "new") {
-        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">新增</span>' +
-          '<span class="akp-diff akp-diff--new">' + esc(p.b) + "</span></span>";
+        /* 纯新增：不单独列一行标「新增」，直接按橙色标出即可
+           —— 管理者 2026-10-14：新增没必要单独列出来 */
+        out += '<span class="akp-diff akp-diff--new">' + esc(p.b) + "</span>";
       } else if (c.kind === "del") {
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">移除</span>' +
           '<span class="akp-diff akp-diff--del">' + esc(p.a) + "</span></span>";
@@ -518,13 +565,15 @@
         if (o && i < 0) return;                    /* 找不到就不动，避免误伤 */
 
         if (d.t === "new" && d.new && o) {
-          /* 组合块：旧片段划掉 + 紧跟橙色新全文（整段重写用，位置准确） */
+          /* 组合块：旧片段划掉 + 紧跟橙色新全文（就地替换，位置准确）
+             ⚠️ 2026-10-14 去掉外层括号：管理者说「新增括号不单独列」，
+                括号会把新内容割裂成一个孤立的（…）块，读起来像附注而非正文。 */
           html = html.slice(0, i) +
-                 '<span class="akp-diff akp-diff--del">' + o + '</span>（<span class="akp-diff akp-diff--new">' + esc(d.new) + "</span>）" +
+                 '<span class="akp-diff akp-diff--del">' + o + '</span><span class="akp-diff akp-diff--new">' + esc(d.new) + "</span>" +
                  html.slice(i + o.length);
         } else if (d.t === "new" && d.new) {
-          /* 纯新增：追加到末尾 */
-          html += '（<span class="akp-diff akp-diff--new">' + esc(d.new) + "</span>）";
+          /* 纯新增：接在末尾，同样不套括号 */
+          html += '<span class="akp-diff akp-diff--new">' + esc(d.new) + "</span>";
         } else if (d.t === "del") {
           html = html.slice(0, i) + '<span class="akp-diff akp-diff--del">' + o + "</span>" + html.slice(i + o.length);
         } else {
