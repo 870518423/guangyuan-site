@@ -111,8 +111,13 @@
   }
 
   var IMGS = window.AKP_IMAGES || {};
-  var html = "";
-  chars.forEach(function (d) {
+
+  /* 品质分组顺序：超越（BY）在上、究极（UL）在下（管理者 2026-10-13 指定）；
+     未列入的其它品质按出现顺序排在最后。每组可一键折叠。 */
+  var TIER_ORDER = ["BY", "UL"];
+  var TIER_LABEL = { "BY": "超越（BY）", "UL": "究极（UL）" };
+
+  function cardHtml(d) {
     var vs = (d.versions || []).map(function (v) { return v.id; });
     var verTxt = vs.length > 1 ? vs.join(" / ") : "仅 v1";
     var nS = pick(d, "skill").length, nP = pick(d, "passive").length;
@@ -124,7 +129,7 @@
       ? '<img class="akc-thumb" src="' + IMGS[d.id].portrait + '" alt="" loading="lazy" decoding="async">'
       : "";
 
-    html += '<a class="akc-card" href="char.html?id=' + encodeURIComponent(d.id) + '">' +
+    return '<a class="akc-card" href="char.html?id=' + encodeURIComponent(d.id) + '">' +
       thumb +
       '<div class="akc-body">' +
       '<div class="akc-card-hd"><span class="akc-name">' + esc(d.name) + "</span>" +
@@ -133,13 +138,45 @@
       '<div class="akc-meta">' + meta.join("") +
       '<span class="akc-go">查看 →</span></div>' +
       "</div></a>";
-  });
-  listBox.innerHTML = html;
+  }
 
   function pick(d, type) {
     var hit = (d.sections || []).filter(function (s) { return s.type === type; })[0];
     return hit ? (hit.items || hit.entries || []) : [];
   }
+
+  /* 按 tier 分组 */
+  var groups = [], seen = {};
+  chars.forEach(function (d) {
+    var t = (d.meta && d.meta.tier) || "其它";
+    if (!seen[t]) { seen[t] = { tier: t, list: [] }; groups.push(seen[t]); }
+    seen[t].list.push(d);
+  });
+  groups.sort(function (a, b) {
+    var ia = TIER_ORDER.indexOf(a.tier), ib = TIER_ORDER.indexOf(b.tier);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+
+  listBox.innerHTML = groups.map(function (g) {
+    return '<section class="akc-tiergroup">' +
+      '<button class="akc-group" type="button" aria-expanded="true">' +
+        '<span class="akc-group-label">' + esc(TIER_LABEL[g.tier] || g.tier) + "</span>" +
+        '<span class="akc-group-count">' + g.list.length + " 位角色</span>" +
+        '<span class="akc-group-toggle">折叠</span>' +
+      "</button>" +
+      '<div class="akc-foldbody"><div class="akc-foldinner">' +
+        '<div class="akc-list">' + g.list.map(cardHtml).join("") + "</div>" +
+      "</div></div></section>";
+  }).join("");
+
+  /* 一键折叠 / 展开（点击整行标题，触摸目标 ≥44px） */
+  [].forEach.call(listBox.querySelectorAll(".akc-group"), function (btn) {
+    btn.addEventListener("click", function () {
+      var folded = btn.parentNode.classList.toggle("is-folded");
+      btn.setAttribute("aria-expanded", folded ? "false" : "true");
+      btn.querySelector(".akc-group-toggle").textContent = folded ? "展开" : "折叠";
+    });
+  });
 })();
 </script>
 
