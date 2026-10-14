@@ -1,5 +1,7 @@
 # 奥系光元工具站
 
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/deed.zh-Hans)
+
 **在线地址：https://m78calc.cn**
 
 一个公益性质的《奥特曼系列OL》玩家工具站。纯静态站点，支持 PWA（可「添加到桌面」离线使用），无需注册、无广告、不收费。
