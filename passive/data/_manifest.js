@@ -29,4 +29,8 @@ window.AKP_MANIFEST = [
   { id: "sailuo-wuxian-chaoxian", name: "赛罗无限形态（超限）", file: "data/sailuo-wuxian-chaoxian.js", category: "奥特之星", tier: "UL" },
   { id: "aotewang-by", name: "奥特之王（BY）", file: "data/aotewang-by.js", category: "奥特之星", tier: "BY" },
   { id: "jiede-zhongji", name: "捷德终极形态", file: "data/jiede-zhongji.js", category: "奥特之星", tier: "BY" },
+  { id: "lingjia", name: "令迦", file: "data/lingjia.js", category: "奥特之星", tier: "BY" },
+  { id: "guanghui-sailuo", name: "光辉赛罗", file: "data/guanghui-sailuo.js", category: "奥特之星", tier: "BY" },
+  { id: "sailuo-shinyaoxing", name: "终极赛罗闪耀型", file: "data/sailuo-shinyaoxing.js", category: "奥特之星", tier: "BY" },
+  { id: "leiguluosi", name: "雷古洛思", file: "data/leiguluosi.js", category: "奥特之星", tier: "BY" },
 ];

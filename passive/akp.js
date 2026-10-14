@@ -122,7 +122,10 @@
      展示永远用原文，且这类「没变但写法不同」的 token 统一显示**当前版本**的写法
      （v2 里写成「提高」就显示「提高」，不会退回 v1 的「增加」）。 */
   var SYN = [["增加", "提高"], ["降低", "减少"], ["角色", "目标"]];
-  var PUNCT_RE = /[\s，。、；：？！,\.\?\!;:·…—～~\-_"“”‘’'()（）\[\]【】<>《》「」『』]/;
+  /* ⚠️ 2026-10-14：补入中文书名/尖括号 〈〉 —— 游戏文案同一效果名常写成
+     [物理] / 〈物理〉 / 「终结印记」/ <终结印记> 混用；不归一就会把
+     「[物理] → 〈物理〉」当成真改动标出来（管理者：括号改写不需大改）。 */
+  var PUNCT_RE = /[\s，。、；：？！,\.\?\!;:·…—～~\-_"“”‘’'()（）\[\]【】<>〈〉《》「」『』]/;
 
   function tokenize(s) {
     var str = String(s == null ? "" : s);
@@ -272,10 +275,16 @@
   var DOWN_WORDS = ["减少", "降低"];
   var EQ_GROUPS  = [
     ["解除", "驱散", "清除", "移除"],
-    ["角色", "目标"],
+    /* ⚠️ 2026-10-14：原含 ["角色","目标"]，但管理者在四处点名要求把
+       「角色 → 目标」「目标 → 角色」**标出来**（无限赛罗 +9、超限 普通技/+9），
+       归同义词会让它们静默消失 → 移除该组，按普通词处理。 */
     ["持续", "维持"],
     ["每回合", "每个回合"],
     ["上阵出场时", "上场时", "入场时"],
+    /* ⚠️ 2026-10-14：经验证，把这一组**去掉尾字「时」**会连带改变一批未点名条目的
+       渲染（奥特之父 +7 由「重做」塌成「新增+移除」、捷德尊皇 能量技 数值调整错位、
+       捷德银河初升 +9 变样），得不偿失。故**保留原样**；
+       「受到能量技攻击时 → 受到能量技攻击后」只在点名的奥特之父 +9 用手写 diffs 解决。 */
     ["受击时", "受到攻击时", "受到主动技攻击时", "受到能量技攻击时"]
   ];
   var W2T = {};
@@ -284,11 +293,27 @@
   EQ_GROUPS.forEach(function (g) {
     g.forEach(function (w) { if (!W2T[w]) W2T[w] = g[0]; });
   });
+  /* 游戏术语词表（2026-10-14 新增）：这些多字词在对比时必须作为**整体**对齐，
+     否则「行动 → 施放主动技」会被逐字错配成「~~行~~〖施放主〗动〖技〗」
+     （管理者实测：奥王 +11 王者制裁、捷德尊皇 +7）。
+     只影响「分词颗粒度」，不改变语义（skel 是 token 串接，结果不变）。 */
+  var TERMS = [
+    "主动技", "能量技", "普通技", "特技", "物理", "施放", "释放", "行动",
+    "攻击力", "攻击", "受击", "格挡率", "格挡", "闪避率", "闪避",
+    "暴击伤害", "暴击率", "暴击", "命中率", "破挡率", "抗暴率", "免伤率",
+    "生命百分比", "生命上限", "生命值", "生命",
+    "治疗", "伤害", "目标", "角色", "回合", "全场", "场上", "己方", "敌方",
+    "全体", "单体", "横排", "直线", "十字", "前排", "后排", "随机", "概率",
+    "效果", "状态", "层数", "能量", "防御", "韧性", "受到", "造成", "获得",
+    "恢复", "免疫", "叠加", "触发", "解除", "驱散", "清除", "移除", "持续"
+  ];
   /* 长词优先，避免「增加」被单字切走 */
-  var DICT_WORDS = Object.keys(W2T).sort(function (a, b) { return b.length - a.length; });
+  var DICT_WORDS = Object.keys(W2T).concat(TERMS)
+    .filter(function (w, i, arr) { return w && arr.indexOf(w) === i; })
+    .sort(function (a, b) { return b.length - a.length; });
   var STOPW = "的了和与在将把被并且则若如每各其之中后前内外均都还就才";
   /* 标点/空白：不参与语义比较（管理者口径：标点增删不算改动） */
-  var SEM_PUNCT = /^[\s，。、；：？！,,\.?!;:·…—～~\-_"“”‘’'()（）\[\]【】《》「」『』]$/;
+  var SEM_PUNCT = /^[\s，。、；：？！,,\.?!;:·…—～~\-_"“”‘’'()（）\[\]【】<>〈〉《》「」『』]$/;
 
   /* 分词：数字整体、词典词整体、其余逐字 */
   function semTokenize(s) {
@@ -352,7 +377,9 @@
       ch = src[i];
       if (OPEN.indexOf(ch) >= 0) depth++;
       else if (CLOSE.indexOf(ch) >= 0) depth = (depth > 0) ? depth - 1 : 0;
-      else if (ch === "。" && depth === 0) { sents.push(src.slice(start, i + 1)); start = i + 1; }
+      else if ((ch === "。" || ch === "！" || ch === "？") && depth === 0) {
+        sents.push(src.slice(start, i + 1)); start = i + 1;
+      }
     }
     if (start < src.length) sents.push(src.slice(start));
 
@@ -385,114 +412,330 @@
     });
   }
   function isRedo(o, w) {
-    if (lcsRatio(o, w) < 0.15) return true;
-    return hasNewBlock(clauses(o), clauses(w));
+    var r = lcsRatio(o, w);
+    if (r < 0.15) return true;
+    /* ⚠️ 2026-10-14 收紧：旧版只要「出现一个与旧版任何子句都不像的长块」就判重做，
+       把大量「一段重写 + 一段微调」的正常条目（泽塔 +6、捷德尊皇 +7、
+       无限赛罗超限 普通技）也误标成重做。现要求**整条相似度也偏低**（<0.45）
+       才配合长块判重做。 */
+    if (r < 0.45 && hasNewBlock(clauses(o), clauses(w))) return true;
+    return false;
   }
-  /* 子句配对：① 词集相似度 ≥0.9 先锚定；② 剩下按出现顺序兜底 */
+  /* 子句配对（2026-10-14 增补「跨子句合并」）：
+     旧版只做 1↔1 配对，遇到「一个 A 子句对应相邻两个 B 子句」就会整条错位 ——
+     泽塔 +6「受到能量技攻击时，立刻增加自身1点能量。」对应新版
+     「全场每有一名目标施放能量技后，……；额外增加自身1点能量。」就是这种。
+     现改为允许 1↔1 / 1↔2 / 2↔1 / 2↔2 四种成组方式，用 DP 取全局最优
+     （组内相似度之和最大，未配对子句记小惩罚）。
+     返回 [{a, b, i}]：a/b 是（可能拼接过的）子句文本，i 是 A 侧首个子句下标。 */
   function pairClauses(A, B) {
-    var usedB = [], mapA = [], i, j;
-    for (j = 0; j < B.length; j++) usedB.push(false);
-    for (i = 0; i < A.length; i++) mapA.push(null);
-    for (i = 0; i < A.length; i++) {
-      var bj = -1, bv = 0;
-      for (j = 0; j < B.length; j++) {
-        if (usedB[j]) continue;
-        var v = jac(A[i], B[j]);
-        if (v >= 0.9 && v > bv) { bv = v; bj = j; }
+    var n = A.length, m = B.length;
+    var cache = {};
+    function J(i, k, j, l) {
+      var key = i + ":" + k + ":" + j + ":" + l;
+      if (cache[key] == null) cache[key] = jac(A.slice(i, k).join(""), B.slice(j, l).join(""));
+      return cache[key];
+    }
+    var GAP = 0.1;                       /* 未配对子句的惩罚（鼓励尽量配上） */
+    var dp = [], back = [], i, j;
+    for (i = 0; i <= n; i++) { dp.push(new Float64Array(m + 1)); back.push(new Array(m + 1)); }
+    for (j = 0; j <= m; j++) back[0][j] = null;
+    for (i = 0; i <= n; i++) back[i][0] = null;
+    for (i = 1; i <= n; i++) dp[i][0] = dp[i - 1][0] - GAP;
+    for (j = 1; j <= m; j++) dp[0][j] = dp[0][j - 1] - GAP;
+    for (i = 1; i <= n; i++) {
+      for (j = 1; j <= m; j++) {
+        var best = dp[i - 1][j - 1] + J(i - 1, i, j - 1, j), b = [1, 1];
+        /* ⚠️ 2026-10-14 修复：这两条「跳过」分支的回溯方向原先写反了
+           （dp[i-1][j] 记成 [0,1]、dp[i][j-1] 记成 [1,0]），
+           于是回溯路径与 DP 值不一致 —— 明明 jac=1 的同一句也会被拆成
+           「新增 + 移除」（管理者实测：捷德终极 +9/+11 的「赛罗不在我才会好好加油」
+           和「遭受越多的创伤才能成长！」被整句划掉）。方向必须与回溯时的
+           x -= ka / y -= kb 对应：从 dp[i-1][j] 来 → 消耗 A[i-1] → ka=1,kb=0。
+           注：dp 值本身是对的，只有方向标反了，所以此前很多条目「看起来还行」。 */
+        var v = dp[i - 1][j] - GAP; if (v > best) { best = v; b = [1, 0]; }     /* A 多出一句 → 移除 */
+        v = dp[i][j - 1] - GAP; if (v > best) { best = v; b = [0, 1]; }         /* B 多出一句 → 新增 */
+        if (i >= 2 && j >= 2) { v = dp[i - 2][j - 2] + J(i - 2, i, j - 2, j); if (v > best) { best = v; b = [2, 2]; } }
+        if (j >= 2) { v = dp[i - 1][j - 2] + J(i - 1, i, j - 2, j); if (v > best) { best = v; b = [1, 2]; } }
+        if (i >= 2) { v = dp[i - 2][j - 1] + J(i - 2, i, j - 1, j); if (v > best) { best = v; b = [2, 1]; } }
+        dp[i][j] = best; back[i][j] = b;
       }
-      if (bj >= 0) { usedB[bj] = true; mapA[i] = bj; }
     }
-    var free = [];
-    for (j = 0; j < B.length; j++) if (!usedB[j]) free.push(j);
-    var k = 0;
-    for (i = 0; i < A.length; i++) {
-      if (mapA[i] === null && k < free.length) { mapA[i] = free[k]; k++; }
+    var pairs = [], x = n, y = m;
+    while (x > 0 || y > 0) {
+      var bk = (x > 0 && y > 0) ? back[x][y] : (x > 0 ? [1, 0] : [0, 1]);
+      if (!bk) break;
+      var ka = bk[0], kb = bk[1];
+      var a = ka ? A.slice(x - ka, x).join("") : null;
+      var bTxt = kb ? B.slice(y - kb, y).join("") : null;
+      pairs.push({ a: a, b: bTxt, i: x - ka });
+      x -= ka; y -= kb;
     }
-    var pairs = [];
-    for (i = 0; i < A.length; i++) pairs.push({ a: A[i], b: mapA[i] === null ? null : B[mapA[i]], i: i });
-    for (; k < free.length; k++) pairs.push({ a: null, b: B[free[k]], i: -1 });
+    pairs.reverse();
     return pairs;
   }
+  /* 一对子句的分档（2026-10-14 重写）：
+       · 就地算出「变更块」；一块都没有 = 同义反复/标点差异 → 不标注
+       · 数值变了、且非数值文字几乎没动 → 数值调整（只标数值）
+       · 变更占比 ≤0.55 → 就地标注（调整为）；否则整块替换 */
   function classify(a, b) {
     if (!a) return { lv: 3, kind: "new" };
     if (!b) return { lv: 3, kind: "del" };
     if (a === b) return { lv: 0 };
-    var jv = jac(a, b);
-    if (jv >= 0.9) {
-      var na = nums(a), nb = nums(b);
-      var same = na.length === nb.length && na.every(function (v, i) { return v === nb[i]; });
-      return same ? { lv: 1 } : { lv: 2, na: na, nb: nb };
+    var chg = inlineSegs(a, b).filter(function (s) { return !s.same; });
+    if (!chg.length) return { lv: 0 };
+    var na = nums(a), nb = nums(b);
+    var numeric = na.length > 0 && na.length === nb.length;
+    var textChg = 0;
+    if (numeric) {
+      chg.forEach(function (s) {
+        textChg += Math.max(plainLen(s.old.replace(NUM_G, "")), plainLen(s["new"].replace(NUM_G, "")));
+      });
     }
-    /* 0.7 ≤ 相似度 < 0.9：只换了几个字的小改动（如「每当」改「每次」）
-       → 就地标注差异处即可，不整段划掉重写（管理者 2026-10-14）。
-         低于 0.7 才是真·重写，走整块替换。 */
-    if (jv >= 0.7) return { lv: 3, kind: "inline" };
-    return { lv: 3, na: nums(a), nb: nums(b) };
+    if (numeric && textChg <= 5) {
+      /* 数值确实变了、且非数值文字几乎没动 → 数值调整（只标数值）。
+         若数值也没变，说明改的是文字（如「减少」→「减免」），落到下面按占比判。 */
+      var sameNum = na.every(function (v, i) { return v === nb[i]; });
+      if (!sameNum) return { lv: 3, kind: "inline", num: true };
+    }
+    var total = Math.max(plainLen(a), plainLen(b)) || 1, size = 0;
+    chg.forEach(function (s) { size += Math.max(plainLen(s.old), plainLen(s["new"])); });
+    if (size / total <= 0.55) return { lv: 3, kind: "inline" };
+    return { lv: 3, kind: "block" };
   }
   /* ⚠️ 数值类小注（「（数值：80%→40%）」）已于 2026-10-14 移除：
      管理者要求小字只保留文字类的（如 L1 的「（原：…）」），数值变化靠就地标色表达。 */
-  /* 数值调整（L2）专用：骨架相同 = 只有数值不同 → **就地只标数值**，
-     其余文字照常显示。这正是官方的写法（「造成450%（原为：350-400%）的伤害」），
-     也是管理者 2026-10-14 的要求：没必要整段标红，标在数值上就够了。
-     —— 只有骨架相同才敢这么标；骨架不同时逐字标会把句子搅成混种句（走 L3 整块替换）。 */
-  /* 「就地标注」：两段文字大部分相同 → 只把真正不同的地方标出来，
-     相同部分照常显示（采用当前版本写法），**不整段划掉重写**。
-     用于两类场景：
-       · L2 数值调整：骨架相同，差异只在数值 → 自然只标数值
-       · 小改动（词集相似度 ≥0.7）：只换了几个字 → 只标那几个字
-     —— 只有「大部分相同」时才敢这么标；差别大时逐字标会把句子搅成
-        读不通的混种句，那种情况走整块替换（见 renderSemDiff L3）。 */
-  function inlineTokDiff(a, b) {
-    var A = semTokenize(a), B = semTokenize(b);
-    var ka = A.map(function (t) { var s = semOf(t); return s === null ? "\u0000P" : s; });
-    var kb = B.map(function (t) { var s = semOf(t); return s === null ? "\u0000P" : s; });
-    var n = A.length, m = B.length, dp = [], i, j;
+  /* ============ 标点透明的「就地对比」引擎（2026-10-14 重写） ============
+     旧版把标点也当 token 参与对齐，于是：
+       · 「[物理] ↔ 〈物理〉」这种纯括号改写会因 LCS 多解错配成
+         「[~~〈~~物理~~〉~~〖]〗」（管理者：方括号改〈〉不需要大改）；
+       · 逗号/句号的增删会被单独标色（管理者：逗号不需要单独标黄、
+         <治疗> 的右中括号不需要变成绿色）。
+     现改为：**先剥掉标点与空白再对齐**，标点位置用原串下标映射回来，
+     于是「纯标点差异」天然不产生任何变更块。
+     再叠一层**多重集差集过滤**：只有整对子句里「A 独有 / B 独有」的规范化
+     token 才算真改动 —— 这样
+       ·「降低目标格挡率50% → 使目标格挡率减少50%」这种同义换位不标注；
+       ·「行动 → 施放主动技」这种整体替换能整块落位（术语词表起了作用）。
+     （对应管理者 2026-10-14 逐条指出的「错位」「整段划掉」「标点标色」问题。） */
+  var NUM_G = /\d+(?:\.\d+)?%?/g;
+  var PUNCT_G = /[\s，。、；：？！,.?!;:·…—～~\-_"“”‘’'()（）\[\]【】<>〈〉《》「」『』]/g;
+  var PUNCT_ONE = /^[\s，。、；：？！,.?!;:·…—～~\-_"“”‘’'()（）\[\]【】<>〈〉《》「」『』]$/;
+  function isPunctChar(ch) { return PUNCT_ONE.test(ch); }
+  /* 右括号 → 配对的左括号（变更块结尾吸收配对右括号时用） */
+  var PUNCT_PAIR = { "）": "（", ")": "(", "]": "[", "〉": "〈", "》": "《", "」": "「", "』": "『", "】": "【", ">": "<" };
+  function plainLen(s) { return String(s == null ? "" : s).replace(PUNCT_G, "").length; }
+  /* 剥标点：返回 {t: 纯文字, m: 每个字符在原串中的下标} */
+  function stripPunct(s) {
+    var str = String(s == null ? "" : s), t = "", m = [];
+    for (var i = 0; i < str.length; i++) {
+      if (!isPunctChar(str[i])) { t += str[i]; m.push(i); }
+    }
+    return { t: t, m: m };
+  }
+  /* 词级 + 字级分词（带在**剥标点串**里的下标 s/e） */
+  function wtok(str) {
+    var out = [], i = 0, k, hit, m;
+    while (i < str.length) {
+      hit = null;
+      for (k = 0; k < DICT_WORDS.length; k++) {
+        if (str.substr(i, DICT_WORDS[k].length) === DICT_WORDS[k]) { hit = DICT_WORDS[k]; break; }
+      }
+      if (hit) { out.push({ t: hit, s: i, e: i + hit.length }); i += hit.length; continue; }
+      m = str.slice(i).match(/^\d+(?:\.\d+)?%?/);
+      if (m) { out.push({ t: m[0], s: i, e: i + m[0].length }); i += m[0].length; continue; }
+      out.push({ t: str.charAt(i), s: i, e: i + 1 }); i++;
+    }
+    return out;
+  }
+  function akey(t) { return W2T[t] || t; }
+  /* 整对子句的规范化 token 多重集差集（同义/语序/标点都不算差） */
+  function multExtra(a, b) {
+    var ma = {}, mb = {}, i, t;
+    var ta = wtok(stripPunct(a).t), tb = wtok(stripPunct(b).t);
+    for (i = 0; i < ta.length; i++) { t = akey(ta[i].t); ma[t] = (ma[t] || 0) + 1; }
+    for (i = 0; i < tb.length; i++) { t = akey(tb[i].t); mb[t] = (mb[t] || 0) + 1; }
+    var da = {}, db = {};
+    for (t in ma) if (ma[t] > (mb[t] || 0)) da[t] = 1;
+    for (t in mb) if (mb[t] > (ma[t] || 0)) db[t] = 1;
+    return { da: da, db: db };
+  }
+  function hasExtra(str, D) {
+    var toks = wtok(stripPunct(str).t);
+    for (var i = 0; i < toks.length; i++) if (D[akey(toks[i].t)]) return true;
+    return false;
+  }
+  /* 两个 token 序列的 LCS 对齐 → 前向 op 列表 */
+  function alignSeq(ta, tb) {
+    var n = ta.length, m = tb.length, i, j;
+    if (n * m > 4000000) return null;
+    var dp = [];
     for (i = 0; i <= n; i++) dp.push(new Uint32Array(m + 1));
     for (i = 1; i <= n; i++) for (j = 1; j <= m; j++)
-      dp[i][j] = (ka[i - 1] === kb[j - 1]) ? dp[i - 1][j - 1] + 1
-                                           : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      dp[i][j] = (akey(ta[i - 1].t) === akey(tb[j - 1].t)) ? dp[i - 1][j - 1] + 1
+                                                          : Math.max(dp[i - 1][j], dp[i][j - 1]);
     var ops = [], x = n, y = m;
     while (x > 0 && y > 0) {
-      if (ka[x - 1] === kb[y - 1]) { ops.push(["s", B[y - 1]]); x--; y--; }
-      else if (dp[x - 1][y] >= dp[x][y - 1]) { ops.push(["d", A[x - 1]]); x--; }
-      else { ops.push(["i", B[y - 1]]); y--; }
+      if (akey(ta[x - 1].t) === akey(tb[y - 1].t)) { ops.push(["same", x - 1, y - 1]); x--; y--; }
+      else if (dp[x - 1][y] >= dp[x][y - 1]) { ops.push(["del", x - 1, -1]); x--; }
+      else { ops.push(["ins", -1, y - 1]); y--; }
     }
-    while (x > 0) { ops.push(["d", A[x - 1]]); x--; }
-    while (y > 0) { ops.push(["i", B[y - 1]]); y--; }
+    while (x > 0) { x--; ops.push(["del", x, -1]); }
+    while (y > 0) { y--; ops.push(["ins", -1, y]); }
     ops.reverse();
-
-    var segs = [], k = 0;
-    while (k < ops.length) {
-      if (ops[k][0] === "s") {
-        var s = "";
-        while (k < ops.length && ops[k][0] === "s") { s += ops[k][1]; k++; }
-        segs.push({ same: s });
+    return ops;
+  }
+  /* token 在原串里的下标区间（只含自身字符，不含夹在中间的标点） */
+  function spansOf(tokens, map) {
+    var sp = [];
+    for (var i = 0; i < tokens.length; i++) sp.push([map[tokens[i].s], map[tokens[i].e - 1] + 1]);
+    return sp;
+  }
+  /* 就地对比分段：返回 [{same,text} | {old,new}] */
+  function inlineSegs(a, b) {
+    var sa = String(a == null ? "" : a), sb = String(b == null ? "" : b);
+    if (sa === sb) return [{ same: true, text: sb }];
+    var A = stripPunct(sa), B = stripPunct(sb);
+    if (!A.t.length || !B.t.length) {
+      return A.t.length === B.t.length ? [{ same: true, text: sb }]
+        : [{ old: A.t.length ? sa : "", "new": B.t.length ? sb : "" }];
+    }
+    var ta = wtok(A.t), tb = wtok(B.t), ops = alignSeq(ta, tb);
+    if (!ops) return [{ old: sa, "new": sb }];
+    var spA = spansOf(ta, A.m), spB = spansOf(tb, B.m);
+    var EX = multExtra(sa, sb);
+    var segs = [], curA = 0, curB = 0, i = 0, p, q, j;
+    while (i < ops.length) {
+      if (ops[i][0] === "same") {
+        p = ops[i][1]; q = ops[i][2];
+        while (i < ops.length && ops[i][0] === "same") { p = ops[i][1]; q = ops[i][2]; i++; }
+        segs.push({ same: true, text: sb.slice(curB, spB[q][1]) });
+        curA = spA[p][1]; curB = spB[q][1];
       } else {
-        var o = "", w = "";
-        while (k < ops.length && ops[k][0] !== "s") {
-          if (ops[k][0] === "d") o += ops[k][1]; else w += ops[k][1];
-          k++;
+        var aEnd = -1, bEnd = -1, aSeen = false, bSeen = false;
+        j = i;
+        while (j < ops.length && ops[j][0] !== "same") {
+          if (ops[j][0] === "del") { aEnd = spA[ops[j][1]][1]; aSeen = true; }
+          else { bEnd = spB[ops[j][2]][1]; bSeen = true; }
+          j++;
         }
-        segs.push({ old: o, "new": w });
+        var oTxt = aSeen ? sa.slice(curA, aEnd) : "";
+        var nTxt = bSeen ? sb.slice(curB, bEnd) : "";
+        /* ⚠️ 2026-10-14：块首的标点本来就会被带进来（curA/curB 落在上一 token 的末尾），
+           块尾却不会 —— 于是「[特技] → <治疗>」会渲染成 `~~[特技~~〖绿:<治疗〗>`（括号被劈开，
+           管理者点名「<治疗> 的右尖括号不需要变绿」）。这里把块尾**配对的右括号**补进来，
+           让成对括号留在同一块里（逗号/句号仍不吸收，交给 tidySegs 按「标点不标色」处理）。
+           只在块内已有**未闭合**的同型左括号时才吸收，避免把外层括号误吞。 */
+        var absorb = function (txt, s, end) {
+          var ch = s.charAt(end), o = PUNCT_PAIR[ch];
+          if (!o) return false;
+          var k = txt.lastIndexOf(o);
+          if (k < 0) return false;
+          return txt.slice(k + 1).indexOf(ch) < 0;   /* 左括号之后还没闭合过 */
+        };
+        if (aSeen) while (aEnd < sa.length && absorb(oTxt, sa, aEnd)) { aEnd++; oTxt = sa.slice(curA, aEnd); }
+        if (bSeen) while (bEnd < sb.length && absorb(nTxt, sb, bEnd)) { bEnd++; nTxt = sb.slice(curB, bEnd); }
+        /* 多重集差集过滤：两边都没有「独有 token」→ 只是同义/语序 → 不标注 */
+        if (!hasExtra(oTxt, EX.da) && !hasExtra(nTxt, EX.db)) {
+          if (nTxt) segs.push({ same: true, text: nTxt });
+        } else {
+          segs.push({ old: oTxt, "new": nTxt });
+        }
+        if (aSeen) curA = aEnd;
+        if (bSeen) curB = bEnd;
+        i = j;
       }
     }
-    /* 相邻碎块合并（合计 <3 字符），避免出现一堆单字小括号 */
-    var merged = [];
-    segs.forEach(function (sg) {
-      var p = merged[merged.length - 1];
-      if (p && p.old != null && sg.old != null &&
-          (p.old + p["new"] + sg.old + sg["new"]).replace(/\s/g, "").length < 3) {
-        p.old += sg.old; p["new"] += sg["new"];
-      } else merged.push(sg);
+    if (curB < sb.length) segs.push({ same: true, text: sb.slice(curB) });
+    return tidySegs(segs);
+  }
+  /* 收尾：合并相邻 same、把变更块之间 ≤1 字的残渣并进去、把两侧相同的标点挪出变更块 */
+  function tidySegs(segs) {
+    var out = [], i, s;
+    for (i = 0; i < segs.length; i++) {
+      s = segs[i];
+      if (s.same) {
+        var p0 = out[out.length - 1];
+        if (p0 && p0.same) { p0.text += s.text; continue; }
+        out.push({ same: true, text: s.text });
+      } else out.push({ old: s.old, "new": s["new"] });
+    }
+    var out2 = [];
+    for (i = 0; i < out.length; i++) {
+      s = out[i];
+      var prev = out2[out2.length - 1], next = out[i + 1];
+      if (s.same && plainLen(s.text) <= 1 && prev && !prev.same && next && !next.same) {
+        prev.old += s.text + next.old;
+        prev["new"] += s.text + next["new"];
+        i++;
+        continue;
+      }
+      out2.push(s);
+    }
+    var out3 = [];
+    out2.forEach(function (g) {
+      if (g.same) { out3.push(g); return; }
+      var oldT = g.old, newT = g["new"], lead = "", trail = "", k = 0;
+      while (k < oldT.length && k < newT.length && oldT[k] === newT[k] && isPunctChar(oldT[k])) {
+        lead += oldT[k]; k++;
+      }
+      var o = oldT.slice(k), w = newT.slice(k);
+      while (o.length && w.length && o.charAt(o.length - 1) === w.charAt(w.length - 1) &&
+             isPunctChar(o.charAt(o.length - 1))) {
+        trail = o.charAt(o.length - 1) + trail; o = o.slice(0, -1); w = w.slice(0, -1);
+      }
+      /* ⚠️ 2026-10-14（管理者逐条点名）：**标点一律不标色**。
+         但只对「纯新增 / 纯删除」的块生效 —— 只在单侧出现的边缘标点移出高亮区、
+         按普通文字显示（用当前版本的标点）。
+         不做「两侧都有内容」的替换块：那种块一旦把新侧开头的「（<」挪到删除块前面，
+         句子顺序会被打乱（实测「（<正面迎击>：… ← 。每当自身」会碎成
+         「（<~~每当自身~~〖绿:正面迎击>：…〗」），反而比标点染色更糟。 */
+      var tail = "", head = "";
+      if (!o) {                                   /* 纯新增：剥新侧边缘标点（删除线内的标点不用管） */
+        while (w.length && isPunctChar(w.charAt(w.length - 1))) { tail = w.charAt(w.length - 1) + tail; w = w.slice(0, -1); }
+        while (w.length && isPunctChar(w.charAt(0))) { head += w.charAt(0); w = w.slice(1); }
+      }
+      if (lead || head) out3.push({ same: true, text: lead + head });
+      if (o === w) { if (w) out3.push({ same: true, text: w }); }
+      else if (o || w) out3.push({ old: o, "new": w });
+      if (tail || trail) out3.push({ same: true, text: tail + trail });
     });
-    return merged.map(function (sg) {
-      if (sg.same != null) return esc(sg.same);
+    var out4 = [];
+    out3.forEach(function (g) {
+      var pp = out4[out4.length - 1];
+      if (g.same && pp && pp.same) { pp.text += g.text; return; }
+      out4.push(g);
+    });
+    return out4;
+  }
+  function inlineHtml(a, b) {
+    return inlineSegs(a, b).map(function (s) {
+      if (s.same) return esc(s.text);
       var r = "";
-      if (sg.old) r += '<span class="akp-diff akp-diff--del">' + esc(sg.old) + "</span>";
-      if (sg["new"]) r += '<span class="akp-diff akp-diff--' + changeType(sg.old, sg["new"]) + '">' +
-        esc(sg["new"]) + "</span>";
+      if (s.old) r += '<span class="akp-diff akp-diff--del">' + esc(s.old) + "</span>";
+      if (s["new"]) r += '<span class="akp-diff akp-diff--' + changeType(s.old, s["new"]) + '">' +
+        esc(s["new"]) + "</span>";
       return r;
     }).join("");
+  }
+  /* 数值调整专用：**只在数值位置标注**，其余文字直接采用当前版本写法
+     （官方公告同款；管理者 2026-10-14：没必要整段标红，标在数值上就够了）。 */
+  function numOnlyDiff(oldT, newT) {
+    var on = String(oldT == null ? "" : oldT).match(NUM_G) || [];
+    var nn = String(newT == null ? "" : newT).match(NUM_G) || [];
+    if (on.length !== nn.length || !on.length) return null;
+    var src = String(newT == null ? "" : newT), out = "", i = 0, k = 0;
+    src.replace(NUM_G, function (m, off) {
+      out += esc(src.slice(i, off));
+      if (on[k] === m) out += esc(m);
+      else out += '<span class="akp-diff akp-diff--del">' + esc(on[k]) + "</span>" +
+        '<span class="akp-diff akp-diff--' +
+        (parseFloat(m) > parseFloat(on[k]) ? "buff" : "adj") + '">' + esc(m) + "</span>";
+      i = off + m.length; k++;
+      return m;
+    });
+    out += esc(src.slice(i));
+    return out;
   }
 
   /* 重做样式（L4）：删除线老全文 + 橙色新全文 */
@@ -506,7 +749,7 @@
 
     /* 整条级快速通道：语义骨架相同（已丢标点、已归同义词、已过滤虚词）
        → 只是措辞或数值差异，**不要切子句**。
-       切子句是按「。」切句的，标点一变就把句子拆开，反而把「逗号→句号」
+       切子句是按句末标点切句的，标点一变就把句子拆开，反而把「逗号→句号」
        这种纯标点差异放大成结构变化（2026-10-13 实测踩到）。 */
     if (skel(prev) === skel(cur)) {
       var n0 = nums(prev), m0 = nums(cur);
@@ -517,7 +760,7 @@
         return esc(cur);
       }
       return '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">数值调整</span>' +
-        inlineTokDiff(prev, cur) + "</span>";
+        (numOnlyDiff(prev, cur) || inlineHtml(prev, cur)) + "</span>";
     }
 
     if (isRedo(prev, cur)) return redoHtml(prev, cur);
@@ -527,30 +770,27 @@
       var c = classify(p.a, p.b);
       var pos = "";
       if (c.lv !== 0 && A.length > 1 && p.i >= 0) {
-        pos = p.i === 0 ? "前半段" : (p.i === A.length - 1 ? "后半段" : "中段");
+        pos = p.i === 0 ? "前半段" : (p.i >= A.length - 1 ? "后半段" : "中段");
       }
       if (c.lv === 0) {
         out += '<span class="akp-dline akp-ctx">' + esc(p.b) + "</span>";
-      } else if (c.lv === 1) {
-        /* 同义反复（骨架数值都相同）→ 不标注，直接显示当前版本文案 */
-        out += esc(p.b);
-      } else if (c.lv === 2) {
-        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--2">' + pos +
-          "数值调整</span>" + inlineTokDiff(p.a, p.b) + "</span>";
-      } else if (c.kind === "inline") {
-        /* 小改动（只换了几个字）：就地标注差异处，不整段划掉重写
-           —— 管理者 2026-10-14：「每当」改「每次」这种区别没必要整段重写 */
-        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">' + pos +
-          "调整为</span>" + inlineTokDiff(p.a, p.b) + "</span>";
       } else if (c.kind === "new") {
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">新增</span>' +
           '<span class="akp-diff akp-diff--new">' + esc(p.b) + "</span></span>";
       } else if (c.kind === "del") {
         out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">移除</span>' +
           '<span class="akp-diff akp-diff--del">' + esc(p.a) + "</span></span>";
+      } else if (c.kind === "inline") {
+        /* 就近标注差异处：改动占比不大 → 不整段划掉重写
+           （管理者 2026-10-14：「每当」改「每次」这种区别没必要整段重写） */
+        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--' + (c.num ? "2" : "3") + '">' +
+          pos + (c.num ? "数值调整" : "调整为") + "</span>" +
+          (c.num ? (numOnlyDiff(p.a, p.b) || inlineHtml(p.a, p.b)) : inlineHtml(p.a, p.b)) + "</span>";
       } else {
-        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--3">' + pos +
-          '调整为</span><span class="akp-diff akp-diff--del">' + esc(p.a) +
+        /* 改动占比大 → 整块替换：老整块划掉 + 新整块给出 */
+        out += '<span class="akp-dline"><span class="akp-dlv akp-dlv--' + (c.num ? "2" : "3") + '">' +
+          pos + (c.num ? "数值调整" : "调整为") +
+          '</span><span class="akp-diff akp-diff--del">' + esc(p.a) +
           '</span><span class="akp-diff akp-diff--' + changeType(p.a, p.b) + '">' +
           esc(p.b) + "</span></span>";
       }
@@ -562,6 +802,27 @@
     return renderSemDiff(prev, cur);
   }
 
+  /* 手写 diffs 的单个区块渲染：与自动分档同款标签 + 同款配色（2026-10-14 统一）。 */
+  function chip(text, lv) {
+    return '<span class="akp-dlv akp-dlv--' + lv + '">' + esc(text) + "</span>";
+  }
+  function regionHtml(d) {
+    if (d.t === "del" || (!d.new && d.old)) {
+      return chip(d.lb || "移除", 3) + '<span class="akp-diff akp-diff--del">' + esc(d.old) + "</span>";
+    }
+    if (d.t === "new" && !d.old) {
+      return chip(d.lb || "新增", 3) + '<span class="akp-diff akp-diff--new">' + esc(d.new) + "</span>";
+    }
+    var c = classify(d.old || "", d.new || "");
+    if (!d.lb && c.kind === "block") {
+      return chip("调整为", 3) + '<span class="akp-diff akp-diff--del">' + esc(d.old) +
+        '</span><span class="akp-diff akp-diff--' + changeType(d.old, d.new) + '">' + esc(d.new) + "</span>";
+    }
+    var num = d.lb === "数值调整" || (!d.lb && !!c.num);
+    var body = num ? (numOnlyDiff(d.old, d.new) || inlineHtml(d.old, d.new)) : inlineHtml(d.old, d.new);
+    return chip(d.lb || (num ? "数值调整" : "调整为"), num ? 2 : 3) + body;
+  }
+
   /* 对比态：以「上一版本」正文为底，把本版落地的改动标出来。
      管理者口径：对比一律**相邻版本**（v3 比 v2、v4 比 v3）。 */
   function renderDiff(entry, verId) {
@@ -571,38 +832,48 @@
     var tp = textOf(entry, prevId || verId);
     var tc = textOf(entry, verId);
 
-    /* 一、数据里手写了 diffs → 按手写标注（子串定位，indexOf+slice，
-       不用 String.replace，避免正文里的特殊字符被当成替换模式）。 */
+    /* 一、数据里手写了 diffs → 按手写标注（子串定位，indexOf + slice，
+       不用 String.replace，避免正文里的特殊字符被当成替换模式）。
+       字段：{ to?: 版本, t: "buff|adj|new|del|redo", old, new, before?, lb? }
+         · old 非空 → 在「上一版正文」里定位 old，用 new 就地替换；
+         · old 为空 → 插到 before 之前（没有 before 就接在末尾）；
+         · lb → 显式指定标签文字（数值调整 / 调整为 / 新增 / 移除）。
+       2026-10-14 管理者要求：手写 diffs 也要有「数值调整 / 调整为 / 新增」标签，
+       且渲染样式与自动分档保持一致（原先只有配色、没有标签）。 */
     if (entry.diffs && entry.diffs.length) {
+      var ds = entry.diffs.filter(function (d) { return !d.to || d.to === verId; });
+      /* ⚠️ 2026-10-14：手写 diffs 是**按版本**给的（d.to 指定目标版本）。
+         若本版没有任何匹配条目，说明本版没手写 → **落回自动分档**，
+         不能直接输出「上一版正文 + 零标注」的纯文本（那样该版本就没有对比信息了）。 */
+      if (!ds.length) return diffHtml(tp, tc);
       /* 手工标注 t:"redo"：机器分不清「真·重做」和「整条描述统一」时，
          在数据里写一行指定（{ to: "v3", t: "redo" }），直接走重做样式。 */
-      var marked = entry.diffs.some(function (d) {
-        return (!d.to || d.to === verId) && d.t === "redo";
-      });
-      if (marked) return redoHtml(tp, tc);
+      if (ds.some(function (d) { return d.t === "redo"; })) return redoHtml(tp, tc);
 
-      var html = esc(tp);
-      entry.diffs.filter(function (d) { return !d.to || d.to === verId; }).forEach(function (d) {
-        var o = esc(d.old || "");
-        var i = o ? html.indexOf(o) : -1;
-        if (o && i < 0) return;                    /* 找不到就不动，避免误伤 */
-
-        if (d.t === "new" && d.new && o) {
-          /* 组合块：旧片段划掉 + 紧跟橙色新全文（就地替换，位置准确）
-             ⚠️ 2026-10-14 去掉外层括号：管理者说「新增括号不单独列」，
-                括号会把新内容割裂成一个孤立的（…）块，读起来像附注而非正文。 */
-          html = html.slice(0, i) +
-                 '<span class="akp-diff akp-diff--del">' + o + '</span><span class="akp-diff akp-diff--new">' + esc(d.new) + "</span>" +
-                 html.slice(i + o.length);
-        } else if (d.t === "new" && d.new) {
-          /* 纯新增：接在末尾，同样不套括号 */
-          html += '<span class="akp-diff akp-diff--new">' + esc(d.new) + "</span>";
-        } else if (d.t === "del") {
-          html = html.slice(0, i) + '<span class="akp-diff akp-diff--del">' + o + "</span>" + html.slice(i + o.length);
+      var regions = [];
+      ds.forEach(function (d) {
+        var start, end;
+        if (d.old) {
+          start = tp.indexOf(d.old);
+          if (start < 0) return;                   /* 定位不到就跳过，避免误伤 */
+          end = start + d.old.length;
+        } else if (d.before) {
+          start = tp.indexOf(d.before);
+          if (start < 0) start = tp.length;
+          end = start;
         } else {
-          html = html.slice(0, i) + o + '（<span class="akp-diff akp-diff--' + d.t + '">' + esc(d.new) + "</span>）" + html.slice(i + o.length);
+          start = end = tp.length;
         }
+        regions.push({ d: d, start: start, end: end });
       });
+      regions.sort(function (x, y) { return x.start - y.start || x.end - y.end; });
+      var html = "", cur = 0;
+      regions.forEach(function (r) {
+        if (r.start < cur) return;                 /* 与前一个区块重叠 → 跳过 */
+        html += esc(tp.slice(cur, r.start)) + regionHtml(r.d);
+        cur = r.end;
+      });
+      html += esc(tp.slice(cur));
       return html;
     }
 
@@ -941,8 +1212,17 @@
     get: function (id) { return REG[id]; },
     list: function () { return ORDER.map(function (id) { return REG[id]; }); },
     /* 仅供自动化测试使用（tools/akp_diff_test.js）：比对引擎的输出探针。
-       规则变化（同义词/标点不计改动）靠它做断言，改引擎时务必重跑。 */
-    __diff: diffHtml
+       规则变化（同义词/标点不计改动）靠它做断言，改引擎时务必重跑。
+       __render：完整条目级对比（含手写 diffs 分支），供 tools/akp_dump.js 离线核对。 */
+    __diff: diffHtml,
+    __render: renderDiff,
+    /* 仅供自动化测试 / 离线核对（tools/akp_diff_test.js、tools/_akp_probe.js）：
+       把分档内部函数暴露出来，便于定位「为什么这句被判成重做 / 错位」。 */
+    __dbg: {
+      jac: jac, skel: skel, semTokens: semTokens, clauses: clauses,
+      pairClauses: pairClauses, classify: classify, isRedo: isRedo,
+      lcsRatio: lcsRatio, inlineSegs: inlineSegs, multExtra: multExtra
+    }
   };
 
   global.AKP = AKP;

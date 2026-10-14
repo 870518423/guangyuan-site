@@ -45,7 +45,9 @@ function get(p) {
       total: (window.AKP_MANIFEST||[]).length
     };})())`));
   ok("首页统计与清单一致", home.stat.indexOf(home.ready + " 位角色") >= 0, home.stat + " / ready=" + home.ready);
-  ok("清单条目数=15", home.total === 15, "total=" + home.total);
+  /* 清单总数：15→17（2026-10-13 超限/奥王BY/捷德终极）→19（2026-10-14 令迦/光辉赛罗/终极赛罗闪耀型/雷古洛思）。
+     新增 ready 角色后同步改这里；「首页统计与清单一致」是动态断言，不用改。 */
+  ok("清单条目数=19", home.total === 19, "total=" + home.total);
 
   await send("Page.navigate", { url: BASE + "/category.html?f=" + encodeURIComponent("奥特之星") });
   await new Promise(r => setTimeout(r, 2400));
@@ -92,9 +94,21 @@ function get(p) {
     }
     await ev(`document.querySelector('.akp-actions [data-akp-role="cmp"]').click()`);
     await new Promise(r => setTimeout(r, 600));
-    const bad = await ev(`JSON.stringify([].map.call(document.querySelectorAll('.akp-sec--passive .akp-diff'), function(e){return e.textContent;}).filter(function(t){
-      return /^(增加|提高|降低|减少|角色|目标)$/.test(t.trim());
-    }))`);
+    /* 口径：**同义改写被标出来** 才算问题（提高↔增加、降低↔减少）。
+       ⚠️ 2026-10-14 修：原来只要有个 diff 块正好等于「提高」就报错，
+       会误伤「额外~~提高~~〖绿:使〗自身命中率增加30%」这类**真改动**
+       （旧写法被换成「使…增加」）。改为只看**相邻两块的同义对**。
+       角色/目标 同日改口径为「要标」，故不在同义集里。 */
+    const bad = await ev(`(function(){
+      var syn = {"增加":"提高","提高":"增加","降低":"减少","减少":"降低"};
+      var ns = [].slice.call(document.querySelectorAll('.akp-sec--passive .akp-diff'));
+      var hit = [];
+      for (var i = 0; i < ns.length - 1; i++) {
+        var a = ns[i].textContent.trim(), b = ns[i+1].textContent.trim();
+        if (syn[a] && syn[b] === a) hit.push(a + "→" + b);
+      }
+      return JSON.stringify(hit);
+    })()`);
     const badArr = JSON.parse(bad || "[]");
     ok(cid + " 对比中无同义词被标注", badArr.length === 0, badArr.join("|"));
   }

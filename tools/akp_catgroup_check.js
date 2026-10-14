@@ -58,8 +58,11 @@ function get(p) {
   ok("分为 2 组", g.n === 2, "n=" + g.n + " labels=" + g.labels.join(","));
   ok("BY 组排在最上方", g.labels[0] === "超越（BY）", g.labels.join(" / "));
   ok("UL 组排在下方", g.labels[1] === "究极（UL）", g.labels.join(" / "));
-  ok("两组卡片数合计=13", (g.counts[0] + g.counts[1]) === 13, g.counts.join("+"));
-  ok("BY 组含 2 位、UL 组含 11 位", g.counts[0] === 2 && g.counts[1] === 11, g.counts.join("+"));
+  /* 卡片计数：2026-10-14 新增令迦/光辉赛罗/终极赛罗闪耀型/雷古洛思（均奥特之星/BY）后
+     BY 2→6、合计 13→17（UL 11 不变；极恶贝利亚/奥美迦朱雀装甲 ready:false 不上阵营页）。
+     新增角色后同步改这里。 */
+  ok("两组卡片数合计=17", (g.counts[0] + g.counts[1]) === 17, g.counts.join("+"));
+  ok("BY 组含 6 位、UL 组含 11 位", g.counts[0] === 6 && g.counts[1] === 11, g.counts.join("+"));
   ok("分组标题按钮触摸高度 ≥44px", g.btnH >= 44, g.btnH + "px");
   ok("初始状态为展开（aria-expanded=true）", g.aria.every(a => a === "true"), g.aria.join(","));
   ok("初始按钮文案为「折叠」", g.labels_btn.every(t => t === "折叠"), g.labels_btn.join(","));

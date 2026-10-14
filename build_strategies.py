@@ -59,8 +59,8 @@ SECTIONS = [
         'file': 'strategy-dati.html',
         'icon': 'assets/strategy-book.png',
         'accent': '#38bdf8',
-        'desc': '140 道奥特曼知识题。答案默认隐藏，可当题库自测；也能一键展开当速查手册，支持题号与关键词搜索。',
-        'tags': ['140 题', '可自测', '一键展开'],
+        'desc': '__NQ__ 道奥特曼知识题。答案默认隐藏，可当题库自测；也能一键展开当速查手册，支持题号与关键词搜索。',
+        'tags': ['__NQ__ 题', '可自测', '一键展开'],
     },
     {
         # 图片型攻略：页面 strategy-bingfeiwudou.html 是手工维护的静态页，
@@ -252,7 +252,7 @@ def parse_dati(path):
         line = raw.rstrip()
         if not line.strip():
             continue
-        m = re.match(r'^\s*(\d+)\s*[.、]\s*(.+)$', line)
+        m = re.match(r'^\s*(\d+)\s*[.、。]\s*(.+)$', line)
         if m:
             cur = {'no': int(m.group(1)), 'q': m.group(2).strip(), 'a': ''}
             items.append(cur)
@@ -604,7 +604,7 @@ TPL_DATI = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>趣味问答题库 · 奥系攻略</title>
 <meta name="theme-color" content="#0a0e1a">
-<meta name="description" content="趣味问答题库：140 道奥特曼知识题，答案默认隐藏，可自测也可一键展开速查">
+<meta name="description" content="趣味问答题库：__NQ__ 道奥特曼知识题，答案默认隐藏，可自测也可一键展开速查">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="icon" href="assets/favicon-32.png">
@@ -867,12 +867,19 @@ def build():
 
     # --- 答题 ---
     quiz = parse_dati(DATI_TXT)
+    # 题数自动填充（__NQ__）：题库增删后不必再手改描述文案
+    nq = str(len(quiz))
+    for _sec in SECTIONS:
+        if _sec.get('id') == 'dati':
+            _sec['desc'] = _sec['desc'].replace('__NQ__', nq)
+            _sec['tags'] = [t.replace('__NQ__', nq) for t in _sec['tags']]
     dati_html = (
         TPL_DATI
         .replace('__CSS__', BASE_CSS)
         .replace('__AUTHORCSS__', AUTHOR_CSS)
         .replace('__AUTHOR__', author_block())
         .replace('__SUB__', html.escape(SECTION_SUB))
+        .replace('__NQ__', nq)
         .replace('__DATA__', json.dumps(quiz, ensure_ascii=False))
     )
     io.open(os.path.join(SRC, 'strategy-dati.html'), 'w', encoding='utf-8').write(dati_html)

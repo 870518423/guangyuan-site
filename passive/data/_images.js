@@ -400,5 +400,117 @@ window.AKP_IMAGES = {
         "src": "img/jiede-zhongji/超越技_v5.webp"
       }
     ]
+  },
+
+  "lingjia": {
+    "portrait": "img/lingjia/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/lingjia/主动技_v1.webp"
+      },
+      {
+        "label": "主动技 v2",
+        "src": "img/lingjia/主动技_v2.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/lingjia/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/lingjia/被动技_v2.webp"
+      },
+      {
+        "label": "超越技 v1",
+        "src": "img/lingjia/超越技_v1.webp"
+      },
+      {
+        "label": "超越技 v2",
+        "src": "img/lingjia/超越技_v2.webp"
+      }
+    ]
+  },
+
+  "guanghui-sailuo": {
+    "portrait": "img/guanghui-sailuo/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/guanghui-sailuo/主动技_v1.webp"
+      },
+      {
+        "label": "主动技 v2",
+        "src": "img/guanghui-sailuo/主动技_v2.jpg"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/guanghui-sailuo/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/guanghui-sailuo/被动技_v2.webp"
+      },
+      {
+        "label": "超越技 v1",
+        "src": "img/guanghui-sailuo/超越技_v1.webp"
+      }
+    ]
+  },
+
+  "sailuo-shinyaoxing": {
+    "portrait": "img/sailuo-shinyaoxing/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/sailuo-shinyaoxing/主动技_v1.webp"
+      },
+      {
+        "label": "主动技 v2",
+        "src": "img/sailuo-shinyaoxing/主动技_v2.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/sailuo-shinyaoxing/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/sailuo-shinyaoxing/被动技_v2.webp"
+      },
+      {
+        "label": "超越技 v1",
+        "src": "img/sailuo-shinyaoxing/超越技_v1.webp"
+      }
+    ]
+  },
+
+  "leiguluosi": {
+    "portrait": "img/leiguluosi/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/leiguluosi/主动技_v1.webp"
+      },
+      {
+        "label": "主动技 v2",
+        "src": "img/leiguluosi/主动技_v2.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/leiguluosi/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/leiguluosi/被动技_v2.webp"
+      },
+      {
+        "label": "超越技 v1",
+        "src": "img/leiguluosi/超越技_v1.webp"
+      },
+      {
+        "label": "超越技 v2",
+        "src": "img/leiguluosi/超越技_v2.webp"
+      }
+    ]
   }
 };
