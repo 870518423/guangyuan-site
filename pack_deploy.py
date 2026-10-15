@@ -124,6 +124,43 @@ def run_akp_lint():
     return (not mod.errors), lines
 
 
+def check_unused_images():
+    """附加自检（2026-10-16）：passive/img/<id>/ 里未被 _images.js 引用的图片。
+
+    背景：校对切片（lj_*/pv*/q_*）与 webp→png 转换图曾两次漏进站点目录。
+    采集脚本把它们排除在 _images.js 之外（所以页面不显示），但**物理文件仍会被
+    目录递归收进 deploy.zip** —— 2026-10-16 实测把包从 15MB 撑到 77MB。
+    这里只告警不阻断（简介技*/魔方* 属既定口径内「不展示但留档」，不算错）。
+    返回 (行列表, 总字节) 或 None（无法检查）。
+    """
+    import urllib.parse
+    idx = os.path.join(SRC, 'passive', 'data', '_images.js')
+    base = os.path.join(SRC, 'passive', 'img')
+    if not (os.path.isfile(idx) and os.path.isdir(base)):
+        return None
+    try:
+        with open(idx, encoding='utf-8') as f:
+            txt = f.read()
+    except OSError:
+        return None
+    used = set()
+    for m in re.finditer(r"""['"]([^'"]+\.(?:webp|png|jpe?g|gif))['"]""", txt, re.I):
+        used.add(urllib.parse.unquote(m.group(1)).rsplit('/', 1)[-1])
+    exts = ('webp', 'png', 'jpg', 'jpeg', 'gif')
+    rows, total = [], 0
+    for d in sorted(os.listdir(base)):
+        p = os.path.join(base, d)
+        if not os.path.isdir(p):
+            continue
+        for f in sorted(os.listdir(p)):
+            if f.rsplit('.', 1)[-1].lower() not in exts or f in used:
+                continue
+            sz = os.path.getsize(os.path.join(p, f))
+            total += sz
+            rows.append('%s/%s  %.2fMB' % (d, f, sz / 1048576.0))
+    return rows, total
+
+
 def main():
     got, missing = collect()
 
@@ -173,6 +210,21 @@ def main():
     print('  数据体检（被动板块）: %s' % ('通过' if lint_ok else '未通过'))
     for l in lint_lines[:12]:
         print(l)
+
+    # 未引用图片自检（2026-10-16，第六项）：只告警不阻断
+    try:
+        unused = check_unused_images()
+    except Exception as e:                      # 自检自身出错绝不能拖垮打包
+        unused = None
+        print('  WARN 未引用图片自检异常: %s' % e)
+    if unused:
+        urows, utotal = unused
+        flag = '   ← 体积可疑，查是否混入校对切片' if utotal > 5 * 1048576 else ''
+        print('  未引用图片: %d 个 / %.2fMB%s' % (len(urows), utotal / 1048576.0, flag))
+        for r in urows[:8]:
+            print('    ' + r)
+        if len(urows) > 8:
+            print('    …另有 %d 个' % (len(urows) - 8))
 
     return 0 if not (bad or absent or missing or sw_fail or not lint_ok) else 1
 

@@ -529,3 +529,38 @@
     transition-duration: .001ms !important;
   }
 }
+
+/* ---------- 原文图视图（2026-10-16 加）----------
+   ⚠️ 是「功能叠加」不是「视觉叠加」：文字版与原文图**互斥**，同一时间只显示一个，
+      靠根元素 data-akp-view 切显隐，不会两层叠在一起看不清。
+   默认文字版；切到原文图时正文/下载入口/脚注隐藏，只留截图。 */
+.akp > .akp-imgview { display: none; }
+.akp[data-akp-view="image"] > .akp-imgview { display: block; }
+
+/* ⚠️ 操作条（版本 / 对比 / 文字版·原文图）挂在被动那一节里面，
+   图片视图下**必须保留这一节**，否则按钮一起被藏掉，用户就切不回来了。
+   做法：带 .akp-sec--ctl 的那一节只藏标题条与正文，操作条常显；其余节整节隐藏。 */
+.akp[data-akp-view="image"] > .akp-sec:not(.akp-sec--ctl) { display: none; }
+.akp[data-akp-view="image"] > .akp-sec--ctl > .akp-bar,
+.akp[data-akp-view="image"] > .akp-sec--ctl > .akp-body,
+.akp[data-akp-view="image"] > .akp-sec--ctl > .akp-fold { display: none; }
+
+.akp[data-akp-view="image"] > .akp-shots,
+.akp[data-akp-view="image"] > .akp-note { display: none; }
+.akp-imgview-item { margin: 0 0 16px; }
+.akp-imgview-cap {
+  font-size: .82em; color: var(--ak-accent);
+  margin-bottom: 6px; letter-spacing: .5px;
+}
+.akp-imgview-img {
+  display: block; width: 100%; height: auto;
+  border: 1px solid var(--ak-line); border-radius: var(--ak-radius-lg);
+  background: var(--ak-bg-1);
+}
+.akp-imgview-miss {
+  padding: 20px 12px; text-align: center;
+  font-size: .82em; color: var(--ak-text-dim);
+  border: 1px dashed var(--ak-line-2); border-radius: var(--ak-radius-lg);
+}
+.akp-imgview-miss .akp-btn { margin-top: 10px; }
+.akp-viewsw { display: inline-flex; gap: 6px; margin-left: auto; }

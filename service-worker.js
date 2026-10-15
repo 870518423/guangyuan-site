@@ -155,7 +155,48 @@
 // v53：趣味问答题库 140 → 160 题（sources/奥特曼答题.txt 换新，新增 24 题、
 //      3 题措辞更新、藤工→藤宫、去掉「戴拿（存疑）」）；题数文案改自动填充，
 //      解析正则兼容「155。」式序号。
-const CACHE_NAME = 'guangyuan-v53';
+// v54：首页页脚新增 CC BY-NC 4.0 分层授权声明（原创部分可转载/须署名/禁商用，
+//      引用的官方素材与转载攻略不在授权范围内）。
+// v55：首页新增「新版本提示」——SW 装到新版本后弹条提示点此刷新
+//      （⚠️ 提示靠 SW 文件变化触发，所以每次上线都得升版本号，否则弹不出来）。
+// v56：「看过即缓存」改到独立的 RUNTIME 缓存（原先进版本缓存，一升版就被整桶清掉）；
+//      静态资源改 stale-while-revalidate（先秒开再后台换新），页面/图片跨版本保留，
+//      上限 400 条自动裁剪。断网时看过的页面不再被兜底成首页。
+// v57：修「离线兜底成首页」——未缓存页面离线时不再返回 index.html（会导致
+//      URL 与内容错乱、相对路径 404、角色页永远打不开），改为自包含的专用离线页。
+//      回归测试：node tools/sw_offline_test.js（6 条断言）
+// v58：被动页新增「文字版 / 原文图」视图切换（akp.js + akp.css）。
+//      只叠加不替代：默认文字版，原文图用于核对原图，图片视图下禁用版本对比。
+//      akp.js/akp.css 都在预缓存清单且走缓存优先 → 按硬规矩必须升版，否则用户拿不到新 JS。
+// v59：原文图视图修「切过去按钮全没了」——操作条在被动 section 里，整节隐藏会连
+//      按钮一起藏掉；改为该节打 .akp-sec--ctl 标记，只藏标题条与正文、保留操作条；
+//      并按管理者要求删掉图片视图顶部的说明文字。
+// v60：奥美迦朱雀装甲（多宇宙/BY）补全校对上线——被动补 +9/+11/+12/+18、
+//      超越技补全（狱火斩/凝寒流/风旋击/裂地钻/离火/凝寒/地煞/控制效果）；
+//      采集脚本排除「简介技/魔方」；_images.js 重生成（清理误入的校对切片）。
+// v61：格式统一——被动板块**恒定有操作条**（版本 + 对比 + 视图切换），
+//      单版本角色（如奥美迦朱雀装甲）不再少一排按钮、视图按钮也不再另挂他处；
+//      「原文图」改称「原图版」。
+const CACHE_NAME = 'guangyuan-v61';
+
+/* 运行时缓存（2026-10-15 加）：「看过即缓存」专用，与版本缓存分离。
+   以前 fetch 成功也写进 CACHE_NAME，但每次升版本号 activate 会把旧缓存整桶删掉，
+   用户攒下来的离线内容一夜清零 → 现在单独放这里，发新版不清。
+   只存同源 GET，且带条目上限，避免无限膨胀。 */
+const RUNTIME = 'guangyuan-runtime';
+const RUNTIME_MAX = 400;          // 上限条目数，超出后从最旧的开始裁
+
+// 超出上限时裁掉最早的条目（cache.keys() 为插入顺序）
+function trimRuntime() {
+  return caches.open(RUNTIME).then((cache) =>
+    cache.keys().then((keys) => {
+      if (keys.length <= RUNTIME_MAX) return;
+      return Promise.all(
+        keys.slice(0, keys.length - RUNTIME_MAX).map((k) => cache.delete(k))
+      );
+    })
+  );
+}
 const ASSETS = [
   './',
   './index.html',
@@ -227,7 +268,41 @@ const ASSETS = [
   './assets/calc/calc.js'
 ];
 
-const OFFLINE_PAGE = './index.html';
+/* 离线兜底页（2026-10-15 重写）
+   ------------------------------------------------------------------
+   ⚠️ 以前这里是 `const OFFLINE_PAGE = './index.html'`，离线且该页面没有缓存时，
+      直接把首页 HTML 塞回去。后果：
+        · 地址栏是 /passive/char.html，内容却是首页 → 上下文完全错乱；
+        · 首页 HTML 里的相对路径（assets/、data/…）会以 /passive/ 为基准去取 →
+          CSS/JS/图片全 404，页面彻底崩坏（这就是「脱机后界面错位」的真因）；
+        · char.html 自己的渲染逻辑根本不会执行，角色页永远显示不出来。
+   现在改成返回一个**自包含的离线页**：不引用任何相对资源、不伪装成别的页面、
+   明确告诉你「当前离线且此页未缓存」，并给出返回首页 / 重试两个出路。 */
+function offlineResponse() {
+  const html = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
+    '<title>离线 · 奥系光元工具站</title><style>' +
+    'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;' +
+    'background:#101828;color:#e6edf7;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;' +
+    'padding:24px;box-sizing:border-box}' +
+    '.c{max-width:420px;text-align:center}' +
+    'h1{margin:0 0 10px;font-size:1.15rem;color:#fbd33c;letter-spacing:1px}' +
+    'p{margin:0 0 20px;font-size:.88rem;line-height:1.9;color:#9fb0c9}' +
+    'a{display:inline-block;margin:0 6px;padding:11px 18px;border-radius:10px;font-size:.86rem;' +
+    'text-decoration:none;background:#fbd33c;color:#1a1206;font-weight:600}' +
+    'a.ghost{background:transparent;color:#9fb0c9;border:1px solid #2a3550}' +
+    '</style></head><body><div class="c">' +
+    '<h1>当前处于离线状态</h1>' +
+    '<p>这个页面你之前没有打开过，所以没有缓存可供离线显示。<br>' +
+    '连上网络后再试一次就好，看过的页面离线也能看。</p>' +
+    '<a href="/index.html">返回首页</a>' +
+    '<a class="ghost" href="javascript:location.reload()">重试</a>' +
+    '</div></body></html>';
+  return new Response(html, {
+    status: 200,
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-AKP-Offline': '1' }
+  });
+}
 
 // 判断该请求是不是"页面"（导航请求，或接受 text/html）
 function isDocumentRequest(request) {
@@ -260,7 +335,8 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+        // ⚠️ RUNTIME（看过即缓存）不在清理之列：发新版不该把用户攒的离线内容清掉
+        keys.filter((k) => k !== CACHE_NAME && k !== RUNTIME).map((k) => caches.delete(k))
       );
     }).then(() => self.clients.claim())
   );
@@ -276,32 +352,47 @@ self.addEventListener('fetch', (event) => {
   try { url = new URL(request.url); } catch (e) { return; }
   if (url.origin !== self.location.origin) return;
 
-  // ---- 页面：网络优先 ----
+  // ---- 页面：网络优先，看过即缓存（写进 RUNTIME，跨版本保留）----
   if (isDocumentRequest(request)) {
     event.respondWith(
       fetch(request)
         .then((response) => {
           if (response && response.ok) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            caches.open(RUNTIME).then((cache) => cache.put(request, clone)).then(trimRuntime);
           }
           return response;
         })
         .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match(OFFLINE_PAGE))
+          // 断网：先看有没有看过这份页面（RUNTIME 里），没有才给专用离线页
+          caches.match(request).then((cached) => cached || offlineResponse())
         )
     );
     return;
   }
 
-  // ---- 静态资源：缓存优先 ----
+  // ---- 静态资源：stale-while-revalidate（先看缓存秒开，同时后台换新）----
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) return cached;
+      if (cached) {
+        // 后台刷新一次，下次打开就是新的；失败静默（离线时保持旧内容可用）
+        event.waitUntil(
+          fetch(request)
+            .then((response) => {
+              if (response && response.ok) {
+                const clone = response.clone();
+                return caches.open(RUNTIME).then((cache) => cache.put(request, clone));
+              }
+            })
+            .then(trimRuntime)
+            .catch(() => {})
+        );
+        return cached;
+      }
       return fetch(request).then((response) => {
         if (response && response.ok) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          caches.open(RUNTIME).then((cache) => cache.put(request, clone)).then(trimRuntime);
         }
         return response;
       });

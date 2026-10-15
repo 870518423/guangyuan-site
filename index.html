@@ -184,6 +184,36 @@
   footer .lic a:hover { color: #fde68a; border-bottom-color: #fde68a; }
   footer .lic a::after { content: "↗"; font-size: .72rem; opacity: .8; }
 
+  /* 新版本提示条（2026-10-15 加）：SW 装到新版本后提示刷新，
+     否则老用户的静态资源一直走缓存优先，会停在旧版本。 */
+  #sw-update {
+    position: fixed; left: 50%;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    z-index: 90; display: flex; align-items: center; gap: 10px;
+    max-width: calc(100vw - 28px);
+    padding: 9px 10px 9px 15px;
+    background: var(--panel2); border: 1px solid var(--gold);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 26px rgba(0,0,0,.32);
+    color: var(--text); font-size: .84rem;
+    animation: swUpIn .26s ease both;
+  }
+  #sw-update .txt { flex: 1; white-space: nowrap; }
+  #sw-update button {
+    min-height: 34px; padding: 0 13px; border: 0; border-radius: 8px;
+    font-size: .82rem; font-weight: 600; cursor: pointer;
+    background: var(--gold); color: #1a1206;
+  }
+  #sw-update .close {
+    background: transparent; color: var(--dim);
+    font-size: 1.05rem; font-weight: 400; min-width: 32px; padding: 0 6px;
+  }
+  @keyframes swUpIn {
+    from { opacity: 0; transform: translate(-50%, 14px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+  }
+
   @media (max-width: 700px) {
     .wrap { padding: 34px 14px 48px; }
     header { margin-bottom: 28px; }
@@ -385,11 +415,58 @@
 /* ===== PWA Service Worker 注册（必须存在于首页！
    浏览器判定「可安装」要求当前页面所在作用域内已注册 Service Worker 且能离线响应。
    以前只有 calculator.html 注册，从首页进入的新访客永远装不上 → 这就是
-   「点了添加到桌面却没有原生弹窗」的根因之一。 ===== */
+   「点了添加到桌面却没有原生弹窗」的根因之一。
+
+   2026-10-15 增：新版本提示。静态资源走「缓存优先」，老用户不刷新会一直吃到旧资源；
+   SW 装到新版本后弹一条提示，点一下就刷新到最新。 ===== */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('service-worker.js')
-      .then(function (reg) { console.log('SW registered:', reg.scope); })
+      .then(function (reg) {
+        console.log('SW registered:', reg.scope);
+
+        /* ---- 新版本提示条 ----
+           ⚠️ SW 里调了 clients.claim()，首次安装也会触发 controllerchange，
+              所以判断依据必须是「本页加载时是否已被旧 SW 接管」，而不是当前有没有 controller，
+              否则新访客第一次进站就会被误提示「有新版本」。 */
+        var hadController = !!navigator.serviceWorker.controller;
+        var tip = null;
+        function showUpdateTip(worker) {
+          if (tip || !hadController) return;
+          tip = document.createElement('div');
+          tip.id = 'sw-update';
+          tip.setAttribute('role', 'status');
+          tip.innerHTML =
+            '<span class="txt">有新版本，点此刷新</span>' +
+            '<button type="button" class="go">刷新</button>' +
+            '<button type="button" class="close" aria-label="忽略">×</button>';
+          document.body.appendChild(tip);
+          tip.querySelector('.go').addEventListener('click', function () {
+            try { worker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+            location.reload();
+          });
+          tip.querySelector('.close').addEventListener('click', function () {
+            tip.remove(); tip = null;
+          });
+        }
+
+        // 注册时就已经有新版本在等待（例如上次访问时装了一半）
+        if (reg.waiting) showUpdateTip(reg.waiting);
+
+        reg.addEventListener('updatefound', function () {
+          var nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', function () {
+            // 装好后仍需用户点刷新：页面是网络优先，但静态资源是缓存优先
+            if (nw.state === 'installed') showUpdateTip(nw);
+          });
+        });
+
+        // 保险：新 SW 接管页面后若还没提示过，也提示一次
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (reg.active) showUpdateTip(reg.active);
+        });
+      })
       .catch(function (err) { console.log('SW registration failed:', err); });
   });
 }

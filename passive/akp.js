@@ -960,7 +960,11 @@
     /* 控件只放在「被动」板块（管理者规则：控件只在被动行）。
        2026-10-13 版式调整：日期占用标题条右端（原版本徽标位，同字体）；
        版本徽标下移到操作条左端（「被动」二字正下方），与查看/对比按钮平行。 */
-    if (versions && sec.type === "passive") {
+    /* 2026-10-16 改：**被动板块恒定有操作条**（版本 + 对比 + 视图切换）。
+       以前只有多版本角色才有操作条，单版本角色（如奥美迦朱雀装甲）整排按钮消失，
+       视图切换按钮只能另找地方挂 → 格式被擅自改了。现在一律保留：
+       单版本时版本/对比按钮照常显示，只是 disabled（v1 没有上一版，也没有下一版）。 */
+    if (sec.type === "passive") {
       verBadge = mk("span", "akp-ver", "");
       dateEl = mk("span", "akp-ver akp-ver--date", "");
     }
@@ -989,8 +993,8 @@
        prose 恒为静态。 */
     var listMode = sec.type === "prose" ? false
                  : (sec.type === "exceed" ? !!list.length : true);
-    var hasVer = !!(versions && sec.type === "passive" &&
-                    list.some(function (e) { return !!e.texts; }));
+    var hasVer = !!(sec.type === "passive" &&
+                    (versions ? list.some(function (e) { return !!e.texts; }) : true));
     var verBtn = null, cmpBtn = null;
     if (hasVer) {
       var actions = mk("div", "akp-actions");
@@ -1041,6 +1045,20 @@
 
       if (!hasVer) return;
 
+      /* 单版本角色（versions 为 null）：按钮照常显示，只是不可点。
+         徽标写 v1（数据里没有 versions 就用「v1」这个约定名）。 */
+      if (!versions) {
+        verBadge.textContent = "v1";
+        verBadge.className = "akp-ver akp-ver--cur";
+        if (dateEl) dateEl.textContent = "";
+        verBtn.disabled = true;
+        verBtn.textContent = "查看 v1";
+        cmpBtn.disabled = true;
+        cmpBtn.textContent = "对比上一版";
+        cmpBtn.setAttribute("aria-pressed", "false");
+        return;
+      }
+
       /* 徽标：非对比态显当前版本；对比态显「上一版 → 当前版 对比」 */
       if (inDiff) {
         verBadge.textContent = versions[vi - 1].badge + " → " + versions[vi].badge + " 对比";
@@ -1081,6 +1099,25 @@
     if (registry) registry.push(paint);      /* 供联动重绘 */
     root.__fold = foldWrap;
     return root;
+  }
+
+  /* ---------------- 视图模式：文字版 / 原图版（2026-10-16 加）----------------
+     ⚠️ 只做「切换」，不替代文字版：版本对比（增强/调整/新增/移除着色）、
+        全文搜索、读屏朗读、字号自选都只在文字层存在，图片层没有这些能力。
+        所以默认是文字版，原文图只给想核对原文的玩家用。
+     状态：localStorage['akp-view-mode']，默认 text；切换靠根元素 data-akp-view
+     + CSS 显隐，不重建 DOM（保住滚动位置和折叠状态）。 */
+  var VIEW_KEY = "akp-view-mode";
+  var viewMode = "text";
+  try {
+    var __sv = localStorage.getItem(VIEW_KEY);
+    if (__sv === "image" || __sv === "text") viewMode = __sv;
+  } catch (e) {}
+  var VIEW_PAINT = [];
+  function setView(m) {
+    viewMode = (m === "image") ? "image" : "text";
+    try { localStorage.setItem(VIEW_KEY, viewMode); } catch (e) {}
+    VIEW_PAINT.forEach(function (f) { try { f(); } catch (e) {} });
   }
 
   /* ---------------- 挂载 ---------------- */
@@ -1173,8 +1210,7 @@
        放在折叠层之外，避免「全部折叠」后连下载入口都看不到。 */
     var pics = (global.AKP_IMAGES || {})[id];
     if (pics && pics.shots && pics.shots.length && el.getAttribute("data-akp-shots") !== "0") {
-      var shotBox = mk("div", "akp-shots");
-      var shotHd = mk("div", "akp-shots-hd");
+      var shotBox = mk("div", "akp-shots");      var shotHd = mk("div", "akp-shots-hd");
       shotHd.appendChild(mk("span", "akp-shots-label", "技能截图原图"));
       shotHd.appendChild(mk("span", "akp-shots-hint", "点击下载"));
       shotBox.appendChild(shotHd);
@@ -1189,6 +1225,95 @@
       });
       shotBox.appendChild(shotList);
       el.appendChild(shotBox);
+    }
+
+    /* ---- 原图版视图（2026-10-16 加，仅叠加，不替代文字版）---- */
+    var hasShots = !!(pics && pics.shots && pics.shots.length);
+    if (hasShots && el.getAttribute("data-akp-imgview") !== "0") {
+      var imgView = mk("div", "akp-imgview");
+
+      /* 按版本分组：标签末尾带 vN 的只在该版本出现，无版本标注的常显 */
+      var groups = [];
+      pics.shots.forEach(function (s) {
+        var m = /(v\d+)\s*$/.exec(s.label || "");
+        var v = m ? m[1] : null;
+        var item = mk("figure", "akp-imgview-item");
+        item.appendChild(mk("figcaption", "akp-imgview-cap", esc(s.label)));
+        var im = document.createElement("img");
+        im.className = "akp-imgview-img";
+        im.loading = "lazy";
+        im.decoding = "async";
+        im.alt = (s.label || "技能截图") + " 原图";
+        /* 缺图 / 404 降级：占位文案 + 一键回文字版，不留破图 */
+        im.onerror = function () {
+          var miss = mk("div", "akp-imgview-miss", "该版本素材未收录");
+          var back = mk("button", "akp-btn", "回到文字版");
+          back.type = "button";
+          back.onclick = function () { setView("text"); };
+          miss.appendChild(back);
+          item.replaceChild(miss, im);
+        };
+        im.src = s.src;
+        item.appendChild(im);
+        var g = null;
+        for (var i = 0; i < groups.length; i++) if (groups[i].ver === v) { g = groups[i]; break; }
+        if (!g) {
+          g = { ver: v, box: mk("div", "akp-imgview-group") };
+          groups.push(g);
+          imgView.appendChild(g.box);
+        }
+        g.box.appendChild(item);
+      });
+      el.appendChild(imgView);
+
+      /* 切换按钮：一律挂在「被动」板块的操作条上（多版本、单版本都一样，格式统一）。
+         ⚠️ 操作条在 section 内部，图片视图要**保留这一节**（否则按钮全被藏起来，
+         用户切过去就切不回来了）→ 给该节打标记，CSS 只藏正文不藏操作条。 */
+      var actBar = el.querySelector(".akp-actions");
+      if (actBar && actBar.parentNode) actBar.parentNode.className += " akp-sec--ctl";
+      var swWrap = mk("div", "akp-viewsw");
+      swWrap.setAttribute("role", "group");
+      swWrap.setAttribute("aria-label", "视图切换");
+      [["text", "文字版"], ["image", "原图版"]].forEach(function (p) {
+        var b = mk("button", "akp-btn", p[1]);
+        b.type = "button";
+        b.setAttribute("data-akp-role", "view-" + p[0]);
+        b.onclick = function () { setView(p[0]); };
+        swWrap.appendChild(b);
+      });
+      actBar.appendChild(swWrap);   /* 操作条恒定存在（单版本角色也会建） */
+
+      var versionsAll = data.versions || [];
+      function applyView() {
+        el.setAttribute("data-akp-view", viewMode);
+        var cur = versionsAll.length
+          ? versionsAll[Math.min(verState.cur, versionsAll.length - 1)].id : null;
+        groups.forEach(function (g) { g.box.hidden = !!(g.ver && cur && g.ver !== cur); });
+        var tbs = el.querySelectorAll(".akp-viewsw .akp-btn");
+        [].forEach.call(tbs, function (b) {
+          var on = b.getAttribute("data-akp-role") === "view-" + viewMode;
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+          b.className = on ? "akp-btn akp-btn--solid" : "akp-btn";
+        });
+
+        /* 图片视图下禁用「对比」（diff 只存在于文字层），并说明原因；
+           切回文字版时让各板块重绘，由 paint() 恢复按钮本来的可用状态
+           （v1 无上一版 → 仍然是禁用的）。 */
+        var cmp = el.querySelector('.akp-btn[data-akp-role="cmp"]');
+        if (cmp) {
+          if (viewMode === "image") {
+            cmp.disabled = true;
+            cmp.title = "原图版不支持版本对比，请切回「文字版」";
+          } else {
+            cmp.removeAttribute("title");
+            if (registry) registry.forEach(function (f) { if (f !== applyView) f(); });
+          }
+        }
+      }
+      applyView();
+      VIEW_PAINT.push(applyView);
+      /* 版本切换后图片跟着换：登记进联动重绘 */
+      if (registry) registry.push(applyView);
     }
 
     /* 脚注 */

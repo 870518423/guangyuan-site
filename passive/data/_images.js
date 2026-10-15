@@ -261,6 +261,23 @@ window.AKP_IMAGES = {
       }
     ]
   },
+  "oumeijia-zhuque": {
+    "portrait": "img/oumeijia-zhuque/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/oumeijia-zhuque/主动技_v1.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/oumeijia-zhuque/被动技_v1.webp"
+      },
+      {
+        "label": "超越技 v1",
+        "src": "img/oumeijia-zhuque/超越技_v1.webp"
+      }
+    ]
+  },
   "sailuo-wuxian": {
     "portrait": "img/sailuo-wuxian/角色图_v1.webp",
     "shots": [
@@ -401,7 +418,6 @@ window.AKP_IMAGES = {
       }
     ]
   },
-
   "lingjia": {
     "portrait": "img/lingjia/角色图_v1.webp",
     "shots": [
@@ -431,7 +447,6 @@ window.AKP_IMAGES = {
       }
     ]
   },
-
   "guanghui-sailuo": {
     "portrait": "img/guanghui-sailuo/角色图_v1.webp",
     "shots": [
@@ -457,7 +472,6 @@ window.AKP_IMAGES = {
       }
     ]
   },
-
   "sailuo-shinyaoxing": {
     "portrait": "img/sailuo-shinyaoxing/角色图_v1.webp",
     "shots": [
@@ -483,7 +497,6 @@ window.AKP_IMAGES = {
       }
     ]
   },
-
   "leiguluosi": {
     "portrait": "img/leiguluosi/角色图_v1.webp",
     "shots": [
