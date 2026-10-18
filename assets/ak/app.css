@@ -19,8 +19,10 @@ html[data-app] header h1 { font-size: 1.5rem; }
 html[data-app] .ak-save-btn { display: none; }          /* 由 app-shell.js 换成「检查更新」 */
 
 /* 首页右上角齿轮（app-shell.js 注入） */
+/* 齿轮：只在主页面显示（app-shell.js 控制），固定左上角 */
 html[data-app] .ak-app-gear {
-  position: fixed; right: 96px; top: 14px; z-index: 60;
+  position: fixed; left: calc(14px + env(safe-area-inset-left));
+  top: calc(14px + env(safe-area-inset-top)); z-index: 60;
   width: 44px; height: 44px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   background: var(--panel2, rgba(255,255,255,.06));
@@ -135,3 +137,35 @@ html[data-app] .akc-card h3 {
 }
 html[data-app] .akc-card { padding: 8px 9px; gap: 7px; }
 html[data-app] .akc-card .akc-thumb { width: 36px; height: 36px; flex: 0 0 36px; }
+/* ---------- guides 搜索栏重设计（第 15 轮，仅 App 模式） ---------- */
+html[data-app][data-page="guides"] .search-row input {
+  height: 52px; border-radius: 12px; padding: 0 52px 0 16px;
+  background: var(--panel); border-color: var(--border2); font-size: .95rem;
+}
+html[data-app][data-page="guides"] .search-row input::placeholder { color: var(--dim); opacity: .85; }
+html[data-app][data-page="guides"] .search-row input:focus {
+  border-color: var(--gold); box-shadow: 0 0 0 3px rgba(251, 191, 36, .13);
+}
+html[data-app][data-page="guides"] #clearQ {
+  width: 40px; height: 40px; right: 6px; font-size: 1.05rem;
+  background: rgba(127,127,127,.10); color: var(--muted);
+}
+html[data-app][data-page="guides"] #clearQ.on { display: flex; align-items: center; justify-content: center; }
+/* 第 15 轮：设置页「下载 App」卡双形态 —— web=下载安装包，App=检查更新 */
+html[data-app] #dl .web-only { display: none; }
+html:not([data-app]) #dl .app-only { display: none; }
+
+/* ---------- guides 滚动感知返回按钮（第 16 轮，仅 App 模式） ---------- */
+html[data-app] .ak-back-float {
+  position: fixed; left: calc(16px + env(safe-area-inset-left));
+  bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 55;
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--panel2, rgba(255,255,255,.08));
+  border: 1px solid var(--border2, rgba(255,255,255,.16));
+  color: var(--text, #e6edf7); text-decoration: none; font-size: 1.2rem;
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity .2s, transform .2s;
+}
+html[data-app] .ak-back-float.on { opacity: 1; transform: translateY(0); pointer-events: auto; }
+html[data-app] .ak-back-float:active { transform: scale(.94); }

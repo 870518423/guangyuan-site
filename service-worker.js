@@ -299,7 +299,20 @@ const IS_NATIVE = self.location.hostname === 'localhost' || self.location.protoc
 // v81：第 14 轮 App 化改造（网站侧）正式发布
 //      双版本适配（探测层 + app.css/app-shell.js）、app.html、SW 资源包通道、
 //      module.json / version.json、CORS、jpg 孤件移出（-3.4MB）、App 卡片精简。
-const BUILD = 'v81';
+// v82：第 17 轮「策略回退 + App 图片链路修复」（管理者拍板：回到旧版本策略）
+//      ① HTML 回退：删掉第 16 轮附加的「HTML 网络优先 + 回写预缓存」分支 ——
+//         导航请求本就走 isDocumentRequest 网络优先，那分支只影响罕见的非导航
+//         .html 子请求，却带来更弱的离线兜底与预缓存桶无 trim 的写入，得不偿失。
+//      ② 图片回退缓存优先（SWR）：命中 packs 桶直接返回（第 14 轮起验证至今），
+//         后台条件请求换新；只保留「未命中就去网络拉并顺手入桶」新能力。
+//      ③ 修 App 裂图根因：未命中取图**必须先把 URL 重写到 SITE_BASE**（App 里
+//         request 是 https://localhost、本地无图必 404）；!ok（404）先回查缓存，
+//         严禁把 404 透传给页面。
+//      ④ 新闸门 tools/sw_app_image_test.js（App 环境模拟，10 断言）：堵住浏览器
+//         同源闸门测不出 App 问题的盲区（旧代码对它跑出 9 项违例）。
+//      注：第 16 轮其余改动（预取可选、并行 6 路、返回钮滚动感知、展开按钮行内、
+//      首启弹层移除）不回退，继续有效。
+const BUILD = 'v82';
 const CACHE_NAME = 'guangyuan-static';   // ⚠️ 固定名，不要再往里加版本号
 const FORCE_FULL_REFRESH = false;        // 平时保持 false；出缓存事故才开一次
 
@@ -310,9 +323,14 @@ const FORCE_FULL_REFRESH = false;        // 平时保持 false；出缓存事故
 const RUNTIME = 'guangyuan-runtime';
 /* App 资源包专用桶（第 14 轮 v81）：固定名、activate 不清、不参与 RUNTIME 400 条裁剪 */
 const PACKS_CACHE = 'guangyuan-packs';
+const PACKS_MAX = 3000;   // packs 桶上限（浏览即缓存 + 预取共用），超出从最旧裁剪
 /* App（Capacitor）里页面 origin 是 https://localhost，图片实际在线上：
    资源包按线上绝对 URL 下载，同时用「本地同路径」再存一份，页面请求才能命中。 */
-const SITE_BASE = 'https://m78calc.cn';
+/* 浏览器同源测试（http://127.0.0.1:8099 等）用自身 origin；
+   App（https://localhost，本地无图片）才从线上站点拉。 */
+const SITE_BASE = (self.location.hostname === 'localhost' && self.location.protocol === 'https:')
+  ? 'https://m78calc.cn'
+  : self.location.origin;
 const RUNTIME_MAX = 400;          // 上限条目数，超出后从最旧的开始裁
 
 // 超出上限时裁掉最早的条目（cache.keys() 为插入顺序）
@@ -455,6 +473,74 @@ function isDocumentRequest(request) {
   return accept.indexOf('text/html') !== -1;
 }
 
+/* ============================================================
+   图片取件（第 14 轮建，第 17 轮定稿）
+   ------------------------------------------------------------
+   ① **缓存优先（SWR）**：命中 packs 桶就立即返回 —— 在线离线都能看，
+      不进网络（第 14 轮起验证至今的行为）；同时 waitUntil 一次**后台条件请求**
+      换新（304 = 零下载），失败静默。先秒开、下次打开是新的。
+   ② **未命中才走网络，且 fetch 前必须把 URL 换到 SITE_BASE**：
+      App（Capacitor）里页面 origin 是 https://localhost，本地服务器根本没有
+      这些图，直接拿 request 去 fetch 必 404 —— 这就是第 16 轮「看过即缓存
+      在 App 下实际是坏的」的根因。浏览器同源时 SITE_BASE 就是自身 origin，
+      重写等于不变。
+   ③ **!ok（404 等）必须先回查缓存，严禁把 404 原样透传给页面**：
+      第 16 轮就是 404 被原样返回（且 catch 只在断网抛错时才查缓存）→ App 裂图。
+   ============================================================ */
+function imgRemoteHref(url) {
+  return new URL(url.pathname + url.search, SITE_BASE).href;
+}
+function imgLocalHref(url) {
+  return new URL(url.pathname + url.search, self.location.origin).href;
+}
+
+/* 一份图存两把钥匙：线上键（预取通道用的绝对 URL）+ 本地键（页面请求用的 URL）。
+   这样「按线上 URL 预取」和「按页面 URL 取图」互相都能命中。 */
+async function putImage(cache, remote, local, res) {
+  try {
+    await cache.put(remote, res.clone());
+    if (local !== remote) {
+      try { await cache.put(local, res.clone()); } catch (e) {}
+    }
+  } catch (e) {}
+  try { await trimPacks(); } catch (e) {}
+}
+
+async function imgCacheHit(cache, request, remote, local) {
+  let hit = null;
+  try { hit = await cache.match(request); } catch (e) { hit = null; }
+  if (!hit && remote !== request.url) { try { hit = await cache.match(remote); } catch (e) {} }
+  if (!hit && local !== request.url) { try { hit = await cache.match(local); } catch (e) {} }
+  return hit;
+}
+
+/* 命中后的后台换新（SWR）：有旧副本 → 带 ETag/Last-Modified 条件请求，
+   304 就一个字节都不下。任何失败都静默，旧内容继续可用。 */
+async function imgRefresh(cache, hit, remote, local) {
+  try {
+    const cond = condHeaders(hit);
+    const res = await fetch(remote, cond ? { headers: cond, credentials: 'omit' } : { credentials: 'omit' });
+    if (res.status === 304) return;
+    if (res && res.ok) await putImage(cache, remote, local, res);
+  } catch (e) { /* 离线或失败：保持旧内容 */ }
+}
+
+/* 未命中：走网络 → 成功入 packs 桶 → 失败/404 先回查缓存 → 都没有才让页面走裂图占位 */
+async function imgFetch(cache, request, remote, local) {
+  let res = null;
+  try { res = await fetch(remote, { credentials: 'omit' }); } catch (e) { res = null; }
+  if (res && res.ok) {
+    const copy = res.clone();
+    await putImage(cache, remote, local, res);
+    return copy;
+  }
+  const fb = await imgCacheHit(cache, request, remote, local);
+  if (fb) return fb;
+  // 真的拿不到：抛错让 <img> 走 onerror（页面显示「未缓存 · 联网后查看」），
+  // 绝不把 404 响应体透传出去。
+  throw new Error('image unavailable: ' + remote);
+}
+
 // 安装：预缓存核心资源
 // 2026-10-13 M2（审查 D-1）：原来用 cache.addAll(ASSETS) —— 它是「全有或全无」，
 // 任何一条资源 404 都会让整个 install 失败，老用户被永久卡在旧版本（且静默）。
@@ -553,14 +639,28 @@ self.addEventListener('fetch', (event) => {
   try { url = new URL(request.url); } catch (e) { return; }
   if (url.origin !== self.location.origin) return;
 
-  /* ---- 图片类资源（第 14 轮 v81）----
-     ① App 里下载过资源包 → 直接命中 packs 桶（离线也能看）
-     ② 没下载 → 交回浏览器 HTTP 缓存（edgeone.json 给了 7 天），**不进 RUNTIME**：
-        805 张图若进 RUNTIME 会把 400 条上限挤满，反倒把页面缓存挤掉。 */
+  /* ---- APK 安装包（第 15 轮）：一次性下载，走网络且不写任何缓存 ---- */
+  if (url.pathname.endsWith('.apk')) return;
+
+  /* ---- 图片类资源（第 14 轮 v81 建，第 17 轮定稿）----
+     ① 命中 packs 桶 → 直接返回（在线离线都能看），后台条件请求换新（SWR）；
+     ② 未命中 → 走网络，**URL 换到 SITE_BASE**（App 本地无图、直接 fetch 必 404
+        是第 16 轮 App 裂图的根因），成功后入 packs 桶（remote + local 双键）；
+     ③ !ok（404）**先回查缓存**，严禁把 404 透传给页面。
+     ⚠️ 只进 packs 桶、**不进 RUNTIME**：805 张图若走 RUNTIME 会把 400 条上限
+        挤满，反倒把页面缓存挤掉。 */
   if (/^\/(images|passive\/img|assets\/guides)\//.test(url.pathname)) {
-    event.respondWith(
-      caches.open(PACKS_CACHE).then((c) => c.match(request)).then((hit) => hit || fetch(request))
-    );
+    event.respondWith((async () => {
+      const cache = await caches.open(PACKS_CACHE);
+      const remote = imgRemoteHref(url);
+      const local = imgLocalHref(url);
+      const hit = await imgCacheHit(cache, request, remote, local);
+      if (hit) {
+        event.waitUntil(imgRefresh(cache, hit, remote, local));
+        return hit;
+      }
+      return imgFetch(cache, request, remote, local);
+    })());
     return;
   }
 
@@ -633,6 +733,14 @@ async function readModuleManifest() {
   }
 }
 
+async function trimPacks() {
+  const cache = await caches.open(PACKS_CACHE);
+  const keys = await cache.keys();
+  if (keys.length <= PACKS_MAX) return;
+  const excess = keys.length - PACKS_MAX;
+  for (let i = 0; i < excess; i++) await cache.delete(keys[i]);
+}
+
 function packIdOf(url) {
   if (url.indexOf('/images/humans/') >= 0) return 'humans';
   if (url.indexOf('/passive/img/') >= 0) return 'passive';
@@ -661,6 +769,8 @@ async function packsStatus() {
   return out;
 }
 
+var packTask = null;   // 运行中的下载任务（页面重进可附着显示）
+
 async function downloadPacks(ids, port) {
   const man = await readModuleManifest();
   const cache = await caches.open(PACKS_CACHE);
@@ -674,33 +784,49 @@ async function downloadPacks(ids, port) {
     port && port.postMessage({ type: 'done', empty: true });
     return;
   }
-  let done = 0, bytes = 0;
-  for (const it of queue) {
-    const remote = new URL(it.url, SITE_BASE);
-    const local = new URL(remote.pathname + remote.search, self.location.origin).href;
-    let hit = null;
-    try { hit = await cache.match(remote.href); } catch (e) {}
-    if (!hit) {
-      try {
-        const res = await fetch(remote.href, { cache: 'no-cache', credentials: 'omit' });
-        if (res && res.ok) {
-          bytes += parseInt(res.headers.get('content-length') || '0', 10) || 0;
-          await cache.put(remote.href, res.clone());
-          if (local !== remote.href) {
-            try { await cache.put(local, res.clone()); } catch (e) {}
-          }
-        }
-      } catch (e) {
-        port && port.postMessage({ type: 'error', id: it.id, file: it.url, message: String(e && e.message || e) });
+  packTask = { ids: (ids || []).slice(), done: 0, total: total, file: '', bytes: 0, pct: 0 };
+  let done = 0, bytes = 0, idx = 0;
+  /* 并行 6 路（第 16 轮）：慢网络下较串行明显提速；断点续传不变（已缓存键跳过）。 */
+  const CONCURRENCY = 6;
+  async function worker() {
+    while (idx < queue.length) {
+      const it = queue[idx++];
+      if (packTask) packTask.file = (it.url.split('/').pop() || '');
+      /* 清单里是线上绝对 URL；同源测试（SITE_BASE === origin）时把路径重写到本地，
+         否则 new URL 的 base 对绝对 URL 无效、仍会打到线上（CORS 拦截）。 */
+      let remote = new URL(it.url, SITE_BASE);
+      if (SITE_BASE === self.location.origin && remote.origin !== self.location.origin) {
+        remote = new URL(remote.pathname + remote.search, self.location.origin);
       }
+      const local = new URL(remote.pathname + remote.search, self.location.origin).href;
+      let hit = null;
+      try { hit = await cache.match(remote.href); } catch (e) {}
+      if (!hit) {
+        try {
+          const res = await fetch(remote.href, { cache: 'no-cache', credentials: 'omit' });
+          if (res && res.ok) {
+            bytes += parseInt(res.headers.get('content-length') || '0', 10) || 0;
+            await cache.put(remote.href, res.clone());
+            if (local !== remote.href) {
+              try { await cache.put(local, res.clone()); } catch (e) {}
+            }
+          }
+        } catch (e) {
+          port && port.postMessage({ type: 'error', id: it.id, file: it.url, message: String(e && e.message || e) });
+        }
+      }
+      done++;
+      if (packTask) { packTask.done = done; packTask.bytes = bytes; packTask.pct = Math.round(done / total * 100); }
+      port && port.postMessage({
+        type: 'progress', id: it.id, file: it.url,
+        done: done, total: total, bytes: bytes,
+        pct: Math.round(done / total * 100)
+      });
     }
-    done++;
-    port && port.postMessage({
-      type: 'progress', id: it.id, file: it.url,
-      done: done, total: total, bytes: bytes,
-      pct: Math.round(done / total * 100)
-    });
   }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, worker));
+  await trimPacks();
+  packTask = null;
   port && port.postMessage({ type: 'done', done: done, total: total, bytes: bytes });
 }
 

@@ -71,6 +71,9 @@ const check = (n, ok, extra) => {
   check("web 首页没有 data-app", (await ev(`document.documentElement.hasAttribute('data-app')`)) === false);
   check("web 首页不请求 app.css / app-shell.js", appReqs.length === 0, appReqs.length + " 个请求");
   check("web 首页仍是 1 列（440 宽）", (await cols(".entries")) === 1, await cols(".entries"));
+  const clRow = await ev(`(function(){var t=document.querySelector('.changelog h3 span');var b=document.getElementById('clToggle');if(!t||!b)return null;return Math.abs(t.getBoundingClientRect().top-b.getBoundingClientRect().top)<8;})()`);
+  check("更新记录展开按钮与标题同行（flex 行内）", clRow === true);
+  check("更新记录按钮非绝对定位", (await ev(`getComputedStyle(document.getElementById('clToggle')).position`)) !== "absolute");
   const webHome = await shot("web-home.png");
 
   await go("/guides.html", 3200); await clean();
@@ -85,11 +88,40 @@ const check = (n, ok, extra) => {
     return a ? a.querySelector('.desc').textContent.indexOf('16 项产出收益')>=0 : false;
   })()`);
   check("app 首页文案已换成精简版", copyOk === true);
-  check("app 首页右上角有齿轮", (await ev(`!!document.querySelector('.ak-app-gear')`)) === true);
+  const gear = await ev(`(function(){var g=document.querySelector('.ak-app-gear');if(!g)return null;var r=g.getBoundingClientRect();return {left:Math.round(r.left),top:Math.round(r.top),pos:getComputedStyle(g).position};})()`);
+  check("app 首页齿轮 fixed 左上", gear && gear.pos === "fixed" && gear.left < 120 && gear.top < 120, JSON.stringify(gear));
+  check("app 首页更新记录默认收起", (await ev(`document.getElementById('clToggle').textContent`)) === "展开");
   const appHome = await shot("app-home.png");
 
   await go("/guides.html?app=1", 3600); await clean();
   check("app guides 两列", (await cols("#cardView")) === 2, await cols("#cardView"));
+  const backHome = await ev(`(function(){var b=document.querySelector('.back-home');return b?getComputedStyle(b).position:'missing';})()`);
+  check("guides 返回按钮①：页头 inline（非 fixed）", backHome !== "fixed", backHome);
+  const fl2 = await ev(`(async function(){
+    window.scrollTo(0, window.innerHeight * 1.2);
+    await new Promise(function(r){setTimeout(r,450)});
+    var f=document.querySelector('.ak-back-float');
+    return !!(f && f.classList.contains('on'));
+  })()`);
+  check("guides 返回按钮②：滚过一屏左下浮出", fl2 === true);
+  await shot("guides-back-floated.png");
+  const fl3 = await ev(`(async function(){
+    window.scrollTo(0, 0);
+    await new Promise(function(r){setTimeout(r,450)});
+    var f=document.querySelector('.ak-back-float');
+    return !(f && f.classList.contains('on'));
+  })()`);
+  check("guides 返回按钮③：回顶隐藏", fl3 === true);
+  check("app guides 无设置齿轮（仅主页面有）", (await ev(`!document.querySelector('.ak-app-gear')`)) === true);
+  /* 浏览即缓存：页面内 fetch 一张图 → packs 桶应出现该键 */
+  const cacheOk = await ev(`(async function(){
+    await fetch('passive/img/factions/star.png', {cache:'no-store'});
+    var c = await caches.open('guangyuan-packs');
+    var ks = await c.keys();
+    return ks.some(function(k){return k.url.indexOf('passive/img/factions/star.png')>=0});
+  })()`);
+  check("图片浏览即入 packs 桶（脱离 RUNTIME）", cacheOk === true);
+  check("app guides 无设置齿轮（仅主页面有）", (await ev(`!document.querySelector('.ak-app-gear')`)) === true);
   const appGuides = await shot("app-guides.png");
 
   await go("/strategies.html?app=1", 3000); await clean();
@@ -104,9 +136,14 @@ const check = (n, ok, extra) => {
   const appCategory = await shot("app-passive-category.png");
 
   await go("/app.html?app=1", 3000); await clean();
-  const zones = JSON.parse(await ev(`JSON.stringify(['dl','packs','about'].map(function(i){
-    var e=document.getElementById(i);return e?getComputedStyle(e).display:'missing'}))`));
-  check("app.html（App 内）三区都显示", zones.join(",") === "block,block,block", zones.join(","));
+  const zones = JSON.parse(await ev(`JSON.stringify([
+    getComputedStyle(document.querySelector('#dl .web-only')).display,
+    getComputedStyle(document.getElementById('packs')).display,
+    getComputedStyle(document.getElementById('about')).display])`));
+  check("app.html（App 内）下载内容隐藏、二区显示", zones.join(",") === "none,block,block", zones.join(","));
+  check("app 内显示「检查更新」卡", (await ev(`!!document.getElementById('updBtn') && getComputedStyle(document.querySelector('#dl .app-only')).display==='block'`)) === true);
+  check("app 内无 APK 下载链接", (await ev(`!document.querySelector('#dl .app-only a[href*=".apk"]')`)) === true);
+  check("app 内三包描述为「并非五斗」", (await ev(`document.body.textContent.indexOf('并非五斗')>=0`)) === true);
   const appSettings = await shot("app-settings.png");
 
   /* ---------- D. 清单 ---------- */
@@ -118,16 +155,10 @@ const check = (n, ok, extra) => {
   check("module.json 三包齐全", ["guide", "passive", "humans"].every((k) => mod.packs[k] && mod.packs[k].count > 0),
     Object.keys(mod.packs).map((k) => k + ":" + mod.packs[k].count).join(" "));
 
-  /* ---------- C. 首启弹层 ---------- */
+  /* ---------- C. 首启弹层已移除（第 16 轮：浏览即缓存） ---------- */
   await go("/index.html", 2200);
-  await ev(`localStorage.removeItem('ak-pack-prompt')`);
   await go("/index.html?app=1", 3400);
-  check("首启弹层出现", (await ev(`!!document.querySelector('.akp-pack-mask')`)) === true);
-  const prompt = await shot("app-firstrun.png");
-  await ev(`document.querySelector('[data-act="later"]').click()`); await sleep(500);
-  check("点「稍后」写入标记", (await ev(`localStorage.getItem('ak-pack-prompt')`)) === "1");
-  await go("/index.html?app=1", 3000);
-  check("刷新后不再弹", (await ev(`!!document.querySelector('.akp-pack-mask')`)) === false);
+  check("首启弹层已移除（清标记也不弹）", (await ev(`!!document.querySelector('.akp-pack-mask')`)) === false);
 
   /* ---------- web 端 app.html ---------- */
   await go("/app.html", 2600); await clean();
@@ -135,9 +166,11 @@ const check = (n, ok, extra) => {
     getComputedStyle(document.getElementById('packs')).display,
     getComputedStyle(document.querySelector('.webnote')).display])`));
   check("web 打开 app.html：② 区隐藏、提示条显示", webZones[0] === "none" && webZones[1] === "block", webZones.join(","));
+  check("web 下载卡有可用 APK 链接", (await ev(`!!document.querySelector('#dl a[href*="aoxi-tools-v0.1.0.apk"]')`)) === true);
+  check("web 设置页无「技术栈」段", (await ev(`document.body.textContent.indexOf('技术栈')<0`)) === true);
+  check("web 署名 chief和小娜", (await ev(`document.body.textContent.indexOf('chief和小娜')>=0`)) === true);
   const webSettings = await shot("app-settings-web.png");
 
-  console.log("\n  截图：" + [webHome, appHome, appGuides, appPassive, appCategory, appSettings, prompt, webSettings].join("  "));
   console.log("  " + (fail ? "FAILED" : "ALL PASS") + "  " + pass + " pass / " + fail + " fail");
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(2); });

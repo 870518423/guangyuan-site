@@ -149,7 +149,16 @@
     color: var(--dim); letter-spacing: 2px; text-transform: uppercase;
     display: flex; align-items: center; gap: 10px;
   }
-  .changelog h3::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+  /* 第 16 轮：展开按钮改为 flex 行内（标题 + 弹性分隔线 + 按钮），不再用绝对定位 */
+  .changelog .cl-line { flex: 1; height: 1px; background: var(--border); }
+  .changelog .cl-toggle {
+    height: 26px; padding: 0 10px; border-radius: 7px; flex: 0 0 auto;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    font-size: .7rem; cursor: pointer; font-family: inherit; letter-spacing: 1px;
+  }
+  .changelog .cl-toggle:hover { border-color: var(--blue); color: var(--blue); }
+  .changelog ul { overflow: hidden; transition: max-height var(--dur-base) var(--ease); }
+  .changelog .cl-toggle:active { transform: scale(.94); }
   .changelog ul { list-style: none; margin: 0; padding: 0; }
   .changelog li {
     display: flex; gap: 14px; padding: 9px 0;
@@ -380,7 +389,7 @@
 
   <!-- ✏️【5】更新记录（有新版本就在最上面加一行 <li>…</li>） -->
   <section class="changelog">
-    <h3>更新记录</h3>
+    <h3><span>更新记录</span><span class="cl-line"></span><button class="cl-toggle" id="clToggle" type="button" aria-expanded="false">展开</button></h3>
     <ul data-stagger>
       <li><time>2026-10-18</time><p>更新了人间体的图片，添加了人间体特训所需的光元消耗；支持人间体图鉴跳转角色被动页面</p></li>
       <li><time>2026-10-17</time><p>新增了域名更新公告</p></li>
@@ -493,6 +502,23 @@ if ('serviceWorker' in navigator) {
   var el = document.querySelector('[data-akp-count]');
   if (el && list.length) el.textContent = list.length + ' 位角色';
 })();
+</script>
+<script>
+  /* 更新记录折叠（第 15 轮，2026-10-18）：默认收起只看最新一条 */
+  (function () {
+    var ul = document.querySelector(".changelog ul");
+    var btn = document.getElementById("clToggle");
+    if (!ul || !btn) return;
+    var collapsed = true;
+    function apply() {
+      ul.style.maxHeight = (collapsed ? ul.children[0].offsetHeight + 9 : ul.scrollHeight) + "px";
+      btn.textContent = collapsed ? "展开" : "收起";
+      btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+    btn.addEventListener("click", function () { collapsed = !collapsed; apply(); });
+    window.addEventListener("resize", function () { if (collapsed) apply(); });
+    apply();
+  })();
 </script>
 </body>
 </html>

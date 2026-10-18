@@ -23,7 +23,7 @@
 
   /* 三包定义（与 module.json / pack_deploy 保持一致） */
   var PACKS = [
-    { id: "guide", name: "攻略资源包", size: "约 2 MB", desc: "兵非武斗 3 张高清攻略长图", def: true },
+    { id: "guide", name: "攻略资源包", size: "约 2 MB", desc: "并非五斗 3 张高清攻略长图", def: true },
     { id: "passive", name: "角色被动图鉴包", size: "约 10.3 MB", desc: "20 个角色的被动版本截图", def: true },
     { id: "humans", name: "人间体图鉴包", size: "约 19.6 MB", desc: "132 位人间体的三形态立绘与头像", def: false }
   ];
@@ -48,7 +48,9 @@
 
   /* ② 右上角齿轮 */
   function addGear() {
-    if (document.querySelector(".ak-app-gear")) return;
+    /* 设置入口只在主页面（管理者 2026-10-18：二级页不浮动，返回/主题按钮已够用） */
+    var isHome = /(^|\/)index\.html$/.test(location.pathname) || /\/$/.test(location.pathname);
+    if (!isHome || document.querySelector(".ak-app-gear")) return;
     var b = document.createElement("button");
     b.className = "ak-app-gear";
     b.type = "button";
@@ -83,66 +85,31 @@
     }, true);
   }
 
-  /* ⑤ 首启弹层 */
-  function buildPrompt() {
-    if (document.querySelector(".akp-pack-mask")) return;
-    var mask = document.createElement("div");
-    mask.className = "akp-pack-mask";
-    var rows = PACKS.map(function (p) {
-      return '<label class="akp-pack-row">' +
-        '<input type="checkbox" data-pack="' + p.id + '"' + (p.def ? " checked" : "") + '>' +
-        '<span class="txt"><span class="t1">' + p.name + '</span>' +
-        '<span class="t2">' + p.size + ' · ' + p.desc + '</span></span>' +
-        '</label>';
-    }).join("");
-    mask.innerHTML = '<div class="akp-pack-sheet" role="dialog" aria-modal="true" aria-label="下载离线资源包">' +
-      '<h3>下载离线资源包</h3>' +
-      '<p class="sub">App 内首次使用，可先下载常用资源，断网也能看图。也可以稍后到「设置」里再下。</p>' +
-      rows +
-      '<div class="akp-pack-actions">' +
-      '<button class="ghost" type="button" data-act="later">稍后</button>' +
-      '<button class="solid" type="button" data-act="go">开始下载</button>' +
-      '</div></div>';
-    document.body.appendChild(mask);
-    requestAnimationFrame(function () { mask.classList.add("on"); });
-
-    mask.addEventListener("click", function (e) {
-      var act = e.target.getAttribute && e.target.getAttribute("data-act");
-      if (act === "later") { finish(); }
-      else if (act === "go") {
-        var ids = [];
-        mask.querySelectorAll("input[data-pack]").forEach(function (i) { if (i.checked) ids.push(i.dataset.pack); });
-        finish();
-        if (window.AkPack && ids.length) window.AkPack.download(ids);
-        else location.href = BASE + "app.html";
-      } else if (e.target === mask) {
-        finish();
-      }
-    });
-
-    function finish() {
-      try { localStorage.setItem(PROMPT_KEY, "1"); } catch (e) {}
-      mask.classList.remove("on");
-      setTimeout(function () { mask.remove(); }, 200);
-    }
-  }
-  function maybePrompt() {
-    var isHome = /(^|\/)index\.html$/.test(location.pathname) || /\/$/.test(location.pathname);
-    if (!isHome) return;
-    var done = false;
-    try { done = localStorage.getItem(PROMPT_KEY) === "1"; } catch (e) {}
-    if (done) return;
-    setTimeout(buildPrompt, 600);
-  }
-
   /* 对外接口 */
-  window.AkApp = { BASE: BASE, PACKS: PACKS, prompt: buildPrompt };
+  window.AkApp = { BASE: BASE, PACKS: PACKS };
 
   function init() {
+    var isGuides = /(^|\/)guides\.html$/.test(location.pathname);
+    if (isGuides) {
+      document.documentElement.setAttribute("data-page", "guides");
+      /* 滚动感知返回按钮（第 16 轮）：页头 inline 跟随滚走，滚过约一屏后左下浮出圆形按钮 */
+      var fb = document.createElement("a");
+      fb.className = "ak-back-float";
+      fb.href = "index.html";
+      fb.setAttribute("aria-label", "返回首页");
+      fb.title = "返回首页";
+      fb.innerHTML = "&uarr;";
+      var attach = function () { document.body.appendChild(fb); };
+      if (document.body) attach(); else document.addEventListener("DOMContentLoaded", attach);
+      var onScroll = function () {
+        fb.classList.toggle("on", window.scrollY > window.innerHeight * 0.9);
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+    }
     rewriteHomeCopy();
     addGear();
     swapSaveButton();
-    maybePrompt();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
@@ -209,7 +176,9 @@
       return call({ type: "akpack-download", ids: ids || [] }, onProgress);
     },
     status: function () {
-      return call({ type: "akpack-status" }).then(function (d) { return d.packs || {}; });
+      return call({ type: "akpack-status" }).then(function (d) {
+        return { packs: d.packs || {}, task: d.task || null, protocol: d.protocol || 1 };
+      });
     },
     remove: function (id) {
       return call({ type: "akpack-remove", id: id });
@@ -228,8 +197,7 @@
     img.dataset.akFail = "1";
     var ph = document.createElement("div");
     ph.className = "ak-pack-ph";
-    ph.textContent = "资源包未下载 · 去设置页";
-    ph.addEventListener("click", function () { location.href = (window.AkApp ? window.AkApp.BASE : "") + "app.html"; });
+    ph.textContent = "未缓存 · 联网后查看";
     if (img.parentNode) img.parentNode.replaceChild(ph, img);
   }, true);
 })();

@@ -31,6 +31,7 @@ INCLUDES = [
     'strategy-dati.html',
     'strategy-bingfeiwudou.html',   # 转载攻略页（新增，勿删）
     'app.html',                     # App 设置页（第 14 轮，2026-10-18）
+    'app',                          # APK 安装包目录（第 15 轮，网页版「下载 App」用）
     'module.json',                  # 资源包清单（pack_deploy 自动生成，勿手改）
     'version.json',                 # 版本清单（同上）
     'manifest.json',

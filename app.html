@@ -12,6 +12,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-app.png">
 <link rel="icon" type="image/png" href="assets/favicon-app.png">
 <link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
 <link rel="stylesheet" href="assets/ak/ak-motion.css">
 <link rel="stylesheet" href="assets/ak/ak-components.css">
 <style>
@@ -93,25 +94,32 @@
 
   <section class="card" id="dl">
     <h2>下载 App <span class="tag">构建中</span></h2>
-    <div class="kv">版本 <b>v0.1.0</b> · 核心层约 7 MB（不含资源包）</div>
-    <ul class="log">
-      <li>核心离线可用：收益预测器 / 人间体图鉴（文字版）/ 攻略 / 被动文字版</li>
-      <li>图片类资源按需下载，不占安装包体积</li>
-      <li>支持检查更新，资源包可增量补下</li>
-    </ul>
-    <button class="btn" type="button" disabled>首个版本构建中</button>
+    <div class="web-only">
+      <div class="kv">版本 <b>v0.1.0</b> · 安装包 <b>5.2 MB</b>（资源包另计，可按需下载）</div>
+      <ul class="log">
+        <li>首版：完整离线核心（收益预测器 / 图鉴 / 攻略 / 被动收录）</li>
+        <li>三类资源包可选下载：攻略 / 被动图鉴 / 人间体图鉴</li>
+        <li>支持站内检查更新，资源包可增量补下</li>
+      </ul>
+      <a class="btn solid" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="app/aoxi-tools-v0.1.0.apk" download="奥系工具站-v0.1.0.apk">下载安装包（5.2 MB）</a>
+    </div>
+    <div class="app-only">
+      <div class="kv">当前版本 <b id="curVer">v0.1.0</b>（App 内已含完整离线核心）</div>
+      <div class="kv" id="updResult" style="margin-top:8px">点击下方按钮，检查站点是否有新版本。</div>
+      <button class="btn solid" style="margin-top:10px" type="button" id="updBtn">检查更新</button>
+    </div>
   </section>
 
   <div class="webnote">资源下载仅在 App 内可用 —— 网页版会把图片放在站点缓存里，不需要单独下载。</div>
 
   <section class="card" id="packs">
     <h2>离线资源包</h2>
-    <p class="hint">勾选需要的包后下载；已下载的包可单独删除。资源包与站点版本联动，站点更新后会提示补下。</p>
+    <p class="hint">浏览过的图片会自动缓存，断网也能看。<b>预取全部</b>是一次性把所有图下好的可选操作，适合想离线看全部内容的人；已下载的包可单独删除。</p>
     <div id="packRows"></div>
     <div class="bar"><i id="bar"></i></div>
     <div class="pstat" id="pstat">未开始</div>
     <div class="actions">
-      <button class="btn solid" type="button" id="dlBtn">开始下载</button>
+      <button class="btn" type="button" id="dlBtn">预取全部（可选）</button>
       <button class="btn" type="button" id="clearBtn">全部删除</button>
     </div>
     <div class="kv" style="margin-top:10px" id="used">已用空间：<b>0 MB</b></div>
@@ -119,9 +127,8 @@
 
   <section class="card about" id="about">
     <h2>关于本站</h2>
-    <p>技术栈：原生 HTML / CSS / JavaScript + Service Worker 离线缓存，无框架、无后端、无追踪脚本（除访问统计）。</p>
     <p>数据来源：玩家社区整理与游戏内截图，仅供个人查询参考；数值以游戏内为准。</p>
-    <p>授权：部分内容转载自社区，转载请署名 <b>chz_和小星</b>，不得用于商业用途。</p>
+    <p>授权：部分内容转载自社区，转载请署名 <b>chief和小娜</b>，不得用于商业用途。</p>
   </section>
 </main>
 
@@ -129,16 +136,34 @@
 (function () {
   "use strict";
   var PACKS = (window.AkApp && window.AkApp.PACKS) || [
-    { id: "guide", name: "攻略资源包", size: "约 2 MB", desc: "兵非武斗 3 张高清攻略长图" },
+    { id: "guide", name: "攻略资源包", size: "约 2 MB", desc: "并非五斗 3 张高清攻略长图" },
     { id: "passive", name: "角色被动图鉴包", size: "约 10.3 MB", desc: "20 个角色的被动版本截图" },
     { id: "humans", name: "人间体图鉴包", size: "约 19.6 MB", desc: "132 位人间体的三形态立绘与头像" }
   ];
 
+  var SEL_KEY = "ak-pack-selected";
   var rows = document.getElementById("packRows");
+  var bar = document.getElementById("bar");
+  var pstat = document.getElementById("pstat");
+  var used = document.getElementById("used");
+  var dlBtn = document.getElementById("dlBtn");
+  var clearBtn = document.getElementById("clearBtn");
+
+  function loadSel() {
+    try { var v = JSON.parse(localStorage.getItem(SEL_KEY)); return Array.isArray(v) ? v : null; }
+    catch (e) { return null; }
+  }
+  function saveSel(ids) {
+    try { localStorage.setItem(SEL_KEY, JSON.stringify(ids)); } catch (e) {}
+  }
+  function fmtMB(b) { return (b / 1048576).toFixed(1) + " MB"; }
+
   if (rows) {
+    var saved = loadSel();
     rows.innerHTML = PACKS.map(function (p) {
+      var checked = saved ? (saved.indexOf(p.id) >= 0) : true;
       return '<label class="prow">' +
-        '<input type="checkbox" data-pack="' + p.id + '" checked>' +
+        '<input type="checkbox" data-pack="' + p.id + '"' + (checked ? " checked" : "") + '>' +
         '<span class="t"><span class="t1">' + p.name + '</span>' +
         '<span class="t2">' + p.size + ' · ' + p.desc + '</span></span>' +
         '<button class="del" type="button" data-del="' + p.id + '" disabled>删除</button>' +
@@ -146,26 +171,57 @@
     }).join("");
   }
 
-  var bar = document.getElementById("bar");
-  var pstat = document.getElementById("pstat");
-  var used = document.getElementById("used");
-  var dlBtn = document.getElementById("dlBtn");
-  var clearBtn = document.getElementById("clearBtn");
+  var polling = false;
+  var tries = 0;
 
-  function fmt(mb) { return mb >= 1000 ? (mb / 1024).toFixed(1) + " GB" : Math.round(mb) + " MB"; }
-
-  function refreshStatus() {
-    if (!window.AkPack) return;
+  function refreshStatus(isRetry) {
+    if (!window.AkPack || !pstat) return;
     window.AkPack.status().then(function (st) {
-      var total = 0;
+      var packs = st.packs || {};
+      var task = st.task || null;
+      /* SW 更新窗口期可能还是旧版响应（protocol 缺失）→ 最多重试 6 次，每次 1.2s */
+      if (st.protocol === undefined && tries < 6) {
+        tries++;
+        setTimeout(function () { refreshStatus(true); }, 1200);
+        return;
+      }
+      var usedB = 0, missing = 0;
       PACKS.forEach(function (p) {
-        var has = st[p.id] && st[p.id].bytes > 0;
-        total += has ? st[p.id].bytes : 0;
-        var del = rows && rows.querySelector('[data-del="' + p.id + '"]');
-        if (del) del.disabled = !has;
+        var m = packs[p.id] || { count: 0, bytes: 0, total: 0 };
+        var done = m.count || 0, total = m.total || 0, b = m.bytes || 0;
+        usedB += b;
+        var del = rows.querySelector('[data-del="' + p.id + '"]');
+        if (del) del.disabled = !(done > 0);
+        if (done > 0 && total > 0 && done < total) missing += (total - done);
       });
-      if (used) used.innerHTML = "已用空间：<b>" + (total ? (total / 1048576).toFixed(1) + " MB" : "0 MB") + "</b>";
-      if (clearBtn) clearBtn.disabled = !total;
+      if (used) used.innerHTML = "已用空间：<b>" + fmtMB(usedB) + "</b>";
+      if (clearBtn) clearBtn.disabled = usedB <= 0;
+
+      /* 后台有任务在跑（页面重进附着显示） */
+      if (task && task.total && task.done < task.total) {
+        dlBtn.disabled = true;
+        dlBtn.textContent = "下载中…";
+        if (bar) bar.style.width = (task.pct || 0) + "%";
+        pstat.textContent = "正在下载：" + task.file + "（" + Math.round(task.pct || 0) + "%）";
+        if (!polling) { polling = true; setTimeout(refreshStatus, 1500); }
+        return;
+      }
+      polling = false;
+
+      if (missing > 0) {
+        dlBtn.disabled = false;
+        dlBtn.textContent = "继续预取（还差 " + missing + " 个文件）";
+      } else {
+        dlBtn.disabled = false;
+        dlBtn.textContent = "预取全部（可选）";
+      }
+    }).catch(function () {
+      pstat.textContent = "状态获取失败 · 点击重试";
+      pstat.style.cursor = "pointer";
+      pstat.onclick = function () {
+        pstat.onclick = null; pstat.style.cursor = "";
+        pstat.textContent = "获取中…"; refreshStatus();
+      };
     });
   }
 
@@ -173,20 +229,22 @@
     if (!window.AkPack) { pstat.textContent = "当前环境不支持（需要 App 或已注册 Service Worker 的浏览器）"; return; }
     var ids = [];
     rows.querySelectorAll("input[data-pack]").forEach(function (i) { if (i.checked) ids.push(i.dataset.pack); });
-    if (!ids.length) { pstat.textContent = "先勾选要下载的包"; return; }
+    if (!ids.length) { pstat.textContent = "先勾选要预取的包"; return; }
+    saveSel(ids);
+    /* 即时反馈：不等第一条进度消息 */
     dlBtn.disabled = true;
-    var lastPct = -1;
+    dlBtn.textContent = "下载中…";
+    if (bar) bar.style.width = "2%";
+    pstat.textContent = "正在准备下载…";
     window.AkPack.download(ids, function (info) {
-      if (bar) bar.style.width = Math.round(info.pct) + "%";
-      pstat.textContent = info.name ? "正在下载：" + info.name + "（" + Math.round(info.pct) + "%）" : Math.round(info.pct) + "%";
-      lastPct = info.pct;
+      if (bar) bar.style.width = Math.max(2, info.pct || 0) + "%";
+      pstat.textContent = "正在下载：" + info.name + "（" + Math.round(info.pct || 0) + "%）";
     }).then(function () {
-      pstat.textContent = lastPct >= 100 ? "下载完成" : "已完成";
-      dlBtn.disabled = false;
+      if (bar) bar.style.width = "100%";
+      pstat.textContent = "预取完成";
       refreshStatus();
     }).catch(function (e) {
       pstat.textContent = "下载中断：" + (e && e.message ? e.message : "网络异常");
-      dlBtn.disabled = false;
       refreshStatus();
     });
   });
@@ -210,9 +268,50 @@
     });
   });
 
-  setTimeout(refreshStatus, 800);
+  /* 勾选变化即保存（断点续传的记忆） */
+  if (rows) rows.addEventListener("change", function (e) {
+    if (!e.target || !e.target.dataset || !e.target.dataset.pack) return;
+    var ids = [];
+    rows.querySelectorAll("input[data-pack]").forEach(function (i) { if (i.checked) ids.push(i.dataset.pack); });
+    saveSel(ids);
+  });
+
+  /* 首启弹层跳转过来：自动开始所选包 */
+  try {
+    if (localStorage.getItem("ak-pack-autostart") === "1") {
+      localStorage.removeItem("ak-pack-autostart");
+      setTimeout(function () { if (dlBtn) dlBtn.click(); }, 400);
+    }
+  } catch (e) {}
+
+  setTimeout(refreshStatus, 600);
 })();
 </script>
 <script src="assets/ak/theme.js"></script>
+<script>
+  /* 检查更新（App 内）：比对本地与线上 version.json 的 BUILD（第 15 轮，2026-10-18） */
+  (function () {
+    if (!document.documentElement.hasAttribute("data-app")) return;
+    var SITE_URL = "https://m78calc.cn";
+    var btn = document.getElementById("updBtn");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      var r = document.getElementById("updResult");
+      btn.disabled = true;
+      r.textContent = "正在检查…";
+      fetch("version.json").then(function (res) { return res.json(); }).then(function (local) {
+        return fetch(SITE_URL + "/version.json", { cache: "no-store" }).then(function (res) { return res.json(); }).then(function (remote) {
+          if (remote.build && remote.build !== local.build) {
+            r.innerHTML = "发现新版本 <b>" + remote.build + "</b>（当前 " + local.build + "）。<br>请到网页版下载最新安装包覆盖安装。";
+          } else {
+            r.textContent = "已是最新版本（" + local.build + "）";
+          }
+        });
+      }).catch(function () {
+        r.textContent = "检查失败：网络不可用，稍后再试";
+      }).then(function () { btn.disabled = false; });
+    });
+  })();
+</script>
 </body>
 </html>
