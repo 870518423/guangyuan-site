@@ -314,7 +314,7 @@ const IS_NATIVE = self.location.hostname === 'localhost' || self.location.protoc
 //      首启弹层移除）不回退，继续有效。
 //      追加（同批未发布，合并进 v82）：首页按钮改版 —— 「添加到桌面」改名
 //      「收藏本网站」（save.js 的 idle 文案统一，不再随 iOS/安卓变），旁边并排
-//      新增「下载 App」按钮（直达 app/aoxi-tools-v0.1.0.apk，仅网页版显示，
+//      新增「下载 App」按钮（直达 app/aoxi-tools-v0.1.1.apk，仅网页版显示，
 //      App 内由 app.css 隐藏）。index.html / ak-components.css / save.js / app.css。
 const BUILD = 'v82';
 const CACHE_NAME = 'guangyuan-static';   // ⚠️ 固定名，不要再往里加版本号

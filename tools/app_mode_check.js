@@ -166,7 +166,7 @@ const check = (n, ok, extra) => {
     getComputedStyle(document.getElementById('packs')).display,
     getComputedStyle(document.querySelector('.webnote')).display])`));
   check("web 打开 app.html：② 区隐藏、提示条显示", webZones[0] === "none" && webZones[1] === "block", webZones.join(","));
-  check("web 下载卡有可用 APK 链接", (await ev(`!!document.querySelector('#dl a[href*="aoxi-tools-v0.1.0.apk"]')`)) === true);
+  check("web 下载卡有可用 APK 链接", (await ev(`!!document.querySelector('#dl a[href$=".apk"]')`)) === true);
   check("web 设置页无「技术栈」段", (await ev(`document.body.textContent.indexOf('技术栈')<0`)) === true);
   check("web 署名 chief和小娜", (await ev(`document.body.textContent.indexOf('chief和小娜')>=0`)) === true);
   const webSettings = await shot("app-settings-web.png");
