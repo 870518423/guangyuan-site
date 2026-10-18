@@ -312,6 +312,10 @@ const IS_NATIVE = self.location.hostname === 'localhost' || self.location.protoc
 //         同源闸门测不出 App 问题的盲区（旧代码对它跑出 9 项违例）。
 //      注：第 16 轮其余改动（预取可选、并行 6 路、返回钮滚动感知、展开按钮行内、
 //      首启弹层移除）不回退，继续有效。
+//      追加（同批未发布，合并进 v82）：首页按钮改版 —— 「添加到桌面」改名
+//      「收藏本网站」（save.js 的 idle 文案统一，不再随 iOS/安卓变），旁边并排
+//      新增「下载 App」按钮（直达 app/aoxi-tools-v0.1.0.apk，仅网页版显示，
+//      App 内由 app.css 隐藏）。index.html / ak-components.css / save.js / app.css。
 const BUILD = 'v82';
 const CACHE_NAME = 'guangyuan-static';   // ⚠️ 固定名，不要再往里加版本号
 const FORCE_FULL_REFRESH = false;        // 平时保持 false；出缓存事故才开一次

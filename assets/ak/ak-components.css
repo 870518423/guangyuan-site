@@ -272,12 +272,22 @@ tbody tr:hover { background: var(--ak-bg-2); }
 /* 12.2 按钮（现在位于页头副标题下方，由 header 自身的下边距与卡片隔开）
    【触摸目标】移动端最小舒适触摸目标为 44×44px（iOS HIG / Material 一致口径）。
    本页所有可点元素（主按钮 / 关闭钮 / 复制钮）统一按此校齐。 */
-.ak-save { display: flex; justify-content: center; margin: 18px 0 0; }
+.ak-save { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin: 18px 0 0; }
 .ak-save-btn {
   display: inline-flex; align-items: center; gap: 9px;
   padding: 11px 22px; font-size: .9rem;
   min-height: 44px;            /* 触摸目标下限 */
 }
+/* 12.2b 下载 App（安卓安装包，2026-10-18）—— 与「收藏本网站」并排同款，
+   仅网页版出现（App 内已装好，由 app.css 隐藏）。<a> 要抹掉链接下划线并撑成按钮盒。 */
+.ak-dl-btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 11px 18px; font-size: .9rem;
+  min-height: 44px;
+  text-decoration: none; white-space: nowrap;
+}
+.ak-dl-ico { width: 15px; height: 15px; flex: 0 0 15px; display: block; fill: none;
+  stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .ak-save-ico { width: 15px; height: 15px; flex: 0 0 15px; display: block; fill: none;
   stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
 .ak-save-btn.is-done { color: var(--ak-accent); border-color: var(--ak-accent); }

@@ -17,6 +17,7 @@ html[data-app] body { -webkit-tap-highlight-color: transparent; }
 html[data-app] .logo { width: 52px; height: 52px; }
 html[data-app] header h1 { font-size: 1.5rem; }
 html[data-app] .ak-save-btn { display: none; }          /* 由 app-shell.js 换成「检查更新」 */
+html[data-app] .ak-dl-btn { display: none; }            /* 已经装好了，App 内不需要再下载安装包 */
 
 /* 首页右上角齿轮（app-shell.js 注入） */
 /* 齿轮：只在主页面显示（app-shell.js 控制），固定左上角 */
