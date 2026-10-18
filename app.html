@@ -78,6 +78,10 @@
   }
   html:not([data-app]) .webnote { display: block; }
   html:not([data-app]) #packs { display: none; }
+  /* 下载卡的「网页/App 两副面孔」：**必须写在内联样式里**，不能放 app.css ——
+     app.css 只在 App 模式加载，放那儿的话网页版两块会同时显示（第 17 轮修）。 */
+  html:not([data-app]) #dl .app-only { display: none; }
+  html[data-app] #dl .web-only { display: none; }
   .about p { margin: 0 0 9px; font-size: .82rem; color: var(--muted, #93a4bd); line-height: 1.75; }
   .about b { color: var(--gold, #ffb300); font-weight: 600; }
 </style>
@@ -93,7 +97,7 @@
   </header>
 
   <section class="card" id="dl">
-    <h2>下载 App <span class="tag">构建中</span></h2>
+    <h2>下载 App <span class="tag">v0.1.1</span></h2>
     <div class="web-only">
       <div class="kv">版本 <b>v0.1.1</b> · 安装包 <b>5.2 MB</b>（资源包另计，可按需下载）</div>
       <ul class="log">

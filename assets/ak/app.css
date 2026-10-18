@@ -153,8 +153,6 @@ html[data-app][data-page="guides"] #clearQ {
 }
 html[data-app][data-page="guides"] #clearQ.on { display: flex; align-items: center; justify-content: center; }
 /* 第 15 轮：设置页「下载 App」卡双形态 —— web=下载安装包，App=检查更新 */
-html[data-app] #dl .web-only { display: none; }
-html:not([data-app]) #dl .app-only { display: none; }
 
 /* ---------- guides 滚动感知返回按钮（第 16 轮，仅 App 模式） ---------- */
 html[data-app] .ak-back-float {
