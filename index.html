@@ -298,6 +298,30 @@
 </style>
 <link rel="stylesheet" href="assets/ak/ak-components.css">
 <link rel="stylesheet" href="assets/ak/ak-light.css">
+<style>
+  /* ---------- 页头两个按钮（收藏本网站 + 下载 App）----------
+     ⚠️ 样式必须内联：SW 对静态资源是缓存优先，发版瞬间用户会拿到「新 HTML + 旧 CSS」，
+     裸 <a> 会缩成一小坨贴在按钮旁边（2026-10-19 管理者截图吐槽过）。这两个按钮只在
+     首页用，内联最稳；ak-components.css 里不再保留同名规则，避免两处漂移。
+     两个按钮**完全同款**：等高（min-height 46px）、等字号、同描边，中间留 12px 空隙，
+     是两个独立的按钮、不是一个控件的两半。 */
+  .ak-save {
+    display: flex; justify-content: center; align-items: center;
+    gap: 12px; flex-wrap: wrap; margin: 18px 0 0;
+  }
+  .ak-save-btn, .ak-dl-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 0 20px; height: 46px; min-height: 46px;
+    font-size: .9rem; line-height: 1; white-space: nowrap;
+  }
+  .ak-dl-btn { text-decoration: none; -webkit-tap-highlight-color: transparent; }
+  .ak-save-ico, .ak-dl-ico {
+    width: 15px; height: 15px; flex: 0 0 15px; display: block; fill: none;
+    stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .ak-save-btn.is-done { color: var(--ak-accent); border-color: var(--ak-accent); }
+  .ak-save-btn.is-done .ak-save-ico { opacity: .85; }
+</style>
 <script defer src="/ak-analytics.js"></script>
 </head>
 <body data-ak-progress>

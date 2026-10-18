@@ -272,26 +272,10 @@ tbody tr:hover { background: var(--ak-bg-2); }
 /* 12.2 按钮（现在位于页头副标题下方，由 header 自身的下边距与卡片隔开）
    【触摸目标】移动端最小舒适触摸目标为 44×44px（iOS HIG / Material 一致口径）。
    本页所有可点元素（主按钮 / 关闭钮 / 复制钮）统一按此校齐。 */
-.ak-save { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin: 18px 0 0; }
-.ak-save-btn {
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 11px 22px; font-size: .9rem;
-  min-height: 44px;            /* 触摸目标下限 */
-}
-/* 12.2b 下载 App（安卓安装包，2026-10-18）—— 与「收藏本网站」并排同款，
-   仅网页版出现（App 内已装好，由 app.css 隐藏）。<a> 要抹掉链接下划线并撑成按钮盒。 */
-.ak-dl-btn {
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 11px 18px; font-size: .9rem;
-  min-height: 44px;
-  text-decoration: none; white-space: nowrap;
-}
-.ak-dl-ico { width: 15px; height: 15px; flex: 0 0 15px; display: block; fill: none;
-  stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.ak-save-ico { width: 15px; height: 15px; flex: 0 0 15px; display: block; fill: none;
-  stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
-.ak-save-btn.is-done { color: var(--ak-accent); border-color: var(--ak-accent); }
-.ak-save-btn.is-done .ak-save-ico { opacity: .85; }
+/* 12.2 页头两个按钮（收藏本网站 + 下载 App）的样式 **已内联进 index.html**（2026-10-19）。
+   原因：SW 对静态资源是缓存优先，发版瞬间用户会拿到「新 HTML + 旧 CSS」，裸 <a> 会缩成
+   一小坨贴在按钮旁边（管理者截图吐槽过）。这两个按钮只在首页用，内联最稳。
+   此处不再保留同名规则，避免两处漂移。 */
 
 /* 12.3 遮罩 + 面板（开合一律用 transition，禁用 keyframes）
    【响应式三则 2026-10-11 第 3 轮补】
