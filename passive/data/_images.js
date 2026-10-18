@@ -248,16 +248,40 @@ window.AKP_IMAGES = {
         "src": "img/jiebeibeiliya/主动技_v1.webp"
       },
       {
+        "label": "主动技 v4",
+        "src": "img/jiebeibeiliya/主动技_v4.webp"
+      },
+      {
         "label": "被动技 v1",
         "src": "img/jiebeibeiliya/被动技_v1.webp"
       },
       {
-        "label": "被动技+超越技 v2",
-        "src": "img/jiebeibeiliya/被动技+超越技_v2.png"
+        "label": "被动技 v2",
+        "src": "img/jiebeibeiliya/被动技_v2.webp"
+      },
+      {
+        "label": "被动技 v3",
+        "src": "img/jiebeibeiliya/被动技_v3.webp"
+      },
+      {
+        "label": "被动技 v4",
+        "src": "img/jiebeibeiliya/被动技_v4.webp"
       },
       {
         "label": "超越技 v1",
         "src": "img/jiebeibeiliya/超越技_v1.webp"
+      },
+      {
+        "label": "超越技 v2",
+        "src": "img/jiebeibeiliya/超越技_v2.webp"
+      },
+      {
+        "label": "超越技 v3",
+        "src": "img/jiebeibeiliya/超越技_v3.webp"
+      },
+      {
+        "label": "超越技 v4",
+        "src": "img/jiebeibeiliya/超越技_v4.webp"
       }
     ]
   },
