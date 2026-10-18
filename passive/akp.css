@@ -552,6 +552,13 @@
   font-size: .82em; color: var(--ak-accent);
   margin-bottom: 6px; letter-spacing: .5px;
 }
+/* 「沿用」标记：该版本没重拍这张图（该类技能那一版没改）→ 用的是更早版本的截图 */
+.akp-imgview-reuse {
+  display: inline-block; margin-left: 6px; padding: 0 5px;
+  font-size: .78em; line-height: 15px; letter-spacing: 0;
+  color: var(--ak-text-dim); border: 1px solid var(--ak-line-2);
+  border-radius: 4px; vertical-align: 1px;
+}
 .akp-imgview-img {
   display: block; width: 100%; height: auto;
   border: 1px solid var(--ak-line); border-radius: var(--ak-radius-lg);

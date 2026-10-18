@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>App 设置 · 奥系工具站</title>
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="奥系工具站 App：下载安装包与离线资源包，查看版本信息">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" type="image/png" href="assets/favicon-app.png">
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<style>
+  :root { color-scheme: dark; }
+  html[data-theme="light"] { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: var(--bg, #0a0e1a); color: var(--text, #e6edf7);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 18px 16px 48px; }
+  .topbar { margin-bottom: 14px; }
+  .topbar a {
+    display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px;
+    border-radius: 9px; border: 1px solid var(--border2, #1e2a41); color: var(--muted, #93a4bd);
+    text-decoration: none; font-size: .86rem;
+  }
+  .topbar a:active { transform: scale(.97); }
+  header { text-align: center; margin-bottom: 22px; }
+  header .logo { width: 56px; height: 56px; object-fit: contain; }
+  header h1 { margin: 6px 0 4px; font-size: 1.4rem; letter-spacing: .5px; }
+  header .en { font-size: .68rem; letter-spacing: 3px; color: var(--dim, #64748b); }
+  .card {
+    background: var(--panel, #111c2f); border: 1px solid var(--border, #1a2336);
+    border-radius: 14px; padding: 16px; margin-bottom: 14px;
+  }
+  .card h2 { margin: 0 0 10px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .card h2 .tag { font-size: .64rem; padding: 2px 7px; border-radius: 999px;
+    background: rgba(251,191,36,.14); color: var(--gold, #ffb300); border: 1px solid rgba(251,191,36,.3); font-weight: 500; }
+  .kv { font-size: .82rem; color: var(--muted, #93a4bd); line-height: 1.7; }
+  .log { margin: 8px 0 14px; padding-left: 18px; font-size: .8rem; color: var(--muted, #93a4bd); line-height: 1.75; }
+  .btn {
+    width: 100%; height: 44px; border-radius: 11px; border: 1px solid var(--border2, #1e2a41);
+    background: var(--panel2, #16233a); color: var(--muted, #93a4bd);
+    font-size: .9rem; font-family: inherit; cursor: pointer;
+  }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn.solid { background: var(--blue, #3b82f6); border-color: transparent; color: #fff; font-weight: 600; }
+  .btn.solid:disabled { background: var(--panel2, #16233a); color: var(--muted, #93a4bd); font-weight: 400; }
+  .hint { margin: 0 0 12px; font-size: .78rem; color: var(--dim, #64748b); line-height: 1.6; }
+  .prow { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--border, #1a2336); }
+  .prow:first-of-type { border-top: 0; }
+  .prow input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: var(--blue, #3b82f6); }
+  .prow .t { flex: 1; min-width: 0; }
+  .prow .t1 { display: block; font-size: .88rem; }
+  .prow .t2 { display: block; font-size: .73rem; color: var(--dim, #64748b); margin-top: 3px; line-height: 1.5; }
+  .prow .del {
+    flex: 0 0 auto; height: 32px; padding: 0 10px; border-radius: 8px; font-size: .76rem;
+    background: transparent; border: 1px solid var(--border2, #1e2a41); color: var(--muted, #93a4bd); cursor: pointer;
+  }
+  .prow .del:disabled { opacity: .4; cursor: not-allowed; }
+  .bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,.07); overflow: hidden; margin: 14px 0 8px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--blue, #3b82f6); transition: width .2s; }
+  .pstat { font-size: .76rem; color: var(--muted, #93a4bd); min-height: 1.2em; }
+  .actions { display: flex; gap: 10px; margin-top: 12px; }
+  .actions .btn { flex: 1; }
+  .webnote {
+    display: none; margin-bottom: 14px; padding: 11px 13px; border-radius: 11px;
+    background: rgba(251,191,36,.09); border: 1px solid rgba(251,191,36,.26);
+    color: var(--gold, #ffb300); font-size: .8rem; line-height: 1.6;
+  }
+  html:not([data-app]) .webnote { display: block; }
+  html:not([data-app]) #packs { display: none; }
+  .about p { margin: 0 0 9px; font-size: .82rem; color: var(--muted, #93a4bd); line-height: 1.75; }
+  .about b { color: var(--gold, #ffb300); font-weight: 600; }
+</style>
+<script defer src="/ak-analytics.js"></script>
+</head>
+<body>
+<main class="wrap">
+  <div class="topbar"><a href="index.html">← 返回首页</a></div>
+  <header>
+    <img class="logo" src="assets/logo-site.webp" alt="奥系工具站">
+    <h1>App 设置</h1>
+    <span class="en">AOXI TOOLS STATION · APP</span>
+  </header>
+
+  <section class="card" id="dl">
+    <h2>下载 App <span class="tag">构建中</span></h2>
+    <div class="kv">版本 <b>v0.1.0</b> · 核心层约 7 MB（不含资源包）</div>
+    <ul class="log">
+      <li>核心离线可用：收益预测器 / 人间体图鉴（文字版）/ 攻略 / 被动文字版</li>
+      <li>图片类资源按需下载，不占安装包体积</li>
+      <li>支持检查更新，资源包可增量补下</li>
+    </ul>
+    <button class="btn" type="button" disabled>首个版本构建中</button>
+  </section>
+
+  <div class="webnote">资源下载仅在 App 内可用 —— 网页版会把图片放在站点缓存里，不需要单独下载。</div>
+
+  <section class="card" id="packs">
+    <h2>离线资源包</h2>
+    <p class="hint">勾选需要的包后下载；已下载的包可单独删除。资源包与站点版本联动，站点更新后会提示补下。</p>
+    <div id="packRows"></div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="pstat" id="pstat">未开始</div>
+    <div class="actions">
+      <button class="btn solid" type="button" id="dlBtn">开始下载</button>
+      <button class="btn" type="button" id="clearBtn">全部删除</button>
+    </div>
+    <div class="kv" style="margin-top:10px" id="used">已用空间：<b>0 MB</b></div>
+  </section>
+
+  <section class="card about" id="about">
+    <h2>关于本站</h2>
+    <p>技术栈：原生 HTML / CSS / JavaScript + Service Worker 离线缓存，无框架、无后端、无追踪脚本（除访问统计）。</p>
+    <p>数据来源：玩家社区整理与游戏内截图，仅供个人查询参考；数值以游戏内为准。</p>
+    <p>授权：部分内容转载自社区，转载请署名 <b>chz_和小星</b>，不得用于商业用途。</p>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var PACKS = (window.AkApp && window.AkApp.PACKS) || [
+    { id: "guide", name: "攻略资源包", size: "约 2 MB", desc: "兵非武斗 3 张高清攻略长图" },
+    { id: "passive", name: "角色被动图鉴包", size: "约 10.3 MB", desc: "20 个角色的被动版本截图" },
+    { id: "humans", name: "人间体图鉴包", size: "约 19.6 MB", desc: "132 位人间体的三形态立绘与头像" }
+  ];
+
+  var rows = document.getElementById("packRows");
+  if (rows) {
+    rows.innerHTML = PACKS.map(function (p) {
+      return '<label class="prow">' +
+        '<input type="checkbox" data-pack="' + p.id + '" checked>' +
+        '<span class="t"><span class="t1">' + p.name + '</span>' +
+        '<span class="t2">' + p.size + ' · ' + p.desc + '</span></span>' +
+        '<button class="del" type="button" data-del="' + p.id + '" disabled>删除</button>' +
+        '</label>';
+    }).join("");
+  }
+
+  var bar = document.getElementById("bar");
+  var pstat = document.getElementById("pstat");
+  var used = document.getElementById("used");
+  var dlBtn = document.getElementById("dlBtn");
+  var clearBtn = document.getElementById("clearBtn");
+
+  function fmt(mb) { return mb >= 1000 ? (mb / 1024).toFixed(1) + " GB" : Math.round(mb) + " MB"; }
+
+  function refreshStatus() {
+    if (!window.AkPack) return;
+    window.AkPack.status().then(function (st) {
+      var total = 0;
+      PACKS.forEach(function (p) {
+        var has = st[p.id] && st[p.id].bytes > 0;
+        total += has ? st[p.id].bytes : 0;
+        var del = rows && rows.querySelector('[data-del="' + p.id + '"]');
+        if (del) del.disabled = !has;
+      });
+      if (used) used.innerHTML = "已用空间：<b>" + (total ? (total / 1048576).toFixed(1) + " MB" : "0 MB") + "</b>";
+      if (clearBtn) clearBtn.disabled = !total;
+    });
+  }
+
+  if (dlBtn) dlBtn.addEventListener("click", function () {
+    if (!window.AkPack) { pstat.textContent = "当前环境不支持（需要 App 或已注册 Service Worker 的浏览器）"; return; }
+    var ids = [];
+    rows.querySelectorAll("input[data-pack]").forEach(function (i) { if (i.checked) ids.push(i.dataset.pack); });
+    if (!ids.length) { pstat.textContent = "先勾选要下载的包"; return; }
+    dlBtn.disabled = true;
+    var lastPct = -1;
+    window.AkPack.download(ids, function (info) {
+      if (bar) bar.style.width = Math.round(info.pct) + "%";
+      pstat.textContent = info.name ? "正在下载：" + info.name + "（" + Math.round(info.pct) + "%）" : Math.round(info.pct) + "%";
+      lastPct = info.pct;
+    }).then(function () {
+      pstat.textContent = lastPct >= 100 ? "下载完成" : "已完成";
+      dlBtn.disabled = false;
+      refreshStatus();
+    }).catch(function (e) {
+      pstat.textContent = "下载中断：" + (e && e.message ? e.message : "网络异常");
+      dlBtn.disabled = false;
+      refreshStatus();
+    });
+  });
+
+  if (clearBtn) clearBtn.addEventListener("click", function () {
+    if (!window.AkPack) return;
+    window.AkPack.removeAll().then(function () {
+      if (bar) bar.style.width = "0";
+      pstat.textContent = "已清空";
+      refreshStatus();
+    });
+  });
+
+  if (rows) rows.addEventListener("click", function (e) {
+    var id = e.target.getAttribute && e.target.getAttribute("data-del");
+    if (!id || !window.AkPack) return;
+    e.preventDefault();
+    window.AkPack.remove(id).then(function () {
+      pstat.textContent = "已删除该资源包";
+      refreshStatus();
+    });
+  });
+
+  setTimeout(refreshStatus, 800);
+})();
+</script>
+<script src="assets/ak/theme.js"></script>
+</body>
+</html>

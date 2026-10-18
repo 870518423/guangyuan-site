@@ -33,4 +33,5 @@ window.AKP_MANIFEST = [
   { id: "guanghui-sailuo", name: "光辉赛罗", file: "data/guanghui-sailuo.js", category: "奥特之星", tier: "BY" },
   { id: "sailuo-shinyaoxing", name: "终极赛罗闪耀型", file: "data/sailuo-shinyaoxing.js", category: "奥特之星", tier: "BY" },
   { id: "leiguluosi", name: "雷古洛思", file: "data/leiguluosi.js", category: "奥特之星", tier: "BY" },
+  { id: "sailuo-yinhe-shanzhuo", name: "赛罗无限形态（银河闪耀）", file: "data/sailuo-yinhe-shanzhuo.js", category: "奥特之星", tier: "BY" },
 ];

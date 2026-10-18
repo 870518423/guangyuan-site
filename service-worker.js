@@ -3,6 +3,9 @@
 // 取件策略（v5 起）：
 //   页面（HTML）  → 网络优先，断网时回退缓存    ← 保证"改完刷新就能看到新版"
 //   其它静态资源  → 缓存优先，网络回退并写入缓存 ← 保证离线可用、二次打开快
+//   预缓存（v66 起）→ **内容寻址**：桶名不带版本号，install 时逐条发条件请求
+//                     （If-None-Match / If-Modified-Since），只有内容真变了才下载。
+//                     详见文件末 v66 注释。
 //
 // v6：人间体数据更新（马东快斗 → 东马快斗；北斗星司/飞鸟信/真角大古/东马快斗
 //     新增「惊喜首充（30元档）vip3礼包」；迫水真吾新增「vip10礼包」）
@@ -177,13 +180,139 @@
 // v61：格式统一——被动板块**恒定有操作条**（版本 + 对比 + 视图切换），
 //      单版本角色（如奥美迦朱雀装甲）不再少一排按钮、视图按钮也不再另挂他处；
 //      「原文图」改称「原图版」。
-const CACHE_NAME = 'guangyuan-v61';
+// v62：奥美迦朱雀装甲补「简介」板块（akp.js 新增 intro 态：恒静态文本块、不参与
+//      版本切换）；采集脚本把「简介技」纳入原图版（排在主动/被动/超越之后）。
+//      另：被动板块长条目统一重排版——19 个角色共 58 处（+12 全部 + 同类长条目），
+//      按原文语义边界插换行、**文字零改动**（去换行后与改前逐字一致，390 条比对通过）。
+//      akp.js/akp.css/_images.js/数据文件都是缓存优先 → 按硬规矩必须升版。
+// v63：新增角色「赛罗无限形态（银河闪耀）」（奥特之星 / BY，3 个版本：
+//      v1 2026-6-16 / v2 2026-6-25 / v3 2026-7-14）；五处登记齐全
+//      （_manifest / index.html / category.html / _images.js / 本 ASSETS）。
+//      新角色长条目同样按 v62 起的排版规则分段。数据文件是缓存优先 → 必须升版。
+// v64：对比态支持段落换行（akp.js 新增 nlPatch）：排版只插了 \n，但对比视图里
+//      「整段一行」的几条快速通道（整条重做 / 纯标点同义 / 数值调整）会把 \n
+//      当空白折叠、看起来还是一坨墙 → 现在统一把 \n 渲染成 <br>（首尾换行先剥掉，
+//      避免段落边界在标签后留空行）。子句级分支本来就是一句一行、换行落在子句首
+//      会被剥掉，不受影响。换行**依旧不算改动**（akp_diff_test 新增 6 条断言守住）。
+//      akp.js 是缓存优先 → 必须升版。
+// v65：原图版改「按类别建块 + 缺图向前沿用」（akp.js + akp.css）——
+//      旧逻辑按版本分组，某版本没给某类别拍图（那一版该类技能确实没改、素材就没再拍）
+//      时会把**整块藏掉**；管理者口径：不能因为没变化就不显示。
+//      现在每类自己选版本：当前版本有图就用，没有就沿用最近一个更早版本，
+//      并在标题右侧打「沿用」标记。标签解析同时支持「主动技 v1v2」（一图覆盖两版）
+//      与「被动技+超越技 v2」（两类别共用一图）。
+//      验收 tools/akp_imgview_test.js（33 断言 + 20 角色 × 全版本类别齐全）。
+//      akp.js / akp.css 缓存优先 → 必须升版。
+// v66：预缓存改「内容寻址增量更新」（管理者反馈：更新版本后依旧全部都要重新加载）
+//      ——根因：以前 CACHE_NAME 里**带版本号**（guangyuan-v65），发一次版就换一个
+//        空桶，install 时把 ASSETS 全量 add 一遍；不管内容有没有变，70+ 条资源
+//        全部重新走一遍网络。v56 改的只是「运行时缓存不清空 + 静态资源后台换新」，
+//        没有动这一条，所以体感依旧是「更新一次 = 全站重下一次」。
+//      ——现在：
+//        · 预缓存桶名固定为 guangyuan-static（**不带版本号**），跨版本保留；
+//        · install 逐条发**条件请求**：拿桶里旧响应存的 ETag / Last-Modified 当
+//          If-None-Match / If-Modified-Since，服务器回 304 就一个字节都不下，
+//          继续用桶里那份（线上实测 EdgeOne 有强 ETag，未变更 → 304 / 0 字节）；
+//        · 服务器不给校验器、或响应异常时，退回无条件下载 / 保留旧内容 —— 只会
+//          退化成旧行为，**不会**出现「内容变了却永远拿不到」的缓存坏死；
+//        · activate 只清「既不是 STATIC 也不是 RUNTIME」的桶，历史版本桶
+//          （guangyuan-v65 等）会被清掉，之后每次发版都是增量。
+//      ⚠️ 桶名不再变化后，浏览器检测更新 / 「新版本提示」只靠 **SW 脚本自身内容变化**
+//         触发 → 每次发布仍然要改 BUILD（就下面这一行），否则不会弹提示、也不会更新。
+//      ⚠️ 老用户从 v65 升上来的**第一次**仍是全量（新桶是空的），从第二次起才是增量。
+//      ⚠️ 逃生舱：万一缓存被污染，把 FORCE_FULL_REFRESH 改成 true 发一版，整桶重下。
+// v67：① 角色页**默认恒为文字版**（管理者反馈：银河闪耀、朱雀一进去就是原图版）——
+//      akp.js 不再把视图模式写进 localStorage（旧值读出来就删掉，老手机残留的
+//      image 也不会再生效）；切换按钮照旧可用，但只在当前页面有效，刷新/换角色
+//      即回文字版。新增角色自动继承，不需要在数据里写任何东西。
+//      ② 文字版空闲时预取当前版本的原图（akp.js，省流量模式/2G3G 不预取）。
+//      ③ 长图压缩：passive/img 里「高≥1800 且（≥300KB 或 宽≥1000）」的 9 张
+//         统一缩到 900 宽 + WebP q82 重编码（471K→378K 等，合计省 20%），
+//         工装 tools/akp_compress_imgs.py（原图备份在 tools/_akp_img_backup）。
+//         压完图 ETag 全变 → 条件请求会拉新，不会留在旧图。
+//      ④ 部署配置 edgeone.json 给 /passive/img/* 加 7 天缓存（上一步）。
+// v68：新增「新域名公告弹窗」assets/ak/notice.js —— 进站延时弹一次，带「不再提示」
+//      复选框（localStorage 持久化，键 ak-domain-notice-2026-10-17），同一次会话
+//      只弹一次（sessionStorage）。样式自包含、只取 --ak-* 令牌 → 亮暗主题自动跟随；
+//      首页/计算器/攻略页/被动三页全部挂载。⚠️ 要想「对所有人重新弹一次」，
+//      改 notice.js 里的 NOTICE.key（带日期当版本号）即可。
+// v69：公告改口径 + 只在主页弹（管理者 2026-10-17）
+//      ① 旧地址**不停用**：改成说明「域名原因可能被拦截到广告网站」，并请看到的人
+//         群里相互转告；删掉「无需重新添加桌面图标」。
+//      ② **只有 index.html 挂载** notice.js（二级页一律不弹；notice.js 里还用
+//         NOTICE.homeOnly 按 pathname 再判一次作保险）。原「同会话只弹一次」的
+//         sessionStorage 逻辑保留，防止首页反复刷新时连环弹。
+//      ⚠️ notice.js 是缓存优先资源，BUILD 不动老用户看不到新文案。
+// v70：修「immutable + 同名换图 = 老用户永远看不到新内容」（管理者 2026-10-17 指出）
+//      ① edgeone.json 的 `/assets/*` 去掉 `immutable`、31536000 压到 **604800（7 天）**：
+//         immutable 的含义是「这一年内连校验都不发」，而本项目一直是**同名覆盖**换图
+//         （2026-10-13 bfdbb46 就换过 guangyuan.png / icon-512 / icon-512-maskable /
+//         factions/multiverse.png），旧头会让那批老用户永久停在旧图，清 CDN 也救不回。
+//         7 天与 /passive/img/* 对齐，最迟 7 天自动校验一次。
+//      ② precacheOne：**没有旧副本时** fetch 带 `cache:'no-cache'` —— 默认模式会先查
+//         浏览器 HTTP 缓存，桶空（首装 / 强制刷新）时会把 HTTP 缓存里的旧文件写进桶，
+//         等于发版也拿不到新内容。有旧副本时仍走 If-None-Match 条件请求，保持 304 零下载。
+//      ⚠️ 残留：浏览器里**已经存着的**旧 immutable 副本不会因改头而失效（最长 1 年），
+//         只能靠 SW 预缓存覆盖来救；`assets/guides/**`（2MB 攻略长图）不在预缓存清单里，
+//         **换这几张图请改名**（或改名后把旧名删掉）。
+// v71：接入 51.la 统计（2026-10-17）—— 新增根目录 ak-analytics.js（**不进 /assets/**，
+//      那里是 immutable，改了老用户拿不到新版；也不进 SW 预缓存，避免统计脚本被缓存成旧版）。
+//      11 个成品页 + guide_template.html + build_strategies.py 三模板各加一行
+//      `<script defer src="/ak-analytics.js"></script>`。
+//      支持 `?owner=1` 本机免统计（写 localStorage `ak-owner`，`?owner=0` 取消）。
+//      SW 侧无需改动：fetch 处理器开头就排除跨域与非 GET，sdk.51.la 天然不被拦截。
+// v72：人间体图鉴加「光元消耗」+ 光元图换 WebP（管理者 2026-10-17）
+//      ① guides.html（由 guide_template.html + build_guides.py 生成）：
+//         · 特训名单里的角色名按**商店价**着色 —— 6000 金（.p6000）；未标价商店
+//           统一按 11280 橙（.p11280，常量 SHOP_UNPRICED）；其它栏位不染色。
+//         · 每张卡片 + 表格第 7 列 + 详情弹层都加「光元消耗」= 该角色 traits
+//           全部商店价之和（0 也显示，走 .costval.zero 灰态）。
+//      ② assets/guangyuan.png（480×520 / 18.6KB）→ **guangyuan.webp**
+//         （256×277 / 11.1KB）：传输 -40%，解码内存 -73%；页面最大显示 72px
+//         （首页 logo），256 宽在 3x 屏仍有 3.5 倍余量。引用（index / calculator /
+//         calc.js / 本 SW 清单）全部换掉，旧 png 已删。
+// v73：人间体图鉴接图片（2026-10-17）—— `images/humans/<id>/{base,awaken,transcend,avatar}.webp`
+//      ① fetch 处理器对 `/images/**` **直接 return**，交回浏览器 HTTP 缓存（7 天）：
+//         805 张图若走 RUNTIME，会把 400 条上限挤满、把页面缓存挤掉。
+//      ② 这些图**不进** ASSETS 预缓存清单（10MB，会把每次安装拖死）。
+//      ③ edgeone.json 新增 `/images/*` → `public, max-age=604800`（与 passive/img 同档）。
+// v74：首页图标换成「成就9」水晶（2026-10-18）—— 新增 assets/logo-crystal.webp
+//      （从桌面素材抠掉深底、边缘去暗边后 256×256 透明 webp），index.html 的 logo 与入口卡 ico
+//      两处引用已换；**计算器页内的光元图标仍用 assets/guangyuan.webp 不动**。
+// v75：首页顶部换成「梦比优斯无限形态」头像框（2026-10-18，管理者提供 216×216 素材）
+//      只替换 header 的 .logo；入口卡 ico 仍是水晶、计算器内仍是 guangyuan.webp。PWA 图标暂不动。
+// v76：详情页左右箭头换成游戏内翻页按钮（2026-10-18）—— assets/ak-btn/{left,right}{,-gray}.webp
+//      等比缩到高 40，排在立绘下方一行；禁用时切灰色版（不再用 opacity）。
+//      （新增 4 个预缓存资源才升版本；之后改样式/文案/数据不需要再动 BUILD）
+// v77：站点/PWA 图标统一换成「界面图标\最终版.webp」（2026-10-18）
+//      PWA 的 4 个 icon + apple-touch + favicon 全部**改名**（app-icon-*、apple-touch-app、favicon-app），
+//      避免同名覆盖后已安装的桌面图标不更新；首页 logo 换 assets/logo-site.webp。
+// v78：首页 h1 恢复显示；logo-site.webp 换成透明底（**同名换内容**，必须升版让预缓存刷新）
+// v79：首页两个入口卡图标换素材（2026-10-18）—— assets/entry-guides.webp / entry-passive.webp
+// v80：修炼数值表按新素材补全 3 处（重伤增幅 18.14 / 减能增幅 5.18 / 混乱增幅 5.58）；
+//      首页攻略卡改为「3 篇攻略」并补上兵非武斗转载。
+//      ⚠️ 注意：所有页面 html 都在 ASSETS 里（离线用），所以**改页面也要升 BUILD**。
+/* App（Capacitor）用 https://localhost 加载本地 assets：不预缓存，避免缓存陈旧；
+   资源包仍走 packs 桶 + 网络。 */
+const IS_NATIVE = self.location.hostname === 'localhost' || self.location.protocol === 'capacitor:';
 
-/* 运行时缓存（2026-10-15 加）：「看过即缓存」专用，与版本缓存分离。
-   以前 fetch 成功也写进 CACHE_NAME，但每次升版本号 activate 会把旧缓存整桶删掉，
+// v81：第 14 轮 App 化改造（网站侧）正式发布
+//      双版本适配（探测层 + app.css/app-shell.js）、app.html、SW 资源包通道、
+//      module.json / version.json、CORS、jpg 孤件移出（-3.4MB）、App 卡片精简。
+const BUILD = 'v81';
+const CACHE_NAME = 'guangyuan-static';   // ⚠️ 固定名，不要再往里加版本号
+const FORCE_FULL_REFRESH = false;        // 平时保持 false；出缓存事故才开一次
+
+/* 运行时缓存（2026-10-15 加）：「看过即缓存」专用，与预缓存分离。
+   以前 fetch 成功也写进版本缓存，但每次升版本号 activate 会把旧缓存整桶删掉，
    用户攒下来的离线内容一夜清零 → 现在单独放这里，发新版不清。
    只存同源 GET，且带条目上限，避免无限膨胀。 */
 const RUNTIME = 'guangyuan-runtime';
+/* App 资源包专用桶（第 14 轮 v81）：固定名、activate 不清、不参与 RUNTIME 400 条裁剪 */
+const PACKS_CACHE = 'guangyuan-packs';
+/* App（Capacitor）里页面 origin 是 https://localhost，图片实际在线上：
+   资源包按线上绝对 URL 下载，同时用「本地同路径」再存一份，页面请求才能命中。 */
+const SITE_BASE = 'https://m78calc.cn';
 const RUNTIME_MAX = 400;          // 上限条目数，超出后从最旧的开始裁
 
 // 超出上限时裁掉最早的条目（cache.keys() 为插入顺序）
@@ -207,13 +336,26 @@ const ASSETS = [
   './strategy-dati.html',
   './strategy-bingfeiwudou.html',
   './manifest.json',
-  './assets/guangyuan.png',
-  './assets/icon-192.png',
-  './assets/icon-512.png',
-  './assets/icon-192-maskable.png',
-  './assets/icon-512-maskable.png',
-  './assets/apple-touch-icon.png',
-  './assets/favicon-32.png',
+  './assets/guangyuan.webp',
+  './assets/logo-crystal.webp',
+  './assets/logo-site.webp',      // 首页顶部站点徽标（2026-10-18）
+  './assets/entry-guides.webp',   // 首页「人间体大全」入口图标（2026-10-18）
+  './assets/entry-passive.webp',  // 首页「角色被动收录」入口图标（2026-10-18）
+  './assets/ak/app.css',          // App 版适配层（第 14 轮）
+  './assets/ak/app-shell.js',
+  './app.html',                   // App 设置页
+  './module.json',                // 资源包清单（App 内下载用）
+  './version.json',
+  './assets/ak-btn/left.webp',
+  './assets/ak-btn/left-gray.webp',
+  './assets/ak-btn/right.webp',
+  './assets/ak-btn/right-gray.webp',
+  './assets/app-icon-192.png',
+  './assets/app-icon-512.png',
+  './assets/app-icon-192-maskable.png',
+  './assets/app-icon-512-maskable.png',
+  './assets/apple-touch-app.png',
+  './assets/favicon-app.png',
   './assets/factions/star.png',
   './assets/factions/multiverse.png',
   './assets/factions/monster.png',
@@ -229,6 +371,7 @@ const ASSETS = [
   './assets/ak/counter.js',
   './assets/ak/theme.js',
   './assets/ak/save.js',
+  './assets/ak/notice.js',
   /* —— passive/ 角色被动版本收录（v26）—— */
   './passive/index.html',
   './passive/category.html',
@@ -258,6 +401,7 @@ const ASSETS = [
   './passive/data/guanghui-sailuo.js',
   './passive/data/sailuo-shinyaoxing.js',
   './passive/data/leiguluosi.js',
+  './passive/data/sailuo-yinhe-shanzhuo.js',
   './passive/img/factions/star.png',
   './passive/img/factions/multiverse.png',
   './passive/img/factions/alien.png',
@@ -314,19 +458,74 @@ function isDocumentRequest(request) {
 // 安装：预缓存核心资源
 // 2026-10-13 M2（审查 D-1）：原来用 cache.addAll(ASSETS) —— 它是「全有或全无」，
 // 任何一条资源 404 都会让整个 install 失败，老用户被永久卡在旧版本（且静默）。
-// 现在改成逐条 add + 单条 catch：个别资源取不到只打印警告，其余照常入缓存、
+// 改成逐条处理 + 单条 catch：个别资源取不到只打印警告，其余照常入缓存、
 // install 照常完成。发布前的对账（pack_deploy.py 第四项自检 + akp_lint.py 第五项）
 // 仍然是第一道防线，这里只是纵深防御。
+//
+// 2026-10-16 v66：逐条处理的同时加「条件请求」——见上方 v66 注释。
+//   有旧副本 → 带上 ETag 问服务器「变了吗」→ 304 就跳过（零下载）；
+//   没旧副本 / 服务器不给校验器 → 直接下载（首次安装仍是全量，属正常）。
+function condHeaders(oldRes) {
+  const h = {};
+  const etag = oldRes.headers.get('etag');
+  const lm = oldRes.headers.get('last-modified');
+  if (etag) h['If-None-Match'] = etag;
+  else if (lm) h['If-Modified-Since'] = lm;
+  return h;
+}
+
+async function precacheOne(url) {
+  const cache = await caches.open(CACHE_NAME);
+  const req = new Request(url);
+  let old = null;
+  try { old = await cache.match(req); } catch (e) { old = null; }
+
+  let res;
+  try {
+    const cond = old ? condHeaders(old) : null;
+    /* ⚠️ 为什么「没旧副本」时必须带 cache:'no-cache'（2026-10-17 修）：
+       默认 cache 模式会**先查浏览器 HTTP 缓存**；桶里空的时候（首次安装、
+       FORCE_FULL_REFRESH、或老用户新桶）就会直接吃到 HTTP 缓存里那份可能很旧的
+       文件并写进预缓存桶 → 等于「发版了也拿不到新内容」。
+       有旧副本时走 If-None-Match 条件请求（本身就是验证请求，会回源），保持 304 语义，
+       所以不加 no-cache，避免把浏览器自动加的 ETag 和我们手写的重复。 */
+    const opt = cond ? { headers: cond } : { cache: 'no-cache' };
+    res = await fetch(new Request(url, opt));
+  } catch (e) {
+    // 离线：手里有旧的就沿用（不拖垮安装），没有也只警告
+    if (!old) console.warn('[SW] 预缓存失败（首次且取不到）:', url, e && e.message);
+    return false;
+  }
+  if (res.status === 304) return false;                 // 内容没变 → 零下载
+  if (!res.ok) {
+    if (old) return false;                              // 异常响应：保住旧内容
+    console.warn('[SW] 预缓存响应异常:', url, res.status);
+    return false;
+  }
+  try { await cache.put(req, res.clone()); }
+  catch (e) { console.warn('[SW] 写入缓存失败:', url, e && e.message); }
+  return true;
+}
+
 self.addEventListener('install', (event) => {
+  if (IS_NATIVE) {                 // App 内 assets 已在安装包里，不需要预缓存
+    event.waitUntil(self.skipWaiting());
+    return;
+  }
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.all(ASSETS.map((url) =>
-        cache.add(url).catch((e) => {
-          console.warn('[SW] 预缓存失败（其余照常，不影响本次安装）:', url, e && e.message);
-          return null;
+    (FORCE_FULL_REFRESH ? caches.delete(CACHE_NAME) : Promise.resolve())
+      .then(() => Promise.all(ASSETS.map((url) =>
+        precacheOne(url).catch((e) => {
+          console.warn('[SW] 预缓存异常（其余照常，不影响本次安装）:', url, e && e.message);
+          return false;
         })
-      ));
-    }).then(() => self.skipWaiting())
+      )))
+      .then((rs) => {
+        const n = rs.filter(Boolean).length;
+        console.log('[SW] ' + BUILD + ' 预缓存完成：实际更新 ' + n + '/' + ASSETS.length +
+          ' 条' + (n < ASSETS.length ? '（其余命中 304，未重复下载）' : ''));
+      })
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -335,8 +534,10 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        // ⚠️ RUNTIME（看过即缓存）不在清理之列：发新版不该把用户攒的离线内容清掉
-        keys.filter((k) => k !== CACHE_NAME && k !== RUNTIME).map((k) => caches.delete(k))
+        // ⚠️ CACHE_NAME（预缓存，v66 起为固定名）与 RUNTIME（看过即缓存）都不清：
+        //    发新版不该把用户攒的离线内容清掉，也不该把没变的静态资源重下一遍。
+        //    历史版本桶（guangyuan-v65 等老名字）会在这里被一次性清掉。
+        keys.filter((k) => k !== CACHE_NAME && k !== RUNTIME && k !== PACKS_CACHE).map((k) => caches.delete(k))
       );
     }).then(() => self.clients.claim())
   );
@@ -351,6 +552,17 @@ self.addEventListener('fetch', (event) => {
   let url;
   try { url = new URL(request.url); } catch (e) { return; }
   if (url.origin !== self.location.origin) return;
+
+  /* ---- 图片类资源（第 14 轮 v81）----
+     ① App 里下载过资源包 → 直接命中 packs 桶（离线也能看）
+     ② 没下载 → 交回浏览器 HTTP 缓存（edgeone.json 给了 7 天），**不进 RUNTIME**：
+        805 张图若进 RUNTIME 会把 400 条上限挤满，反倒把页面缓存挤掉。 */
+  if (/^\/(images|passive\/img|assets\/guides)\//.test(url.pathname)) {
+    event.respondWith(
+      caches.open(PACKS_CACHE).then((c) => c.match(request)).then((hit) => hit || fetch(request))
+    );
+    return;
+  }
 
   // ---- 页面：网络优先，看过即缓存（写进 RUNTIME，跨版本保留）----
   if (isDocumentRequest(request)) {
@@ -398,4 +610,118 @@ self.addEventListener('fetch', (event) => {
       });
     })
   );
+});
+
+/* ============================================================
+   App 资源包通道（第 14 轮 · v81，2026-10-18）
+   ------------------------------------------------------------
+   页面侧（app-shell.js 的 AkPack）发消息 → 这里逐文件 fetch 进 packs 桶，
+   每下完一个就通过 MessageChannel 回传进度（App 内需要 CORS，见 edgeone.json）。
+
+   消息：
+     akpack-status    → { type:'status', packs:{ guide:{count,bytes}, ... } }
+     akpack-download  → 参数 { ids:[...] }，进度走 port
+     akpack-remove    → { id }
+     akpack-removeAll
+   ============================================================ */
+async function readModuleManifest() {
+  try {
+    const r = await fetch('./module.json', { cache: 'no-cache' });
+    return r.ok ? await r.json() : { packs: {} };
+  } catch (e) {
+    return { packs: {} };
+  }
+}
+
+function packIdOf(url) {
+  if (url.indexOf('/images/humans/') >= 0) return 'humans';
+  if (url.indexOf('/passive/img/') >= 0) return 'passive';
+  if (url.indexOf('/assets/guides/') >= 0) return 'guide';
+  return 'other';
+}
+
+async function packsStatus() {
+  const cache = await caches.open(PACKS_CACHE);
+  const keys = await cache.keys();
+  const counts = {};
+  for (const k of keys) {
+    const id = packIdOf(k.url);
+    counts[id] = (counts[id] || 0) + 1;
+  }
+  /* 字节数用 module.json 的声明值按已下载文件比例估算：
+     读每个 response 的 body 太慢，而 Cache 里 header 不一定带 content-length。 */
+  const man = await readModuleManifest();
+  const out = {};
+  Object.keys(counts).forEach((id) => {
+    const meta = (man.packs && man.packs[id]) || null;
+    const n = counts[id];
+    const bytes = meta && meta.count ? Math.round(meta.bytes * Math.min(1, n / meta.count)) : 0;
+    out[id] = { count: n, bytes: bytes, total: meta ? meta.count : n };
+  });
+  return out;
+}
+
+async function downloadPacks(ids, port) {
+  const man = await readModuleManifest();
+  const cache = await caches.open(PACKS_CACHE);
+  const queue = [];
+  (ids || []).forEach((id) => {
+    const p = man.packs && man.packs[id];
+    if (p && Array.isArray(p.files)) p.files.forEach((f) => queue.push({ id: id, url: f }));
+  });
+  const total = queue.length;
+  if (!total) {
+    port && port.postMessage({ type: 'done', empty: true });
+    return;
+  }
+  let done = 0, bytes = 0;
+  for (const it of queue) {
+    const remote = new URL(it.url, SITE_BASE);
+    const local = new URL(remote.pathname + remote.search, self.location.origin).href;
+    let hit = null;
+    try { hit = await cache.match(remote.href); } catch (e) {}
+    if (!hit) {
+      try {
+        const res = await fetch(remote.href, { cache: 'no-cache', credentials: 'omit' });
+        if (res && res.ok) {
+          bytes += parseInt(res.headers.get('content-length') || '0', 10) || 0;
+          await cache.put(remote.href, res.clone());
+          if (local !== remote.href) {
+            try { await cache.put(local, res.clone()); } catch (e) {}
+          }
+        }
+      } catch (e) {
+        port && port.postMessage({ type: 'error', id: it.id, file: it.url, message: String(e && e.message || e) });
+      }
+    }
+    done++;
+    port && port.postMessage({
+      type: 'progress', id: it.id, file: it.url,
+      done: done, total: total, bytes: bytes,
+      pct: Math.round(done / total * 100)
+    });
+  }
+  port && port.postMessage({ type: 'done', done: done, total: total, bytes: bytes });
+}
+
+async function removePack(id) {
+  const cache = await caches.open(PACKS_CACHE);
+  const keys = await cache.keys();
+  const todel = keys.filter((k) => packIdOf(k.url) === id);
+  await Promise.all(todel.map((k) => cache.delete(k)));
+  return todel.length;
+}
+
+self.addEventListener('message', (event) => {
+  const msg = event.data || {};
+  const port = (event.ports && event.ports[0]) || null;
+  if (msg.type === 'akpack-status') {
+    event.waitUntil(packsStatus().then((packs) => port && port.postMessage({ type: 'status', packs: packs })));
+  } else if (msg.type === 'akpack-download') {
+    event.waitUntil(downloadPacks(msg.ids, port));
+  } else if (msg.type === 'akpack-remove') {
+    event.waitUntil(removePack(msg.id).then((n) => port && port.postMessage({ type: 'removed', id: msg.id, n: n })));
+  } else if (msg.type === 'akpack-removeAll') {
+    event.waitUntil(caches.delete(PACKS_CACHE).then(() => port && port.postMessage({ type: 'removedAll' })));
+  }
 });

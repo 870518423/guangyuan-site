@@ -30,10 +30,16 @@ INCLUDES = [
     'strategy-xiulian.html',
     'strategy-dati.html',
     'strategy-bingfeiwudou.html',   # 转载攻略页（新增，勿删）
+    'app.html',                     # App 设置页（第 14 轮，2026-10-18）
+    'module.json',                  # 资源包清单（pack_deploy 自动生成，勿手改）
+    'version.json',                 # 版本清单（同上）
     'manifest.json',
     'service-worker.js',
     'edgeone.json',
+    'ak-analytics.js',               # 51.la 统计接入（2026-10-17 新增；放根目录，
+                                     #   不能进 assets/ —— 那里是 immutable，改脚本老用户拿不到）
     'assets',                        # 含 assets/guides/** 长图，递归自动收集
+    'images',                        # 人间体图鉴图片（images/humans/**，2026-10-17）
     'passive',                       # 「奥系角色被动版本收录」板块（目录递归全收；
                                      #  开发用的 _模板.js / _校对预览 等不拷入本目录）
 ]
@@ -124,6 +130,36 @@ def run_akp_lint():
     return (not mod.errors), lines
 
 
+def check_sw_build():
+    """v66 附加自检（2026-10-16）：service-worker.js 的 BUILD 应比上次打包有变化。
+
+    背景：v66 起预缓存桶名**固定**为 guangyuan-static（不再带版本号），浏览器
+    判断「有没有新版本」只认 **SW 脚本自身内容有没有变**。所以 BUILD 不变就成了
+    致命遗漏 —— 老用户不会触发 updatefound：既拿不到新资源，也不弹「新版本提示」。
+    上次打包的 BUILD 记在 tools/.sw_build（tools 不在 INCLUDES 里，不会进包）。
+    返回 (当前 build, 上次 build)，解析不到时为 (None, ...)。
+    """
+    sw_path = os.path.join(SRC, 'service-worker.js')
+    with open(sw_path, 'r', encoding='utf-8') as fh:
+        m = re.search(r"const\s+BUILD\s*=\s*'([^']+)'", fh.read())
+    cur = m.group(1) if m else None
+    rec = os.path.join(SRC, 'tools', '.sw_build')
+    last = None
+    if os.path.isfile(rec):
+        with open(rec, 'r', encoding='utf-8') as fh:
+            last = fh.read().strip() or None
+    return cur, last
+
+
+def write_sw_build(cur):
+    """记录本次打包的 BUILD（仅在发生变化时调用）。"""
+    if not cur:
+        return
+    rec = os.path.join(SRC, 'tools', '.sw_build')
+    with open(rec, 'w', encoding='utf-8') as fh:
+        fh.write(cur)
+
+
 def check_unused_images():
     """附加自检（2026-10-16）：passive/img/<id>/ 里未被 _images.js 引用的图片。
 
@@ -161,7 +197,86 @@ def check_unused_images():
     return rows, total
 
 
+
+
+# ---------------- App 资源包清单（第 14 轮，2026-10-18） ----------------
+SITE_BASE = 'https://m78calc.cn'   # App 内下载资源包用（Capacitor origin 是 localhost）
+
+PACK_DEFS = [
+    ('guide',   '攻略资源包',       ['assets/guides'],   ('.webp', '.png')),
+    ('passive', '角色被动图鉴包',   ['passive/img'],     ('.webp', '.png')),
+    ('humans',  '人间体图鉴包',     ['images/humans'],   ('.webp',)),
+]
+
+
+def build_pack_manifests():
+    """生成 module.json / version.json（App 内按包下载用），并打印统计。"""
+    import hashlib
+    import datetime
+
+    build = 'unknown'
+    sw = os.path.join(SRC, 'service-worker.js')
+    if os.path.isfile(sw):
+        import re as _re
+        m = _re.search(r"const BUILD = '([^']+)'", open(sw, encoding='utf-8').read())
+        if m:
+            build = m.group(1)
+
+    packs = {}
+    for pid, name, roots, exts in PACK_DEFS:
+        files = []
+        for root in roots:
+            base = os.path.join(SRC, root)
+            if not os.path.isdir(base):
+                continue
+            for dp, _, fns in os.walk(base):
+                for fn in sorted(fns):
+                    if not fn.lower().endswith(exts):
+                        continue
+                    rel = os.path.relpath(os.path.join(dp, fn), SRC).replace('\\', '/')
+                    files.append(rel)
+        files.sort()
+        total = 0
+        h = hashlib.md5()
+        for rel in files:
+            full = os.path.join(SRC, rel)
+            sz = os.path.getsize(full)
+            total += sz
+            h.update(rel.encode('utf-8'))
+            h.update(str(sz).encode())
+            with open(full, 'rb') as fh:
+                for chunk in iter(lambda: fh.read(1 << 20), b''):
+                    h.update(chunk)
+        packs[pid] = {
+            'name': name,
+            'count': len(files),
+            'bytes': total,
+            'version': h.hexdigest()[:10],
+            'files': [SITE_BASE.rstrip('/') + '/' + f for f in files],
+        }
+
+    module = {
+        'build': build,
+        'generated': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
+        'packs': packs,
+    }
+    version = {
+        'build': build,
+        'generated': module['generated'],
+        'packs': {k: {'version': v['version'], 'count': v['count'], 'bytes': v['bytes']} for k, v in packs.items()},
+    }
+    import json as _json
+    with open(os.path.join(SRC, 'module.json'), 'w', encoding='utf-8') as fh:
+        _json.dump(module, fh, ensure_ascii=False, separators=(',', ':'))
+    with open(os.path.join(SRC, 'version.json'), 'w', encoding='utf-8') as fh:
+        _json.dump(version, fh, ensure_ascii=False, separators=(',', ':'))
+    for pid, v in packs.items():
+        print('  资源包 %-8s %4d 个 / %6.2f MB / 版本 %s' % (pid, v['count'], v['bytes'] / 1048576, v['version']))
+    return packs
+
 def main():
+    print('生成资源包清单 …')
+    build_pack_manifests()
     got, missing = collect()
 
     if os.path.exists(OUT):
@@ -204,6 +319,18 @@ def main():
         print('  SW 预缓存清单: %d 条，对账 %s'
               % (len(sw_assets), ('缺 %s' % lost) if lost else '全部在包内'))
         sw_fail = bool(lost)
+
+    # SW 版本号自检（v66，第七项）：桶名固定后，「有新版」只靠 BUILD 变化来触发
+    sw_build, last_build = check_sw_build()
+    if sw_build is None:
+        print('  WARN service-worker.js 里没解析到 BUILD 常量（v66 起必须保留）')
+    elif sw_build == last_build:
+        print('  WARN SW BUILD 仍是 %s（与上次打包相同）→ 老用户不会触发更新、'
+              '也不弹新版本提示；本次若改过任何资源请把 BUILD 加一（纯重打包可忽略）'
+              % sw_build)
+    else:
+        print('  SW BUILD: %s（上次：%s）' % (sw_build, last_build or '无记录'))
+        write_sw_build(sw_build)
 
     # 数据体检（M1，第五项自检）：manifest/数据/图片/SW 清单四层一致性
     lint_ok, lint_lines = run_akp_lint()

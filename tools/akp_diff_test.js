@@ -109,6 +109,32 @@ h = diff("免疫<眩晕>效果。每回合第一次受能量技攻击时，使�
 chk("官方同款：后半段调整为（整块替换，不是逐字涂抹）",
   /后半段/.test(h) && /akp-diff--del/.test(h) && !/均增加到的所有伤害/.test(plain(h)), plain(h));
 
+/* —— 换行（长条目排版）口径（2026-10-16 管理者确认）——
+   排版只插 \n、一个字都不改，所以：
+     · 只多/少换行 → **不算改动**（不得出现任何 akp-diff 染色或 akp-dlv 标记）
+     · 换行在对比态要**渲染成真正的折行 <br>**，让对比视图也按段断开
+     · 首尾换行必须剥掉，否则段落边界会在标签后留下多余空行 */
+const NL = "第一段文字，说明效果。\n第二段文字，说明机制。\n第三段文字，补充限制。";
+let hn = diff(NL.replace(/\n/g, ""), NL);
+chk("只加换行 → 不算改动", !has(hn) && !/akp-dlv/.test(hn), hn);
+chk("对比态把换行渲染成折行 <br>（2 处）", (hn.match(/<br>/g) || []).length === 2, hn);
+chk("折行不留多余空行（无 <br><br>、不以 <br> 起止）",
+  !/<br><br>/.test(hn) && !/^<br>/.test(hn) && !/<br>$/.test(hn), hn);
+hn = diff(NL, NL.replace(/\n/g, ""));
+chk("只减换行 → 不算改动", !has(hn) && !/akp-dlv/.test(hn), hn);
+hn = diff(NL, NL.replace("第二段文字", "第二段描述"));
+/* 子句级分支本来就是「一个子句一行」(.akp-dline)，
+   而排版的换行点全都落在 。／； 之后 → 换行正好是下一个子句的首字符，
+   nlPatch 会把它当首尾换行剥掉：既不会多出空行，段落也已由子句行体现。
+   所以这一路**不该出现 <br>**，只该出现「只标真实改动 + 每段各占一行」。 */
+chk("换行 + 真实改动 → 只标真实改动，每段各占一行（3 个 dline）、无多余空行",
+  has(hn) && /akp-diff--/.test(hn) && (hn.match(/akp-dline/g) || []).length === 3 &&
+  !/<br>/.test(hn) && !/<br><br>/.test(hn), hn);
+/* 而「整段一行」的快速通道（重做 / 纯标点同义）才需要 <br> 来分段 */
+hn = diff(NL.replace(/\n/g, ""), "第一段文字，说明效果。\n第二段文字，说明机制。\n第三段文字，补充限制。");
+chk("快速通道（内容等价、只有换行差）→ 仍按段折行 <br>×2",
+  !has(hn) && (hn.match(/<br>/g) || []).length === 2, hn);
+
 const total = checks;
 console.log(fails ? "\n比对规则测试：" + fails + " 项失败" : "\n比对规则测试：全部通过 " + total + "/" + total);
 process.exit(fails ? 1 : 0);

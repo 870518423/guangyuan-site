@@ -280,8 +280,8 @@ TPL_INDEX = """<!DOCTYPE html>
 <meta name="theme-color" content="#0a0e1a">
 <meta name="description" content="奥系攻略板块：修炼数值表、趣味问答题库等玩家社区攻略收录">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="icon" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="奥系工具站">
@@ -373,6 +373,7 @@ TPL_INDEX = """<!DOCTYPE html>
 </style>
 <link rel="stylesheet" href="assets/ak/ak-components.css">
 <link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
 </head>
 <body data-ak-progress>
 <div class="wrap">
@@ -457,8 +458,8 @@ TPL_XIULIAN = """<!DOCTYPE html>
 <meta name="theme-color" content="#0a0e1a">
 <meta name="description" content="修炼数值表：6级词条的非完美属性数值，四维、全伤全免、高级属性、增幅与抗性">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="icon" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="奥系工具站">
@@ -550,6 +551,7 @@ TPL_XIULIAN = """<!DOCTYPE html>
 </style>
 <link rel="stylesheet" href="assets/ak/ak-components.css">
 <link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
 </head>
 <body data-ak-progress>
 <div class="wrap">
@@ -606,8 +608,8 @@ TPL_DATI = """<!DOCTYPE html>
 <meta name="theme-color" content="#0a0e1a">
 <meta name="description" content="趣味问答题库：__NQ__ 道奥特曼知识题，答案默认隐藏，可自测也可一键展开速查">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="icon" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="奥系工具站">
@@ -700,6 +702,7 @@ TPL_DATI = """<!DOCTYPE html>
 </style>
 <link rel="stylesheet" href="assets/ak/ak-components.css">
 <link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
 </head>
 <body data-ak-progress>
 <div class="wrap">
@@ -815,6 +818,34 @@ def author_block():
     ).format(url=html.escape(AUTHOR_URL, quote=True), name=html.escape(AUTHOR_NAME))
 
 
+
+# ---- App 版探测脚本（第 14 轮，2026-10-18）----
+# 生成页也要带，否则重建后 app 模式失效。纯字符串后处理，不影响模板占位符。
+APP_PROBE = (
+    '<script>(function(){try{var q=location.search.indexOf("app=1")>-1;'
+    'var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();'
+    'if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");'
+    'var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);'
+    'var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);'
+    '}catch(e){}})();</script>'
+)
+
+
+def with_probe(html):
+    """在防闪色脚本之后插入 App 探测（幂等）。"""
+    if 'setAttribute("data-app","1")' in html:
+        return html
+    key = "localStorage.getItem('ak-theme')"
+    i = html.find(key)
+    if i < 0:
+        return html
+    j = html.find('</script>', i)
+    if j < 0:
+        return html
+    j += len('</script>')
+    return html[:j] + '\n' + APP_PROBE + html[j:]
+
+
 def build():
     # --- 修炼 ---
     blocks, filled = parse_xiulian(XIULIAN_MD)
@@ -863,7 +894,7 @@ def build():
         .replace('__NOTE__', note)
         .replace('__BODY__', xiulian_body)
     )
-    io.open(os.path.join(SRC, 'strategy-xiulian.html'), 'w', encoding='utf-8').write(xiulian_html)
+    io.open(os.path.join(SRC, 'strategy-xiulian.html'), 'w', encoding='utf-8').write(with_probe(xiulian_html))
 
     # --- 答题 ---
     quiz = parse_dati(DATI_TXT)
@@ -882,7 +913,7 @@ def build():
         .replace('__NQ__', nq)
         .replace('__DATA__', json.dumps(quiz, ensure_ascii=False))
     )
-    io.open(os.path.join(SRC, 'strategy-dati.html'), 'w', encoding='utf-8').write(dati_html)
+    io.open(os.path.join(SRC, 'strategy-dati.html'), 'w', encoding='utf-8').write(with_probe(dati_html))
 
     # --- 板块首页 ---
     idx_html = (
@@ -891,7 +922,7 @@ def build():
         .replace('__SUB__', html.escape(SECTION_SUB))
         .replace('__DATA__', json.dumps(SECTIONS, ensure_ascii=False))
     )
-    io.open(os.path.join(SRC, 'strategies.html'), 'w', encoding='utf-8').write(idx_html)
+    io.open(os.path.join(SRC, 'strategies.html'), 'w', encoding='utf-8').write(with_probe(idx_html))
 
     # --- 报告 ---
     def size(p):

@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#0a0e1a" />
 <meta name="description" content="预测游戏资源的固定每日收益 × 天数总量" />
 <link rel="manifest" href="manifest.json" />
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
-<link rel="icon" type="image/png" href="assets/favicon-32.png" />
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png" />
+<link rel="icon" type="image/png" href="assets/favicon-app.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="光元预测" />
@@ -15,6 +15,7 @@
 <title>光元收益预测器</title>
 <!-- 主题引导：首帧前定好亮/暗，避免闪色（早于样式表执行） -->
 <script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
 <link rel="stylesheet" href="assets/calc/calc-base.css">
 <link rel="stylesheet" href="assets/ak/ak-theme.css">
 <link rel="stylesheet" href="assets/ak/ak-motion.css">
@@ -27,6 +28,7 @@
   .header .ttl { min-width: 0; }
 </style>
 <link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
 </head>
 <body data-ak-progress>
 <div class="container">
@@ -34,7 +36,7 @@
   <a class="back-home" href="index.html">← 返回首页</a>
 
   <div class="header">
-    <img src="assets/guangyuan.png" alt="光元" class="title-icon" />
+    <img src="assets/guangyuan.webp" alt="光元" class="title-icon" />
     <div class="ttl">
       <h1>光元收益预测器</h1>
       <span class="ak-label-en">Forecast Terminal</span>
@@ -88,7 +90,7 @@
       </div>
       <div class="total-value">
         <span id="totalPredicted">0</span>
-        <img src="assets/guangyuan.png" alt="光元" class="icon-large" />
+        <img src="assets/guangyuan.webp" alt="光元" class="icon-large" />
       </div>
     </div>
 
@@ -99,7 +101,7 @@
         <div class="donut-center">
           <span class="donut-center-label">总光元</span>
           <span id="donutCenterValue">0</span>
-          <img src="assets/guangyuan.png" alt="光元" class="icon-tiny" />
+          <img src="assets/guangyuan.webp" alt="光元" class="icon-tiny" />
         </div>
       </div>
       <div class="donut-legend" id="donutLegend"></div>
@@ -109,7 +111,7 @@
       <div class="existing-input-group">
         <label for="existingAmount">
           现有光元数量
-          <img src="assets/guangyuan.png" alt="光元" class="icon-small" />
+          <img src="assets/guangyuan.webp" alt="光元" class="icon-small" />
         </label>
         <input type="number" id="existingAmount" min="0" step="1" placeholder="0" />
       </div>
@@ -117,7 +119,7 @@
         <span class="label">最终合计（现有 + 预测）</span>
         <div class="value">
           <span id="grandTotal">0</span>
-          <img src="assets/guangyuan.png" alt="光元" class="icon-large" />
+          <img src="assets/guangyuan.webp" alt="光元" class="icon-large" />
         </div>
       </div>
     </div>
@@ -133,7 +135,7 @@
   <span class="mtb-label">最终合计</span>
   <span class="mtb-value">
     <span id="mobileGrandTotal">0</span>
-    <img src="assets/guangyuan.png" alt="光元" class="icon-inline" />
+    <img src="assets/guangyuan.webp" alt="光元" class="icon-inline" />
   </span>
 </div>
 

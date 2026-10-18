@@ -7,13 +7,14 @@
 <meta name="theme-color" content="#0a0e1a">
 <meta name="description" content="奥系攻略板块：修炼数值表、趣味问答题库等玩家社区攻略收录">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="icon" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="奥系工具站">
 <!-- 主题引导：首帧前定好亮/暗，避免闪色（早于样式表执行） -->
 <script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
 <style>
   :root {
     --bg: #0a0e1a; --panel: #101828; --panel2: #0d1526;
@@ -135,6 +136,7 @@
 </style>
 <link rel="stylesheet" href="assets/ak/ak-components.css">
 <link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
 </head>
 <body data-ak-progress>
 <div class="wrap">

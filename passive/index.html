@@ -8,17 +8,19 @@
 <meta name="theme-color" content="#0a0e1a">
 <meta name="description" content="奥系角色被动版本收录：按版本查看主动技 / 被动技改动，支持相邻版本对比">
 <link rel="manifest" href="../manifest.json">
-<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-<link rel="icon" type="image/png" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-app.png">
+<link rel="icon" type="image/png" href="../assets/favicon-app.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="角色被动版本收录">
 <meta name="mobile-web-app-capable" content="yes">
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="../assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="../assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
 
 <!-- 1) 组件样式（正式并入站点时这两个都要拷过去） -->
 <link rel="stylesheet" href="akp.css">
 <!-- 2) 列表页外壳样式（并入站点时删掉，改用站点自己的页面壳） -->
 <link rel="stylesheet" href="akp-list.css">
+<script defer src="/ak-analytics.js"></script>
 </head>
 <body>
 
@@ -29,7 +31,7 @@
 
   <header class="akc-hd">
     <h1>角色被动版本收录</h1>
-    <p>按阵营浏览：进入后查看该阵营角色的主动技与被动，可切换版本并开启版本对比。</p>
+    <p>按阵营收录角色的技能版本（附带日期）。进入后查看该阵营角色的主动技与被动，可切换版本并开启版本对比。</p>
   </header>
 
   <!-- 阵营目录卡片：与人间体 4 大阵营一致，图标沿用人间体阵营图标 -->
@@ -82,6 +84,7 @@
 <script src="data/guanghui-sailuo.js"></script>
 <script src="data/sailuo-shinyaoxing.js"></script>
 <script src="data/leiguluosi.js"></script>
+<script src="data/sailuo-yinhe-shanzhuo.js"></script>
 
 <script>
 (function () {

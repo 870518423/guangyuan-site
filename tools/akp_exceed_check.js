@@ -1,6 +1,6 @@
 /* 超越技版本对比专项验收（tools/akp_exceed_check.js）
    用法：node tools/akp_exceed_check.js [baseUrl] [id...]
-     默认 baseUrl = http://127.0.0.1:8920/passive；默认校验两个带超越技多版本数据的角色。
+     默认 baseUrl = http://127.0.0.1:8099/passive；默认校验两个带超越技多版本数据的角色。
    检查：超越技板块存在、随版本切换正文、开对比后有标注、v3/v4（无素材）沿用 v2、
         与被动板块的版本状态联动（同一角色共享 VS）。
    管理者口径（2026-10-13）：超越技也要能对比。 */
@@ -29,7 +29,15 @@ function get(p) {
     const r = await send("Runtime.evaluate", { expression: e, returnByValue: true, awaitPromise: true });
     return r.result && r.result.result ? r.result.result.value : null;
   };
-  const BASE = (process.argv[2] || "http://127.0.0.1:8920/passive").replace(/\/$/, "");
+  const BASE = (process.argv[2] || "http://127.0.0.1:8099/passive").replace(/\/$/, "");
+  /* 先把「视图模式」钉回文字版再开始断言：该值持久化在 localStorage，
+     手动切过原图版后跑验收，会因「原图版会藏起正文」而误报（2026-10-16 踩到）。
+     做法：借脚本自己的第一次导航之前先访问一次站点源把值改掉；
+     不用 addScriptToEvaluateOnNewDocument，避免在共用浏览器里留下长期注入。 */
+  await send("Page.navigate", { url: BASE + "/index.html" });
+  await new Promise(r => setTimeout(r, 900));
+  await ev("try{localStorage.setItem('akp-view-mode','text');}catch(e){}");
+
   let IDS = process.argv.slice(3);
   if (!IDS.length) IDS = ["aotewang-by", "jiede-zhongji"];
 

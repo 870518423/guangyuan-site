@@ -32,6 +32,23 @@
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;").replace(/'/g, "&#39;");   /* 2026-10-13 S4：补引号，防未来拼属性逃逸 */
   }
+  /* 对比态里把「段落换行」渲染成真正的换行（2026-10-16 管理者确认）。
+     ⚠️ 为什么放在最后做「整体后处理」而不是改每一处 esc()：
+        生成的 HTML 里用户文本已经全部 esc() 过（不可能含 < >），
+        所以「<」只可能来自我们自己写的标签 → 用 (^|>)([^<]*) 就能只扫文本节点、不碰标签。
+        （条目标题、标签芯片里的文字本来也没有换行，天然不受影响。）
+     ⚠️ 两边的换行要先剥掉：clauses() 不 trim，「。」之后的 \n 会粘到下一个子句**开头**，
+        不剥的话标签后面会先蹦一个空行；子句级分支每个子句本来就是一个 .akp-dline，
+        留着首尾换行只会多出空白。只保留段内换行。
+     说明：换行只在**对比态**生效；非对比态本来就是 split("\n") 逐段 <p class="akp-d">。 */
+  function nlPatch(html) {
+    var s = String(html == null ? "" : html);
+    if (s.indexOf("\n") === -1) return s;
+    return s.replace(/(^|>)([^<]*)/g, function (m, pre, txt) {
+      if (txt.indexOf("\n") === -1) return m;
+      return pre + txt.replace(/^\n+|\n+$/g, "").replace(/\n/g, "<br>");
+    });
+  }
   function mk(tag, cls, html) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -799,7 +816,7 @@
   }
 
   function diffHtml(prev, cur) {
-    return renderSemDiff(prev, cur);
+    return nlPatch(renderSemDiff(prev, cur));
   }
 
   /* 手写 diffs 的单个区块渲染：与自动分档同款标签 + 同款配色（2026-10-14 统一）。 */
@@ -874,10 +891,10 @@
         cur = r.end;
       });
       html += esc(tp.slice(cur));
-      return html;
+      return nlPatch(html);
     }
 
-    if (!prevId || tp === tc) return esc(tp);
+    if (!prevId || tp === tc) return nlPatch(esc(tp));
 
     /* 语义分档（L0–L4）：不再逐字涂抹，也不再按「前缀 / 相似度」分支处理 */
     return diffHtml(tp, tc);
@@ -991,7 +1008,10 @@
        不参与版本对比；现在若数据里写成 `entries`（带 texts），即与被动一样
        按版本渲染并支持对比。旧的静态写法继续兼容。
        prose 恒为静态。 */
-    var listMode = sec.type === "prose" ? false
+    /* prose / intro 恒为静态文本块（不参与版本切换）：
+       intro = 角色「简介」（2026-10-16 新增，内容来自简介技原图），
+       与超越技同构，只是多段正文用 `paras` 承载。 */
+    var listMode = (sec.type === "prose" || sec.type === "intro") ? false
                  : (sec.type === "exceed" ? !!list.length : true);
     var hasVer = !!(sec.type === "passive" &&
                     (versions ? list.some(function (e) { return !!e.texts; }) : true));
@@ -1105,18 +1125,20 @@
      ⚠️ 只做「切换」，不替代文字版：版本对比（增强/调整/新增/移除着色）、
         全文搜索、读屏朗读、字号自选都只在文字层存在，图片层没有这些能力。
         所以默认是文字版，原文图只给想核对原文的玩家用。
-     状态：localStorage['akp-view-mode']，默认 text；切换靠根元素 data-akp-view
-     + CSS 显隐，不重建 DOM（保住滚动位置和折叠状态）。 */
+     状态（2026-10-17 改）：**不再持久化，默认恒为文字版**。
+     以前写 localStorage['akp-view-mode']，一旦用户在某个角色切到原图版，
+     之后**所有角色**一进来就是原图版（管理者反馈：银河闪耀、朱雀都成了默认原图版）。
+     现在：viewMode 只活在当前页面生命周期内；旧手机里残留的值读出来就删掉，
+     免得老用户一直被旧值钉在原图版。切换按钮照旧能用，刷新/换角色即回文字版。
+     （新增角色自动继承：默认由代码决定，不写在数据里。） */
   var VIEW_KEY = "akp-view-mode";
   var viewMode = "text";
   try {
-    var __sv = localStorage.getItem(VIEW_KEY);
-    if (__sv === "image" || __sv === "text") viewMode = __sv;
+    if (localStorage.getItem(VIEW_KEY) !== null) localStorage.removeItem(VIEW_KEY);
   } catch (e) {}
   var VIEW_PAINT = [];
   function setView(m) {
     viewMode = (m === "image") ? "image" : "text";
-    try { localStorage.setItem(VIEW_KEY, viewMode); } catch (e) {}
     VIEW_PAINT.forEach(function (f) { try { f(); } catch (e) {} });
   }
 
@@ -1227,42 +1249,56 @@
       el.appendChild(shotBox);
     }
 
-    /* ---- 原图版视图（2026-10-16 加，仅叠加，不替代文字版）---- */
+    /* ---- 原图版视图（2026-10-16 加，仅叠加，不替代文字版）----
+       ⚠️ 2026-10-16 改：「按版本分组」→「按**类别**建块，每类自己选版本」。
+       原因：某版本没给某类别拍图（那一版主动技/超越技确实没改，素材就没再拍）
+       时，旧逻辑会把整块藏掉 —— 管理者口径：**不能因为没变化就不显示**。
+       现在缺图时向前**沿用最近一个有图的版本**，并在标题上打「沿用」标记。
+       类别 = 标签去掉末尾版本号；标签支持两种写法：
+         · 「主动技 v1v2」  → 一张图覆盖 v1、v2（用 multi 版本尾巴解析）
+         · 「被动技+超越技 v2」→ 两个类别共用同一张图（按 + 拆类别） */
     var hasShots = !!(pics && pics.shots && pics.shots.length);
+    var imgCats = [];
     if (hasShots && el.getAttribute("data-akp-imgview") !== "0") {
-      var imgView = mk("div", "akp-imgview");
-
-      /* 按版本分组：标签末尾带 vN 的只在该版本出现，无版本标注的常显 */
-      var groups = [];
+      var VER_TAIL = /^(.*?)[\s]*((?:v\d+[\s、,，~～\-–—→]*)+)$/;
+      var catIndex = {};
       pics.shots.forEach(function (s) {
-        var m = /(v\d+)\s*$/.exec(s.label || "");
-        var v = m ? m[1] : null;
+        var label = s.label || "技能截图";
+        var m = VER_TAIL.exec(label);
+        var names = (m ? m[1] : label).split("+");
+        var vers = (m ? (m[2].match(/v\d+/g) || []) : [null]);
+        names.forEach(function (raw) {
+          var nm = raw.trim() || label;
+          var c = catIndex[nm];
+          if (!c) { c = catIndex[nm] = { name: nm, map: {} }; imgCats.push(c); }
+          vers.forEach(function (v) {
+            if (!c.map[v]) c.map[v] = { label: label, src: s.src };
+          });
+        });
+      });
+
+      var imgView = mk("div", "akp-imgview");
+      imgCats.forEach(function (c) {
         var item = mk("figure", "akp-imgview-item");
-        item.appendChild(mk("figcaption", "akp-imgview-cap", esc(s.label)));
+        c.__cap = mk("figcaption", "akp-imgview-cap", "");
         var im = document.createElement("img");
         im.className = "akp-imgview-img";
         im.loading = "lazy";
         im.decoding = "async";
-        im.alt = (s.label || "技能截图") + " 原图";
         /* 缺图 / 404 降级：占位文案 + 一键回文字版，不留破图 */
-        im.onerror = function () {
-          var miss = mk("div", "akp-imgview-miss", "该版本素材未收录");
-          var back = mk("button", "akp-btn", "回到文字版");
-          back.type = "button";
-          back.onclick = function () { setView("text"); };
-          miss.appendChild(back);
-          item.replaceChild(miss, im);
-        };
-        im.src = s.src;
+        var miss = mk("div", "akp-imgview-miss", "该版本素材未收录");
+        var back = mk("button", "akp-btn", "回到文字版");
+        back.type = "button";
+        back.onclick = function () { setView("text"); };
+        miss.appendChild(back);
+        miss.hidden = true;
+        im.onerror = function () { im.hidden = true; miss.hidden = false; };
+        im.onload = function () { im.hidden = false; miss.hidden = true; };
+        item.appendChild(c.__cap);
         item.appendChild(im);
-        var g = null;
-        for (var i = 0; i < groups.length; i++) if (groups[i].ver === v) { g = groups[i]; break; }
-        if (!g) {
-          g = { ver: v, box: mk("div", "akp-imgview-group") };
-          groups.push(g);
-          imgView.appendChild(g.box);
-        }
-        g.box.appendChild(item);
+        item.appendChild(miss);
+        imgView.appendChild(item);
+        c.__item = item; c.__img = im; c.__miss = miss; c.__src = null;
       });
       el.appendChild(imgView);
 
@@ -1284,11 +1320,64 @@
       actBar.appendChild(swWrap);   /* 操作条恒定存在（单版本角色也会建） */
 
       var versionsAll = data.versions || [];
+      /* 某类别在当前版本没有截图 → 向前**沿用**最近一个有图的版本
+         （那一版该类技能没改动，素材自然没再拍）；万一图片只有比当前更**新**的版本，
+         就退而用最早一张，一样打「沿用」。找不到任何图（理论上不会）→ 返回 null。 */
+      function shotFor(c, vi) {
+        var j, v;
+        for (j = vi; j >= 0; j--) {
+          v = versionsAll.length ? (versionsAll[j] && versionsAll[j].id) : null;
+          if (c.map[v]) return { hit: c.map[v], reused: j !== vi };
+        }
+        for (j = vi + 1; j < (versionsAll.length || 1); j++) {
+          v = versionsAll.length ? (versionsAll[j] && versionsAll[j].id) : null;
+          if (c.map[v]) return { hit: c.map[v], reused: true };
+        }
+        return null;
+      }
+      /* 2026-10-17：文字版时**空闲预取**当前版本会用到的原图（管理者同意）
+         长图 170~470KB、节点在新加坡，切过去现下载要等好几秒；趁空闲先下好，
+         切到原图版基本秒开。请求照旧经过 SW → 会存进运行时缓存，之后离线也能看。
+         ⚠️ 流量保护：用户开了「省流量」或处在 2G/3G 就**不预取**（省用户流量）。
+         ⚠️ 同一张只预取一次；切版本后新的那几张也是空闲时才补。 */
+      var __prefetched = {};
+      function prefetchShots(vi) {
+        var c = navigator.connection;
+        if (c && (c.saveData === true ||
+            /^(slow-2g|2g|3g)$/.test(c.effectiveType || ""))) return;
+        var go = function () {
+          imgCats.forEach(function (cc) {
+            var r = shotFor(cc, vi);
+            if (!r || !r.hit || !r.hit.src || __prefetched[r.hit.src]) return;
+            __prefetched[r.hit.src] = 1;
+            var p = new Image();
+            p.decoding = "async";
+            p.src = r.hit.src;
+          });
+        };
+        if (window.requestIdleCallback) {
+          try { window.requestIdleCallback(go, { timeout: 4000 }); return; } catch (e) {}
+        }
+        setTimeout(go, 1500);
+      }
       function applyView() {
         el.setAttribute("data-akp-view", viewMode);
-        var cur = versionsAll.length
-          ? versionsAll[Math.min(verState.cur, versionsAll.length - 1)].id : null;
-        groups.forEach(function (g) { g.box.hidden = !!(g.ver && cur && g.ver !== cur); });
+        var vi = versionsAll.length
+          ? Math.min(verState.cur, versionsAll.length - 1) : 0;
+        imgCats.forEach(function (c) {
+          var r = shotFor(c, vi);
+          if (!r) { c.__item.hidden = true; return; }
+          c.__item.hidden = false;
+          if (c.__src !== r.hit.src) {                 /* 只在换图时才动 src，避免重载闪烁 */
+            c.__src = r.hit.src;
+            c.__img.hidden = false;
+            c.__miss.hidden = true;
+            c.__img.alt = r.hit.label + " 原图";
+            c.__img.src = r.hit.src;
+          }
+          c.__cap.textContent = r.hit.label;
+          if (r.reused) c.__cap.appendChild(mk("span", "akp-imgview-reuse", "沿用"));
+        });
         var tbs = el.querySelectorAll(".akp-viewsw .akp-btn");
         [].forEach.call(tbs, function (b) {
           var on = b.getAttribute("data-akp-role") === "view-" + viewMode;
@@ -1309,6 +1398,7 @@
             if (registry) registry.forEach(function (f) { if (f !== applyView) f(); });
           }
         }
+        if (viewMode === "text") prefetchShots(vi);
       }
       applyView();
       VIEW_PAINT.push(applyView);

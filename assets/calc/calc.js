@@ -339,7 +339,7 @@
           <span class="label">每日均量</span>
           <span class="daily-avg-value">
             <span class="daily-avg-number">${formatNumber(dailyAvg)}</span>
-            <img src="assets/guangyuan.png" alt="光元" class="icon-tiny" />
+            <img src="assets/guangyuan.webp" alt="光元" class="icon-tiny" />
           </span>
         </div>
       `;
@@ -381,7 +381,7 @@
           <span class="label">每日光元</span>
           <span class="daily-avg-value">
             <span class="arsenal-daily-light">${formatNumber(dailyLight)}</span>
-            <img src="assets/guangyuan.png" alt="光元" class="icon-tiny" />
+            <img src="assets/guangyuan.webp" alt="光元" class="icon-tiny" />
           </span>
         </div>
       `;
@@ -425,7 +425,7 @@
         <span class="label">预测总量</span>
         <span class="predicted-value">
           <span class="predicted-number">${formatNumber(predicted)}</span>
-          <img src="assets/guangyuan.png" alt="光元" class="icon-inline" />
+          <img src="assets/guangyuan.webp" alt="光元" class="icon-inline" />
         </span>
       </div>
     `;

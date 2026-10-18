@@ -275,6 +275,10 @@ window.AKP_IMAGES = {
       {
         "label": "超越技 v1",
         "src": "img/oumeijia-zhuque/超越技_v1.webp"
+      },
+      {
+        "label": "简介技 v1",
+        "src": "img/oumeijia-zhuque/简介技_v1.webp"
       }
     ]
   },
@@ -444,6 +448,14 @@ window.AKP_IMAGES = {
       {
         "label": "超越技 v2",
         "src": "img/lingjia/超越技_v2.webp"
+      },
+      {
+        "label": "简介技 v1",
+        "src": "img/lingjia/简介技_v1.webp"
+      },
+      {
+        "label": "简介技 v2",
+        "src": "img/lingjia/简介技_v2.webp"
       }
     ]
   },
@@ -523,6 +535,39 @@ window.AKP_IMAGES = {
       {
         "label": "超越技 v2",
         "src": "img/leiguluosi/超越技_v2.webp"
+      }
+    ]
+  },
+  "sailuo-yinhe-shanzhuo": {
+    "portrait": "img/sailuo-yinhe-shanzhuo/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/sailuo-yinhe-shanzhuo/主动技_v1.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/sailuo-yinhe-shanzhuo/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/sailuo-yinhe-shanzhuo/被动技_v2.webp"
+      },
+      {
+        "label": "被动技 v3",
+        "src": "img/sailuo-yinhe-shanzhuo/被动技_v3.webp"
+      },
+      {
+        "label": "超越技 v1",
+        "src": "img/sailuo-yinhe-shanzhuo/超越技_v1.webp"
+      },
+      {
+        "label": "超越技 v3",
+        "src": "img/sailuo-yinhe-shanzhuo/超越技_v3.webp"
+      },
+      {
+        "label": "简介技 v1",
+        "src": "img/sailuo-yinhe-shanzhuo/简介技_v1.webp"
       }
     ]
   }

@@ -29,6 +29,41 @@ DEFAULT_SRC = r"C:\Users\Admin\Desktop\奥系道具图片\人间体大全（含�
 TEMPLATE = os.path.join(HERE, "guide_template.html")
 OUT = os.path.join(HERE, "guides.html")
 
+# ---- 人间体图片（2026-10-17 新增）----
+# 图片由 tools/build_human_imgs.py 压好落在 images/humans/<id>/，清单同名 manifest.json
+IMG_MANIFEST = os.path.join(HERE, "images", "humans", "manifest.json")
+# Excel 用简体正字、图片目录按游戏内写法 → 少量别名（其余已把 Excel 改对）
+IMG_ALIAS = {"姬矢准": "姫矢准"}
+
+# 性别判定表（2026-10-17）：A 序号 / B 角色名 / C 形态数 / D 性别 / E 依据
+SEX_SRC = r"C://Users//Admin//Desktop//奥系道具图片//奥系人间体//人间体性别判定表.xlsx"
+
+
+def load_sex():
+    """读性别判定表 → {角色名: 男/女/不明}；文件缺失就返回空（构建照常，只是不显示性别）。"""
+    if not os.path.isfile(SEX_SRC):
+        print("提示：没找到性别判定表，本次生成不带性别。")
+        return {}
+    wb = openpyxl.load_workbook(SEX_SRC, data_only=True)
+    ws = wb.worksheets[0]
+    out = {}
+    for row in ws.iter_rows(min_row=3, values_only=True):   # 第 1 行说明、第 2 行表头
+        if not row or len(row) < 4:
+            continue
+        name, sex = row[1], row[3]
+        if name and sex:
+            out[str(name).strip()] = str(sex).strip()
+    return out
+
+
+def load_img_manifest():
+    """读图片清单；没生成过就返回空（构建照常，只是不带图）。"""
+    if not os.path.isfile(IMG_MANIFEST):
+        print("提示：还没有图片清单（先跑 tools/build_human_imgs.py），本次生成不带图。")
+        return {}
+    with open(IMG_MANIFEST, "r", encoding="utf-8") as f:
+        return json.load(f).get("chars", {})
+
 # 阵营 → 图标 / 主题色（改图标只需换这里的文件名）
 FACTIONS = [
     {"name": "奥特之星", "icon": "assets/factions/star.png",       "color": "#fbbf24"},
@@ -82,6 +117,8 @@ def split_multi(value):
 def load_entries(src):
     wb = openpyxl.load_workbook(src, data_only=True)
     known = {f["name"] for f in FACTIONS}
+    pics = load_img_manifest()
+    sexes = load_sex()
     entries = []
     per_faction = {}
 
@@ -113,6 +150,8 @@ def load_entries(src):
 
             fate = split_multi(row[COL_FATE])
             prereq = split_multi(row[COL_PREQ])
+            pic = pics.get(IMG_ALIAS.get(name, name))
+            sex = sexes.get(name) or sexes.get(IMG_ALIAS.get(name, name), "")
             if "fate" in CARD_FIELDS:
                 fate = mark(fate)
             if "prereq" in CARD_FIELDS:
@@ -125,6 +164,10 @@ def load_entries(src):
                 "how": split_multi(row[COL_HOW]),
                 "prereq": prereq,
                 "traits": traits,
+                "img": pic["id"] if pic else "",
+                "forms": pic["forms"] if pic else [],
+                "av": 1 if (pic and pic.get("avatar")) else 0,
+                "sex": sex,
             })
             got += 1
         per_faction[faction] = got
@@ -199,6 +242,9 @@ def main():
     for f in FACTIONS:
         print(f"    {f['name']}: {per_faction.get(f['name'], 0)}")
     print(f"  输出体积：{size:,} 字节（约 {size/1024:.1f} KB）")
+    no_sex = [e["name"] for e in entries if not e.get("sex")]
+    if no_sex:
+        print(f"  提示：{len(no_sex)} 条没有性别 → {', '.join(no_sex[:6])}")
     no_trait = [e["name"] for e in entries if not e["traits"]]
     if no_trait:
         print(f"  提示：{len(no_trait)} 条没有任何特训人间体 → {', '.join(no_trait[:8])}")

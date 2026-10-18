@@ -1,0 +1,137 @@
+/* ============================================================
+   App 版适配层（第 14 轮 · 2026-10-18）
+   ------------------------------------------------------------
+   适用范围：**只在 html[data-app] 下生效**，网页版零影响。
+   data-app 由各页面 head 里的内联探测脚本注入（?app=1 或 Capacitor 原生环境）。
+
+   分区：
+     ① 全局 / 顶栏
+     ② 首页 2×2 + 窄卡
+     ③ 列表页两列（guides / strategies / passive 两页）
+     ④ App 专属页面（app.html）
+     ⑤ 首启资源包弹层
+   ============================================================ */
+
+/* ---------- ① 全局 ---------- */
+html[data-app] body { -webkit-tap-highlight-color: transparent; }
+html[data-app] .logo { width: 52px; height: 52px; }
+html[data-app] header h1 { font-size: 1.5rem; }
+html[data-app] .ak-save-btn { display: none; }          /* 由 app-shell.js 换成「检查更新」 */
+
+/* 首页右上角齿轮（app-shell.js 注入） */
+html[data-app] .ak-app-gear {
+  position: fixed; right: 96px; top: 14px; z-index: 60;
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--panel2, rgba(255,255,255,.06));
+  border: 1px solid var(--border2, rgba(255,255,255,.14));
+  color: var(--muted, #93a4bd); cursor: pointer;
+}
+html[data-app] .ak-app-gear:active { transform: scale(.94); }
+html[data-app] .ak-app-gear svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+
+/* ---------- ② 首页 2×2 ---------- */
+html[data-app] .entries { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+html[data-app] .entry { min-width: 0; }
+html[data-app] .entry { padding: 13px 12px 12px; }
+html[data-app] .entry .top { gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+html[data-app] .entry .ico { width: 40px; height: 40px; flex-basis: 40px; border-radius: 11px; }
+html[data-app] .entry .ico img { width: 26px; height: 26px; }
+html[data-app] .entry h2 { font-size: .97rem; line-height: 1.25; }
+html[data-app] .entry .desc {
+  font-size: .76rem; line-height: 1.5; color: var(--muted, #93a4bd);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+html[data-app] .entry .meta { display: none; }
+html[data-app] .entry .badge { font-size: .62rem; padding: 2px 7px; letter-spacing: .5px; }
+
+/* ---------- ③ 列表页两列 ---------- */
+/* 人间体图鉴（guides.html） */
+html[data-app] #cardView.cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 9px; }
+html[data-app] #cardView .card { min-width: 0; }
+html[data-app] #cardView .card { padding: 10px 10px 11px; border-radius: 9px; }
+html[data-app] #cardView .card-hd { gap: 6px; margin-bottom: 7px; }
+html[data-app] #cardView .card-hd h3 { font-size: .9rem; }
+html[data-app] #cardView .card-hd .fname { font-size: .64rem; }
+html[data-app] #cardView .card-hd .pav { width: 32px; height: 32px; flex-basis: 32px; }
+html[data-app] #cardView .row { gap: 5px; margin-top: 5px; }
+html[data-app] #cardView .row .k { flex-basis: 44px; font-size: .64rem; }
+html[data-app] #cardView .tag { font-size: .68rem; padding: 1px 6px; border-radius: 5px; }
+html[data-app] #cardView .costval { font-size: .74rem; }
+html[data-app] #cardView .costval img { width: 12px; height: 12px; }
+
+/* 攻略列表（strategies.html） */
+html[data-app] #cards.cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 9px; }
+html[data-app] #cards .card { min-width: 0; }
+html[data-app] #cards .card { padding: 12px 11px; }
+html[data-app] #cards .card h2 { font-size: .95rem; }
+html[data-app] #cards .card .desc { font-size: .74rem; line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* 被动：阵营页 */
+html[data-app] .akc-entries { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+html[data-app] .akc-entries .entry { min-width: 0; }
+html[data-app] .akc-entries .entry { padding: 12px 11px; }
+html[data-app] .akc-entries .entry h2 { font-size: .95rem; }
+html[data-app] .akc-entries .entry .desc { font-size: .74rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* 被动：角色列表页（横向卡改两列） */
+html[data-app] .akc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+html[data-app] .akc-card { min-width: 0; }
+html[data-app] .akc-card { padding: 9px 10px; gap: 8px; }
+html[data-app] .akc-card .akc-thumb { width: 40px; height: 40px; flex: 0 0 40px; }
+html[data-app] .akc-card .akc-name, html[data-app] .akc-card h3 { font-size: .84rem; }
+html[data-app] .akc-card .akc-sub, html[data-app] .akc-card .akc-meta { font-size: .68rem; }
+
+/* ---------- ⑤ 首启资源包弹层 ---------- */
+html[data-app] .akp-pack-mask {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(4,7,15,.72); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; transition: opacity .18s;
+}
+html[data-app] .akp-pack-mask.on { opacity: 1; }
+html[data-app] .akp-pack-sheet {
+  width: min(560px, 100%); max-height: 82vh; overflow: auto;
+  background: var(--panel, #111c2f); border: 1px solid var(--border2, rgba(255,255,255,.14));
+  border-radius: 16px 16px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  transform: translateY(14px); transition: transform .2s;
+}
+html[data-app] .akp-pack-mask.on .akp-pack-sheet { transform: translateY(0); }
+html[data-app] .akp-pack-sheet h3 { margin: 0 0 4px; font-size: 1.02rem; }
+html[data-app] .akp-pack-sheet .sub { margin: 0 0 14px; font-size: .78rem; color: var(--muted, #93a4bd); }
+html[data-app] .akp-pack-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-top: 1px solid var(--border, rgba(255,255,255,.08));
+}
+html[data-app] .akp-pack-row:first-of-type { border-top: 0; }
+html[data-app] .akp-pack-row input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: var(--blue, #3b82f6); }
+html[data-app] .akp-pack-row .txt { flex: 1; min-width: 0; }
+html[data-app] .akp-pack-row .t1 { display: block; font-size: .86rem; }
+html[data-app] .akp-pack-row .t2 { display: block; font-size: .72rem; color: var(--muted, #93a4bd); margin-top: 3px; line-height: 1.5; }
+html[data-app] .akp-pack-actions { display: flex; gap: 10px; margin-top: 14px; }
+html[data-app] .akp-pack-actions button { flex: 1; height: 44px; border-radius: 11px; font-size: .9rem; cursor: pointer; }
+html[data-app] .akp-pack-actions .ghost { background: transparent; border: 1px solid var(--border2, rgba(255,255,255,.14)); color: var(--muted, #93a4bd); }
+html[data-app] .akp-pack-actions .solid { background: var(--blue, #3b82f6); border: 0; color: #fff; font-weight: 600; }
+
+/* 资源包未下载时的占位（替代裂图） */
+html[data-app] .ak-pack-ph {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 64px; padding: 8px; border-radius: 8px;
+  border: 1px dashed var(--border2, rgba(255,255,255,.16));
+  background: rgba(255,255,255,.03); color: var(--dim, #64748b);
+  font-size: .72rem; text-align: center; line-height: 1.5; cursor: pointer;
+}
+/* App 卡片只呈现要点，完整信息进详情看（管理者 2026-10-18：挤的话可以不完全显示） */
+html[data-app] #cardView .card-bd .row:nth-child(2),
+html[data-app] #cardView .card-bd .row:nth-child(3) { display: none; }   /* 本命 / 前置 */
+html[data-app] #cardView .row .tags .tag:nth-child(n+4) { display: none; } /* 每行最多 3 个标签 */
+/* 被动角色卡：名称最多两行、缩略图再小一点 */
+html[data-app] .akc-card .akc-name,
+html[data-app] .akc-card h3 {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; line-height: 1.3;
+}
+html[data-app] .akc-card { padding: 8px 9px; gap: 7px; }
+html[data-app] .akc-card .akc-thumb { width: 36px; height: 36px; flex: 0 0 36px; }

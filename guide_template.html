@@ -7,13 +7,14 @@
 <meta name="theme-color" content="#0a0e1a">
 <meta name="description" content="奥系人间体查询工具：按名称、本命、特训、获得方式、前置要求快速检索">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="icon" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="奥系工具站">
 <!-- 主题引导：首帧前定好亮/暗，避免闪色（早于样式表执行） -->
 <script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
 <style>
   :root {
     --bg: #0a0e1a;
@@ -163,6 +164,21 @@
   .card-hd h3.link:hover { color: var(--fcolor, var(--blue)); text-decoration: underline; }
   .card-hd .fname { font-size: .72rem; color: var(--fcolor, var(--muted)); white-space: nowrap; opacity: .9; }
 
+  /* ---------- 纯文字版 / 图片版（2026-10-17）----------
+     两版都用卡片：「纯文字版」= 原来这张卡（左侧阵营图标）；
+     「图片版」= 左侧换成角色**常态头像**（管理者：头像只用常态、只在浏览页出现）。
+     立绘不进列表，只在详情弹层里显示。 */
+  .card-hd .pav {
+    display: none;
+    width: 44px; height: 44px; flex: 0 0 44px;
+    object-fit: cover; border-radius: 50%;
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--border2);
+  }
+  #cardView.view-image .card-hd .pav { display: block; }
+  #cardView.view-image .card-hd .ficon:not(.no-pav) { display: none; }
+  /* 文字版：保留阵营图标（2026-10-17 管理者改口径）；图片版换成常态头像 */
+
   .row { display: flex; gap: 8px; margin-top: 7px; align-items: flex-start; }
   .row:first-child { margin-top: 0; }
   .row .k {
@@ -181,11 +197,46 @@
   .tag.lv { color: var(--gold); background: rgba(251,191,36,.09); border-color: rgba(251,191,36,.22); font-variant-numeric: tabular-nums; }
   .tag.shop { color: #fca5a5; background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.25); }
   .tag.none { color: var(--dim); background: transparent; }
+  /* 性别标签（2026-10-17）：男/女/不明 三色，亮色主题下加深 */
+  .tag.sx-m { color: #7dd3fc; background: rgba(56,189,248,.12); border-color: rgba(56,189,248,.3); }
+  .tag.sx-f { color: #f9a8d4; background: rgba(244,114,182,.12); border-color: rgba(244,114,182,.3); }
+  .tag.sx-x { color: var(--dim); background: rgba(255,255,255,.045); }
+  /* 本命可跳被动页（2026-10-18）：金色 + ↗，与普通蓝标签区分 */
+  a.tag.fate-go { text-decoration: none; border-color: rgba(251,191,36,.45); color: var(--gold); background: rgba(251,191,36,.1); }
+  a.tag.fate-go:hover { background: rgba(251,191,36,.22); color: #fde68a; }
+  a.tag.fate-go .arw { font-size: .72em; margin-left: 3px; opacity: .85; }
+  html[data-theme="light"] a.tag.fate-go { color: #a16207; border-color: rgba(161,98,7,.4); background: rgba(202,138,4,.12); }
+  html[data-theme="light"] a.tag.fate-go:hover { background: rgba(202,138,4,.2); color: #78350f; }
+  html[data-theme="light"] .tag.sx-m { color: #0369a1; background: rgba(3,105,161,.1); border-color: rgba(3,105,161,.28); }
+  html[data-theme="light"] .tag.sx-f { color: #be185d; background: rgba(190,24,93,.1); border-color: rgba(190,24,93,.28); }
+  html[data-theme="light"] .tag.sx-x { background: rgba(0,0,0,.04); }
+  /* 特训列表里的角色名按「商店价」着色（2026-10-17 新增，管理者口径）：
+     6000 光元 = 金；商店未标价（按 11280）= 橙。只在「特训所需」栏生效，其它栏位保持蓝色。 */
+  /* 6000 用**明金**（#ffd75e），不再用 --gold 那支偏橙的琥珀，避免和 11280 的橙糊成一片 */
+  .tag.nam.p6000 { border-color: rgba(255,213,74,.62); color: #ffd75e; background: rgba(255,193,7,.20); }
+  .tag.nam.p6000:hover { background: rgba(255,193,7,.34); color: #ffeaa0; }
+  html[data-theme="light"] .tag.nam.p6000 { color: #a16207; border-color: rgba(161,98,7,.52); background: rgba(202,138,4,.14); }
+  html[data-theme="light"] .tag.nam.p6000:hover { background: rgba(202,138,4,.22); color: #78350f; }
+  .tag.nam.p11280 { border-color: rgba(249,115,22,.55); color: #fb923c; background: rgba(249,115,22,.16); }
+  .tag.nam.p11280:hover { background: rgba(249,115,22,.28); color: #fdba74; }
+  /* 亮色主题下橙色要加深，否则浅橙在浅底上看不清（金色走 var(--gold)，ak-light 已重映射） */
+  html[data-theme="light"] .tag.nam.p11280 { color: #c2410c; background: rgba(194,65,12,.10); border-color: rgba(194,65,12,.38); }
+  html[data-theme="light"] .tag.nam.p11280:hover { background: rgba(194,65,12,.18); color: #9a3412; }
+  /* 光元消耗（卡片行 / 表格列 / 详情弹层共用） */
+  .costval {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .82rem; font-weight: 650; color: var(--gold);
+    padding: 1px 0;
+  }
+  .costval img { width: 14px; height: 14px; object-fit: contain; flex: 0 0 14px; }
+  .costval.zero { color: var(--dim); font-weight: 500; }
+  .costval.zero img { opacity: .45; }
+  .row .costval { padding-top: 1px; }
   em.hi { font-style: normal; background: rgba(251,191,36,.32); color: #fff; border-radius: 3px; padding: 0 1px; }
 
   /* ---------- table ---------- */
   .tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
-  table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 860px; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 940px; }
   thead th {
     position: sticky; top: 0; z-index: 1;
     background: #0f1a2e; color: var(--muted); font-weight: 600;
@@ -200,6 +251,7 @@
   td.c-name.link:hover { color: var(--blue); text-decoration: underline; }
   td.c-fac { white-space: nowrap; color: var(--fcolor, var(--muted)); }
   td .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  td.c-cost { white-space: nowrap; }
 
   /* ---------- empty ---------- */
   .empty { text-align: center; color: var(--dim); padding: 70px 20px; }
@@ -228,12 +280,67 @@
   .modal.on { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
   .m-hd {
     display: flex; align-items: center; gap: 11px;
-    padding: 16px 18px 13px; border-bottom: 1px solid var(--border);
+    padding: 16px 48px 13px 18px;   /* 右侧留出关闭按钮的位置，避免「奥特之星」被 ✕ 压住 */
+    border-bottom: 1px solid var(--border);
     position: relative;
   }
   .m-hd img { width: 38px; height: 38px; object-fit: contain; border-radius: 50%; background: rgba(255,255,255,.05); }
   .m-hd h2 { margin: 0; font-size: 1.16rem; font-weight: 700; flex: 1; min-width: 0; }
   .m-hd .fname { font-size: .76rem; color: var(--fcolor, var(--muted)); white-space: nowrap; }
+
+  /* ---------- 详情：左图右文（2026-10-17 二次改版）----------
+     左列：立绘（等比，绝不裁/拉伸）+ 下方「‹ 形态名 ›」；
+     右列：获得方式 / 本命 / 前置要求 竖排；
+     下方 #mBody：特训所需 / 光元消耗 / 参与特训（整宽）。 */
+  .m-top {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    background: radial-gradient(circle at 16% 8%, rgba(255,255,255,.05), transparent 62%);
+  }
+  .m-top[hidden] { display: none; }        /* 文字版详情不渲染这块 */
+  .m-left { flex: 0 0 172px; width: 172px; }
+  .m-left[hidden] { display: none; }        /* 覆盖 flex，否则 hidden 失效 */
+  .m-shot {
+    display: block; width: 100%; padding: 0; margin: 0; border: 0;
+    background: transparent; cursor: zoom-in; border-radius: var(--radius);
+  }
+  .m-shot img {
+    width: 100%; height: auto; max-height: 220px;
+    object-fit: contain; display: block;
+    filter: drop-shadow(0 4px 14px rgba(0,0,0,.22));
+  }
+  .m-ctl { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
+  /* 翻页按钮：原图 51×101 竖条，**等比缩到高 40**（宽约 20），横向排在图片下方 */
+  .m-arrow-img {
+    height: 40px; width: auto; padding: 0; border: 0; background: none;
+    cursor: pointer; transition: filter .15s, transform .15s;
+  }
+  .m-arrow-img img { height: 40px; width: auto; display: block; }
+  .m-arrow-img:hover:not(:disabled) { filter: drop-shadow(0 0 8px rgba(251,191,36,.55)); }
+  .m-arrow-img:active:not(:disabled) { transform: scale(.92); }
+  .m-arrow-img:disabled { cursor: not-allowed; }
+  .m-form {
+    min-width: 46px; text-align: center;
+    font-size: .74rem; letter-spacing: .5px; color: var(--muted);
+  }
+  .m-side { flex: 1; min-width: 0; }
+  .m-side .m-sec { margin-bottom: 9px; }
+  .m-side .m-sec:last-child { margin-bottom: 0; }
+  .m-side .m-sec .st { margin-bottom: 4px; }
+  .m-sec .st.sub { margin-top: 8px; font-size: .7rem; opacity: .85; }
+  @media (min-width: 560px) {
+    .m-left { flex-basis: 220px; width: 220px; }
+    .m-shot img { max-height: 280px; }
+  }
+  /* 点立绘 → 全屏看大图 */
+  .m-zoom {
+    position: fixed; inset: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.93); cursor: zoom-out; padding: 10px;
+  }
+  .m-zoom[hidden] { display: none; }
+  .m-zoom img { max-width: 96vw; max-height: 92vh; object-fit: contain; }
   #mClose {
     position: absolute; right: 12px; top: 12px;
     width: 30px; height: 30px; border: 0; border-radius: 8px;
@@ -323,6 +430,7 @@
 </style>
 <link rel="stylesheet" href="assets/ak/ak-components.css">
 <link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
 </head>
 <body data-ak-progress>
 <div class="wrap">
@@ -343,8 +451,8 @@
     <div class="toolbar-bottom">
       <span class="count" id="resultCount">…</span>
       <div class="viewtoggle" id="viewToggle">
-        <button data-view="card" class="on">卡片</button>
-        <button data-view="table">表格</button>
+        <button data-view="text" class="on">文字版</button>
+        <button data-view="image">图片版</button>
       </div>
     </div>
   </div>
@@ -364,7 +472,7 @@
       <table>
         <thead>
           <tr>
-            <th>人间体</th><th>阵营</th><th>本命</th><th>获得方式</th><th>前置要求</th><th>特训所需人间体</th>
+            <th>人间体</th><th>阵营</th><th>本命</th><th>获得方式</th><th>前置要求</th><th>特训所需人间体</th><th>光元消耗</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -390,7 +498,30 @@
     <span class="fname" id="mFaction"></span>
     <button id="mClose" title="关闭" aria-label="关闭">✕</button>
   </div>
+  <!-- 详情头部下方：**左图右文**（2026-10-17 二次改版）
+       左「立绘 + 箭头 + 形态名」，右侧竖排「获得方式 / 本命 / 前置要求」；
+       特训所需、光元消耗、参与特训仍在下方整宽（#mBody）。 -->
+  <div class="m-top" id="mTop">
+    <div class="m-left" id="mPic" hidden>
+      <button class="m-shot" id="mZoomBtn" type="button" aria-label="查看大图" title="点击查看大图">
+        <img id="mPortrait" src="" alt="" loading="lazy" decoding="async">
+      </button>
+      <!-- 2026-10-18：翻页键（左/右 × 可用/灰）放在图片下方一行，缩到高 40 -->
+      <div class="m-ctl">
+        <button class="m-arrow-img" id="mPrev" type="button" aria-label="上一个形态" title="上一个形态">
+          <img id="mPrevImg" src="assets/ak-btn/left-gray.webp" alt="">
+        </button>
+        <span class="m-form" id="mForm"></span>
+        <button class="m-arrow-img" id="mNext" type="button" aria-label="下一个形态" title="下一个形态">
+          <img id="mNextImg" src="assets/ak-btn/right.webp" alt="">
+        </button>
+      </div>
+    </div>
+    <div class="m-side" id="mSide"></div>
+  </div>
   <div class="m-body" id="mBody"></div>
+  <!-- 全屏看大图（点立绘触发，点任意处 / Esc 关闭） -->
+  <div class="m-zoom" id="mZoom" hidden><img id="mZoomImg" alt=""></div>
   <div class="m-foot">
     <button id="mBack">← 返回列表</button>
   </div>
@@ -426,9 +557,80 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
   const isLv = v => /^LV\d+/i.test(v);
   const isShop = v => /商店|礼包|赠送|^vip|送的|首充/i.test(v);
 
+  /* ---- 本命 → 角色被动版本收录（2026-10-18）----
+     被动板块只有 20 个角色，所以「能对上才给链接」，对不上就是普通标签。
+     新增被动角色时：在 PASSIVE_EXACT 补一行（名字 → id），或在 PASSIVE_ALIAS 补个简称。 */
+  const PASSIVE_EXACT = {
+    "奥特之父真之力（突破）": "aotefuzhi-zhenzhili",
+    "奥特之王（UL）": "aotewang-ul",
+    "奥特之王（BY）": "aotewang-by",
+    "捷德尊皇形态（捷德之证）": "jiede-zunhuang",
+    "雷欧王者披风（突破）": "leiou-pifeng",
+    "利布特": "libute",
+    "梦比优斯凤凰勇气（突破）": "mengbiyousi-fenghuang",
+    "泰迦三重斯特利姆": "taijia-sanchosuterimu",
+    "捷德银河初升": "yinhechusheng",
+    "泽塔德尔塔天爪": "zeta-delta",
+    "极恶贝利亚": "jiebeibeiliya",
+    "奥美迦朱雀装甲": "oumeijia-zhuque",
+    "赛罗无限形态": "sailuo-wuxian",
+    "赛罗无限形态（超限）": "sailuo-wuxian-chaoxian",
+    "赛罗无限形态（银河闪耀）": "sailuo-yinhe-shanzhuo",
+    "捷德终极形态": "jiede-zhongji",
+    "令迦": "lingjia",
+    "光辉赛罗": "guanghui-sailuo",
+    "终极赛罗闪耀型": "sailuo-shinyaoxing",
+    "雷古洛思": "leiguluosi",
+    /* —— 2026-10-18 管理者逐条确认的「带括号写法」对应 —— */
+    "奥特之王（奥王）": "aotewang-ul",
+    "奥特之王（突破）": "aotewang-by",
+    "雷欧（突破）": "leiou-pifeng",
+    "奥特之父（突破）": "aotefuzhi-zhenzhili",
+    "泰迦三重斯特利姆形态（泰三）": "taijia-sanchosuterimu",
+    /* 2026-10-18 管理者确认：括号里是绰号/别名的，视作同一张卡（显式列出，不靠规则猜） */
+    "极恶贝利亚（饥饿）": "jiebeibeiliya",
+    "捷德终极形态（孝子）": "jiede-zhongji",
+    "雷古洛思（肋骨）": "leiguluosi"
+  };
+  /* ⚠️ 只认「全名字面完全相同」，**不做任何模糊/去括号/前缀猜测**。
+     管理者 2026-10-18 两次纠正：①「梦比优斯」≠「梦比优斯凤凰勇气」；
+     ②「捷德尊皇形态」≠「捷德尊皇形态（捷德之证）」。
+     所以每条映射都必须由管理者确认后，把**图鉴里那个原样的写法**写进 PASSIVE_EXACT。 */
+  function passiveIdOf(v) {
+    const raw = String(v || "").trim();
+    return PASSIVE_EXACT[raw] || "";
+  }
+  /* 可跳的本命：金色 + ↗；对不上被动角色的保持原样 */
+  function fateTag(v, selfName) {
+    const id = passiveIdOf(v);
+    if (!id) return tag(v, selfName);
+    return `<a class="tag nam fate-go" href="passive/char.html?id=${encodeURIComponent(id)}"` +
+      ` title="查看「${esc(v)}」的被动版本">${hl(v)}<span class="arw" aria-hidden="true">↗</span></a>`;
+  }
+  const fateTags = (list, selfName) =>
+    (list && list.length) ? list.map(v => fateTag(v, selfName)).join("") : `<span class="tag none">—</span>`;
+
+  /* ---------- 商店价格（2026-10-17，管理者口径）----------
+     获得方式写「限时商店6000光元」→ 6000（特训名单里标金色）
+     写「限时商店购买」但没标价 → 统一按 11280（标橙色）
+     其余（城市 / 试炼 LVxx / 礼包 / 首充）→ 0，不计入光元消耗 */
+  const SHOP_UNPRICED = 11280;
+  const PRICE = Object.create(null);
+  entries.forEach(e => {
+    let p = 0, shop = false;
+    (e.how || []).forEach(h => {
+      const m = /(\d{3,6})\s*光元/.exec(h);
+      if (m && !p) p = +m[1];
+      if (/商店/.test(h)) shop = true;
+    });
+    PRICE[e.name] = p || (shop ? SHOP_UNPRICED : 0);
+  });
+
   let q = "";
   let facet = "全部";
-  let view = "card";
+  /* 2026-10-17：开关由「卡片/表格」改为「纯文字版/图片版」，默认纯文字版；
+     不做持久化（与被动板块口径一致：每次进来都是纯文字版）。 */
+  let view = "text";
 
   // ---- 高亮 ----
   function hl(text) {
@@ -443,7 +645,7 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
   function hit(e) {
     if (facet !== "全部" && e.faction !== facet) return false;
     if (!q) return true;
-    const hay = [e.name, e.faction].concat(e.fate || [], e.how || [], e.prereq || [], e.traits || []).join("\u0001").toLowerCase();
+    const hay = [e.name, e.faction, e.sex || ""].concat(e.fate || [], e.how || [], e.prereq || [], e.traits || []).join("\u0001").toLowerCase();
     return hay.indexOf(q.toLowerCase()) !== -1;
   }
 
@@ -465,31 +667,63 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
       .map(x => x.e);
   }
 
-  // ---- 标签渲染 ----
-  function tag(v, selfName) {
+  /* ---- 标签渲染 ----
+     withPrice：只给「特训所需」传 true —— 名字按商店价着色（6000 金 / 未标价 11280 橙） */
+  function tag(v, selfName, withPrice) {
     if (v === null || v === undefined || v === "") return "";
     let cls = "tag";
-    if (isName(v)) cls += " nam" + (v === selfName ? " self" : "");
-    else if (isLv(v)) cls += " lv";
+    let tip = "";
+    if (isName(v)) {
+      cls += " nam" + (v === selfName ? " self" : "");
+      const p = PRICE[v] || 0;
+      if (withPrice && p) {
+        cls += p >= 10000 ? " p11280" : " p6000";
+        tip = ` title="商店 ${p.toLocaleString("zh-CN")} 光元"`;
+      }
+    } else if (isLv(v)) cls += " lv";
     else if (isShop(v)) cls += " shop";
     const clickable = isName(v);
     const attr = clickable ? ` data-goto="${esc(v)}" role="button" tabindex="0"` : "";
-    return `<span class="${cls}"${attr}>${hl(v)}</span>`;
+    return `<span class="${cls}"${attr}${tip}>${hl(v)}</span>`;
   }
-  function tags(list, selfName, emptyText) {
+  function tags(list, selfName, emptyText, withPrice) {
     if (!list || !list.length) return `<span class="tag none">${emptyText || "—"}</span>`;
-    return list.map(v => tag(v, selfName)).join("");
+    return list.map(v => tag(v, selfName, withPrice)).join("");
   }
-  function rowOf(k, list, selfName, emptyText) {
-    return `<div class="row"><span class="k">${k}</span><div class="tags">${tags(list, selfName, emptyText)}</div></div>`;
+  function rowOf(k, list, selfName, emptyText, withPrice) {
+    return `<div class="row"><span class="k">${k}</span><div class="tags">${tags(list, selfName, emptyText, withPrice)}</div></div>`;
+  }
+
+  /* ---- 光元消耗：特训所需角色价格之和 ---- */
+  const costOf = e => (e.traits || []).reduce((s, n) => s + (PRICE[n] || 0), 0);
+  function costHtml(e) {
+    const sum = costOf(e);
+    const parts = (e.traits || []).map(n => PRICE[n] || 0).filter(Boolean);
+    const detail = parts.length > 1 ? ` title="${parts.join(" + ")} = ${sum}"` : "";
+    return `<span class="costval${sum ? "" : " zero"}"${detail}>` +
+      `<img src="assets/guangyuan.webp" alt="光元">${sum.toLocaleString("zh-CN")}</span>`;
+  }
+  function costRow(e) {
+    return `<div class="row"><span class="k">光元消耗</span><div class="tags">${costHtml(e)}</div></div>`;
   }
 
   // ---- 卡片 ----
+  /* ---- 图片路径（2026-10-17）----
+     images/humans/<id>/base|awaken|transcend.webp + avatar.webp（常态头像） */
+  const IMG_BASE = "images/humans/";
+  const picOf = (e, f) => IMG_BASE + e.img + "/" + f + ".webp";
+
   function cardHtml(e) {
     const f = FAC[e.faction] || {};
+    /* 只有图片版才生成头像 <img>：文字版连标签都不输出，减少 DOM 与任何潜在请求 */
+    const hasAv = view === "image" && !!(e.av && e.img);
+    const av = hasAv
+      ? `<img class="pav" src="${picOf(e, "avatar")}" alt="${esc(e.name)}" width="44" height="44" loading="lazy" decoding="async">`
+      : "";
     return `<article class="card" style="--fcolor:${f.color || "var(--border2)"}">
       <div class="card-hd">
-        <img class="ficon ak-img-fade" src="${esc(f.icon || "")}" alt="${esc(e.faction)}" loading="lazy" decoding="async">
+        ${av}
+        <img class="ficon ak-img-fade${hasAv ? "" : " no-pav"}" src="${esc(f.icon || "")}" alt="${esc(e.faction)}" loading="lazy" decoding="async">
         <h3 class="link" data-goto="${esc(e.name)}">${hl(e.name)}</h3>
         <span class="fname">${hl(e.faction)}</span>
       </div>
@@ -497,7 +731,8 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
         ${rowOf("获得", e.how, e.name)}
         ${rowOf("本命", e.fate, e.name)}
         ${rowOf("前置", e.prereq, e.name)}
-        ${rowOf("特训所需", e.traits, e.name, "无")}
+        ${rowOf("特训所需", e.traits, e.name, "无", true)}
+        ${costRow(e)}
       </div>
     </article>`;
   }
@@ -510,7 +745,8 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
       <td><div class="tags">${tags(e.fate, e.name)}</div></td>
       <td><div class="tags">${tags(e.how, e.name)}</div></td>
       <td><div class="tags">${tags(e.prereq, e.name)}</div></td>
-      <td><div class="tags">${tags(e.traits, e.name, "无")}</div></td>
+      <td><div class="tags">${tags(e.traits, e.name, "无", true)}</div></td>
+      <td class="c-cost">${costHtml(e)}</td>
     </tr>`;
   }
 
@@ -519,19 +755,18 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     const sk = $("skeleton");
     if (sk) sk.remove();                 /* 真实内容就绪 → 移除骨架屏 */
     const list = results();
-    const isCard = view === "card";
     const has = list.length > 0;
-    $("cardView").classList.toggle("hidden", !isCard || !has);
-    $("tableView").classList.toggle("hidden", isCard || !has);
+    /* 两版都是卡片，只切 class；表格视图已停用（DOM 留着但不渲染） */
+    $("cardView").classList.toggle("hidden", !has);
+    $("cardView").classList.toggle("view-image", view === "image");
+    $("tableView").classList.add("hidden");
     $("empty").classList.toggle("hidden", has);
     $("resultCount").innerHTML = `显示 <b>${list.length}</b> / ${entries.length} 位`;
     if (!has) {
       $("cardView").innerHTML = "";
-      $("tbody").innerHTML = "";
       return;
     }
-    if (isCard) $("cardView").innerHTML = list.map(cardHtml).join("");
-    else $("tbody").innerHTML = list.map(tableRowHtml).join("");
+    $("cardView").innerHTML = list.map(cardHtml).join("");
   }
 
   // ---- 筛选条 ----
@@ -552,6 +787,46 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
   }
 
   // ---- 详情弹层 ----
+  /* 立绘 + 三形态切换（2026-10-17）：只在详情里出图；默认常态，箭头到边界置灰；
+     缺形态（如只有常态）时箭头 disabled；完全无图的角色（朝影雄一郎）整块隐藏。 */
+  const sec = (title, inner) => `<div class="m-sec"><div class="st">${title}</div><div class="tags">${inner}</div></div>`;
+  /* 性别（2026-10-17 接入性别判定表）：男 / 女 / 不明；表里没有就标「未收录」 */
+  function sexTag(e) {
+    const v = e.sex || "";
+    if (!v) return `<span class="tag none">未收录</span>`;
+    const cls = v === "男" ? " sx-m" : v === "女" ? " sx-f" : " sx-x";
+    return `<span class="tag${cls}">${esc(v)}</span>`;
+  }
+  const FORM_CN = { base: "常态", awaken: "觉醒", transcend: "超越觉醒" };
+  let pEntry = null, pForms = [], pIdx = 0;
+  function paintPortrait() {
+    if (!pEntry || !pForms.length) return;
+    const f = pForms[pIdx];
+    const img = $("mPortrait");
+    img.src = picOf(pEntry, f);
+    img.alt = pEntry.name + " · " + FORM_CN[f];
+    $("mForm").textContent = FORM_CN[f];
+    const last = pForms.length - 1;
+    $("mPrev").disabled = pIdx === 0;
+    $("mNext").disabled = pIdx === last;
+    /* 按钮用游戏内的灰色版表示不可用（比半透明更像游戏原生） */
+    $("mPrevImg").src = "assets/ak-btn/" + (pIdx === 0 ? "left-gray" : "left") + ".webp";
+    $("mNextImg").src = "assets/ak-btn/" + (pIdx === last ? "right-gray" : "right") + ".webp";
+  }
+  function setPortrait(e, showPic) {
+    pEntry = e;
+    pForms = (e.forms || []).filter(f => FORM_CN[f]);
+    pIdx = 0;
+    const box = $("mPic");
+    /* 文字版详情不出图（管理者 2026-10-17：文字版详情应该和以前一样） */
+    if (!showPic || !e.img || !pForms.length) {
+      box.hidden = true;
+      $("mPortrait").removeAttribute("src");
+      return;
+    }
+    box.hidden = false;
+    paintPortrait();
+  }
   const stack = [];
   function openDetail(name, push) {
     const e = byName[name];
@@ -564,32 +839,42 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     $("mIcon").alt = e.faction;
     $("mName").innerHTML = esc(e.name);
     $("mFaction").textContent = e.faction;
+    const showPic = view === "image" && !!e.img && (e.forms || []).length > 0;
+    setPortrait(e, showPic);
 
-    const secs = [];
-    secs.push(`<div class="m-sec"><div class="st">获得方式</div><div class="tags">${tags(e.how, e.name)}</div></div>`);
-    secs.push(`<div class="m-sec"><div class="st">本命</div><div class="tags">${tags(e.fate, e.name)}</div></div>`);
-    secs.push(`<div class="m-sec"><div class="st">前置要求</div><div class="tags">${tags(e.prereq, e.name)}</div></div>`);
-    secs.push(`<div class="m-sec"><div class="st">特训所需人间体（${(e.traits || []).length}）</div><div class="tags">${tags(e.traits, e.name, "无")}</div></div>`);
-
-    const tb = trainedBy[e.name] || [];
     const po = prereqOf[e.name] || [];
+    const tb = trainedBy[e.name] || [];
     const fo = fateOf[e.name] || [];
-    if (tb.length) {
-      secs.push(`<div class="m-sec rev"><div class="st">参与以下人间体的特训（${tb.length}）</div><div class="tags">${tags(tb, e.name)}</div></div>`);
-    }
-    if (po.length) {
-      secs.push(`<div class="m-sec rev"><div class="st">被列为前置要求（${po.length}）</div><div class="tags">${tags(po, e.name)}</div></div>`);
-    }
-    if (fo.length) {
-      secs.push(`<div class="m-sec rev"><div class="st">被下列人间体作为本命（${fo.length}）</div><div class="tags">${tags(fo, e.name)}</div></div>`);
-    }
-    $("mBody").innerHTML = secs.join("");
+
+    const topSecs = [
+      sec("性别", sexTag(e)),
+      sec("获得方式", tags(e.how, e.name)),
+      sec("本命", fateTags(e.fate, e.name)),
+      `<div class="m-sec"><div class="st">前置要求</div><div class="tags">${tags(e.prereq, e.name)}</div>` +
+        (po.length
+          ? `<div class="st sub">被列为前置要求（${po.length}）</div><div class="tags">${tags(po, e.name)}</div>`
+          : "") +
+      `</div>`,
+    ];
+    const lowSecs = [
+      sec(`特训所需人间体（${(e.traits || []).length}）`, tags(e.traits, e.name, "无", true)),
+      sec("光元消耗", costHtml(e)),
+    ];
+    if (tb.length) lowSecs.push(`<div class="m-sec rev"><div class="st">参与以下人间体的特训（${tb.length}）</div><div class="tags">${tags(tb, e.name)}</div></div>`);
+    if (fo.length) lowSecs.push(`<div class="m-sec rev"><div class="st">被下列人间体作为本命（${fo.length}）</div><div class="tags">${tags(fo, e.name)}</div></div>`);
+
+    /* 图片版 → 左图右文；文字版 → 以前那套单列、完全无图 */
+    const isImg = view === "image" && !!e.img && (e.forms || []).length > 0;
+    $("mTop").hidden = !isImg;
+    $("mSide").innerHTML = isImg ? topSecs.join("") : "";
+    $("mBody").innerHTML = (isImg ? lowSecs : topSecs.concat(lowSecs)).join("");
     $("mBack").textContent = stack.length > 1 ? "← 返回上一个" : "← 返回列表";
     m.classList.add("on");
     $("mask").classList.add("on");
     $("mBody").scrollTop = 0;
   }
   function closeDetail() {
+    if ($("mZoom") && !$("mZoom").hidden) { $("mZoom").hidden = true; $("mZoomImg").removeAttribute("src"); }
     const m = $("modal"), k = $("mask");
     m.classList.add("closing"); k.classList.add("closing");
     m.classList.remove("on"); k.classList.remove("on");
@@ -605,7 +890,10 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     if (goto) { openDetail(goto.dataset.goto); return; }
   });
   document.addEventListener("keydown", ev => {
-    if (ev.key === "Escape") { closeDetail(); return; }
+    if (ev.key === "Escape") {
+      if (!$("mZoom").hidden) { $("mZoom").hidden = true; $("mZoomImg").removeAttribute("src"); return; }
+      closeDetail(); return;
+    }
     if (ev.key === "Enter" && ev.target.closest("[data-goto]")) { openDetail(ev.target.dataset.goto); }
   });
 
@@ -633,6 +921,23 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
   });
   $("mClose").addEventListener("click", closeDetail);
   $("mask").addEventListener("click", closeDetail);
+  /* 点立绘 → 全屏看大图（同一张图，等比不裁） */
+  $("mZoomBtn").addEventListener("click", () => {
+    const im = $("mPortrait");
+    if (!im.getAttribute("src")) return;
+    const z = $("mZoomImg");
+    z.src = im.src; z.alt = im.alt || "";
+    $("mZoom").hidden = false;
+  });
+  $("mZoom").addEventListener("click", () => { $("mZoom").hidden = true; $("mZoomImg").removeAttribute("src"); });
+  $("mPrev").addEventListener("click", () => { if (pIdx > 0) { pIdx--; paintPortrait(); } });
+  $("mNext").addEventListener("click", () => { if (pIdx < pForms.length - 1) { pIdx++; paintPortrait(); } });
+  /* 键盘左右也能切形态（弹层打开时才生效） */
+  document.addEventListener("keydown", e => {
+    if (!$("modal").classList.contains("on") || !pForms.length) return;
+    if (e.key === "ArrowLeft" && pIdx > 0) { e.preventDefault(); pIdx--; paintPortrait(); }
+    else if (e.key === "ArrowRight" && pIdx < pForms.length - 1) { e.preventDefault(); pIdx++; paintPortrait(); }
+  });
   $("mBack").addEventListener("click", () => {
     if (stack.length > 1) { stack.pop(); openDetail(stack[stack.length - 1], false); }
     else { closeDetail(); }

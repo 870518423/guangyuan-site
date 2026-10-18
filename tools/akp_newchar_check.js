@@ -1,7 +1,7 @@
 /* 新角色专项验收（tools/akp_newchar_check.js）
    用法：node tools/akp_newchar_check.js <baseUrl> [id1 id2 ...]
      例：node tools/akp_newchar_check.js http://127.0.0.1:8940/passive aotewang-by jiede-zhongji
-   默认 baseUrl = http://127.0.0.1:8920/passive，默认校验最近新增的 4 个角色。
+   默认 baseUrl = http://127.0.0.1:8099/passive，默认校验最近新增的 4 个角色。
    检查：首页统计与清单一致、阵营页含全部已收录角色、每个角色页的日期/按钮/立绘/条目渲染、
         以及对比态下「同义词不被标注」（管理者口径）。 */
 /* 新增角色专项验收：奥特之王（BY）/ 捷德终极形态 / 赛罗两形态
@@ -31,7 +31,15 @@ function get(p) {
     const r = await send("Runtime.evaluate", { expression: e, returnByValue: true, awaitPromise: true });
     return r.result && r.result.result ? r.result.result.value : null;
   };
-  const BASE = (process.argv[2] || "http://127.0.0.1:8920/passive").replace(/\/$/, "");
+  const BASE = (process.argv[2] || "http://127.0.0.1:8099/passive").replace(/\/$/, "");
+  /* 先把「视图模式」钉回文字版再开始断言：该值持久化在 localStorage，
+     手动切过原图版后跑验收，会因「原图版会藏起正文」而误报（2026-10-16 踩到）。
+     做法：借脚本自己的第一次导航之前先访问一次站点源把值改掉；
+     不用 addScriptToEvaluateOnNewDocument，避免在共用浏览器里留下长期注入。 */
+  await send("Page.navigate", { url: BASE + "/index.html" });
+  await new Promise(r => setTimeout(r, 900));
+  await ev("try{localStorage.setItem('akp-view-mode','text');}catch(e){}");
+
   const checks = []; let fails = 0;
   const ok = (n, c, extra) => { checks.push((c ? "PASS " : "FAIL ") + n + (extra ? "  [" + extra + "]" : "")); if (!c) fails++; };
 
@@ -39,15 +47,21 @@ function get(p) {
   await send("Page.navigate", { url: BASE + "/index.html" });
   await new Promise(r => setTimeout(r, 2600));
   const home = JSON.parse(await ev(`JSON.stringify((function(){
+    var metas = [].map.call(document.querySelectorAll('.entry .meta'), function(e){ return e.textContent || ''; });
+    var sum = 0;
+    metas.forEach(function(t){ var m = t.match(/^(\\d+)\\s*位角色/); if (m) sum += Number(m[1]); });
     return {
-      stat: (document.querySelector('.entry .meta')||{}).textContent || '',
+      /* ⚠️ 首页是**按阵营分卡**的，第一张卡只代表该阵营 —— 必须把各卡数字加总再比清单 ready 数。
+         （2026-10-16 修：原断言只取第一张卡，朱雀加入「多宇宙」后该假设失效。） */
+      stat: metas.join(' | '),
+      sum: sum,
       ready: (window.AKP_MANIFEST||[]).filter(function(m){return m.ready!==false;}).length,
       total: (window.AKP_MANIFEST||[]).length
     };})())`));
-  ok("首页统计与清单一致", home.stat.indexOf(home.ready + " 位角色") >= 0, home.stat + " / ready=" + home.ready);
-  /* 清单总数：15→17（2026-10-13 超限/奥王BY/捷德终极）→19（2026-10-14 令迦/光辉赛罗/终极赛罗闪耀型/雷古洛思）。
-     新增 ready 角色后同步改这里；「首页统计与清单一致」是动态断言，不用改。 */
-  ok("清单条目数=19", home.total === 19, "total=" + home.total);
+  ok("首页各阵营卡合计=清单 ready 数", home.sum === home.ready, home.stat + " 合计=" + home.sum + " / ready=" + home.ready);
+  /* 清单总数：15→17（2026-10-13 超限/奥王BY/捷德终极）→19（2026-10-14 令迦/光辉赛罗/终极赛罗闪耀型/雷古洛思）
+     →20（2026-10-16 赛罗无限形态（银河闪耀））。新增角色后同步改这里。 */
+  ok("清单条目数=20", home.total === 20, "total=" + home.total);
 
   await send("Page.navigate", { url: BASE + "/category.html?f=" + encodeURIComponent("奥特之星") });
   await new Promise(r => setTimeout(r, 2400));

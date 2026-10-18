@@ -1,5 +1,5 @@
 /* 阵营页「品质分组 + 一键折叠」验收（tools/akp_catgroup_check.js）
-   用法：node tools/akp_catgroup_check.js [baseUrl]     默认 http://127.0.0.1:8920/passive
+   用法：node tools/akp_catgroup_check.js [baseUrl]     默认 http://127.0.0.1:8099/passive
    检查：首页阵营卡描述文案、按品质分组（超越 BY 在上 / 究极 UL 在下）、
         组内卡片数、标题按钮触摸高度 ≥44px、折叠与展开、aria-expanded 同步、无横向溢出。
    管理者口径（2026-10-13）：BY = 超越品质、UL = 究极品质；BY 组排在上方。 */
@@ -30,7 +30,15 @@ function get(p) {
     const r = await send("Runtime.evaluate", { expression: e, returnByValue: true, awaitPromise: true });
     return r.result && r.result.result ? r.result.result.value : null;
   };
-  const BASE = (process.argv[2] || "http://127.0.0.1:8920/passive").replace(/\/$/, "");
+  const BASE = (process.argv[2] || "http://127.0.0.1:8099/passive").replace(/\/$/, "");
+  /* 先把「视图模式」钉回文字版再开始断言：该值持久化在 localStorage，
+     手动切过原图版后跑验收，会因「原图版会藏起正文」而误报（2026-10-16 踩到）。
+     做法：借脚本自己的第一次导航之前先访问一次站点源把值改掉；
+     不用 addScriptToEvaluateOnNewDocument，避免在共用浏览器里留下长期注入。 */
+  await send("Page.navigate", { url: BASE + "/index.html" });
+  await new Promise(r => setTimeout(r, 900));
+  await ev("try{localStorage.setItem('akp-view-mode','text');}catch(e){}");
+
   const checks = []; let fails = 0;
   const ok = (n, c, extra) => { checks.push((c ? "PASS " : "FAIL ") + n + (extra ? "  [" + extra + "]" : "")); if (!c) fails++; };
 
@@ -58,11 +66,11 @@ function get(p) {
   ok("分为 2 组", g.n === 2, "n=" + g.n + " labels=" + g.labels.join(","));
   ok("BY 组排在最上方", g.labels[0] === "超越（BY）", g.labels.join(" / "));
   ok("UL 组排在下方", g.labels[1] === "究极（UL）", g.labels.join(" / "));
-  /* 卡片计数：2026-10-14 新增令迦/光辉赛罗/终极赛罗闪耀型/雷古洛思（均奥特之星/BY）后
-     BY 2→6、合计 13→17（UL 11 不变；极恶贝利亚/奥美迦朱雀装甲 ready:false 不上阵营页）。
-     新增角色后同步改这里。 */
-  ok("两组卡片数合计=17", (g.counts[0] + g.counts[1]) === 17, g.counts.join("+"));
-  ok("BY 组含 6 位、UL 组含 11 位", g.counts[0] === 6 && g.counts[1] === 11, g.counts.join("+"));
+  /* 卡片计数：2026-10-14 新增令迦/光辉赛罗/终极赛罗闪耀型/雷古洛思（均奥特之星/BY）→ BY 6、合计 17；
+     2026-10-16 新增赛罗无限形态（银河闪耀）（奥特之星/BY）→ BY 7、合计 18（UL 11 不变；
+     极恶贝利亚 ready:false 不上阵营页）。新增角色后同步改这里。 */
+  ok("两组卡片数合计=18", (g.counts[0] + g.counts[1]) === 18, g.counts.join("+"));
+  ok("BY 组含 7 位、UL 组含 11 位", g.counts[0] === 7 && g.counts[1] === 11, g.counts.join("+"));
   ok("分组标题按钮触摸高度 ≥44px", g.btnH >= 44, g.btnH + "px");
   ok("初始状态为展开（aria-expanded=true）", g.aria.every(a => a === "true"), g.aria.join(","));
   ok("初始按钮文案为「折叠」", g.labels_btn.every(t => t === "折叠"), g.labels_btn.join(","));

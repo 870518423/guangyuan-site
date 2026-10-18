@@ -1,0 +1,1227 @@
+{
+ "generated": "2026-10-18",
+ "portrait": {
+  "size": 420,
+  "quality": 86,
+  "note": "等比缩到长边，保持比例"
+ },
+ "avatar": {
+  "size": 96,
+  "note": "等比缩到长边 96"
+ },
+ "chars": {
+  "SSP队员": {
+   "id": "4e094667",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "一条寺友也": {
+   "id": "98fafac5",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "七濑丽娜": {
+   "id": "80ad5998",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "七濑理莎": {
+   "id": "c4226e77",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "三泽广之": {
+   "id": "10595955",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "上古幽魂": {
+   "id": "826c6772",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "下野首相": {
+   "id": "f94633f9",
+   "forms": [
+    "base"
+   ],
+   "avatar": true
+  },
+  "东光太郎": {
+   "id": "fd0a4972",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "东马快斗": {
+   "id": "d4cddedc",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "中岛洋子": {
+   "id": "aa5da9ba",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "九条莲人": {
+   "id": "3219c9d1",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "乡秀树": {
+   "id": "085bed5c",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "亚布鲁怨念": {
+   "id": "2e6737c8",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "伊格尼斯": {
+   "id": "ea8735a0",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "伊贺栗令人": {
+   "id": "809047f9",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "伏井出K": {
+   "id": "3fc21dda",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "伽古拉": {
+   "id": "f5dab5d8",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "健一凯伊": {
+   "id": "25bd1107",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "兄妹同心": {
+   "id": "6fa3b052",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "光之适能者": {
+   "id": "196ca8fd",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "凑勇海": {
+   "id": "b1dfc313",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "凑朝阳": {
+   "id": "4b0468d2",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "凑活海": {
+   "id": "9b6df7a7",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "凤源": {
+   "id": "2ad4b0f8",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "凶暴野兽": {
+   "id": "e93a7d36",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "初恋少年": {
+   "id": "b60dc774",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "化石怪人": {
+   "id": "0e5f83ec",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "北斗星司": {
+   "id": "a87ac950",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "千树怜": {
+   "id": "9c9b92cb",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "南夕子": {
+   "id": "b8ba8c1c",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "卡露蜜拉": {
+   "id": "9074eeea",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "变异怪鸟": {
+   "id": "fd177fde",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "古阿": {
+   "id": "2809411e",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "喜比刚助": {
+   "id": "df11dd48",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "圣诞老人": {
+   "id": "6bc170b1",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "夏川遥辉": {
+   "id": "27ae8757",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "外星科学家": {
+   "id": "cf781926",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "大木田宙人": {
+   "id": "18c95c6b",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "大河望": {
+   "id": "c93ff3db",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "大空大地": {
+   "id": "bb58b0d4",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "大阴谋家": {
+   "id": "3ebef0d9",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "天照女王": {
+   "id": "7a4c351b",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "奥特黑暗杀手": {
+   "id": "a9a571d6",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "姆鲁娜乌": {
+   "id": "5c612fce",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "姫矢准": {
+   "id": "72a69c98",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "孤门一辉": {
+   "id": "c35d9bf7",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "宇宙怨灵": {
+   "id": "fbbc0f06",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "宗方诚一": {
+   "id": "c4f10430",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "小治": {
+   "id": "ce9a0e42",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "居间惠": {
+   "id": "c9576ab2",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "岚": {
+   "id": "2f8f8d0e",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "工藤优幸": {
+   "id": "467ace4c",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "巴里斯士兵": {
+   "id": "42f9042b",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "布莱克指令": {
+   "id": "cf99cff7",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "彪形大汉": {
+   "id": "486d151f",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "德拉西翁": {
+   "id": "dfe84bbe",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "怪兽买家": {
+   "id": "0d5e86fb",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "怪能野兽": {
+   "id": "ff5003b5",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "恐怖昆虫": {
+   "id": "abc25627",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "户井幸雄": {
+   "id": "117380d5",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "才气博士": {
+   "id": "eac88fea",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "托雷基亚": {
+   "id": "c5e03a8f",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "斋田莉子": {
+   "id": "3df7289e",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "斯菲亚": {
+   "id": "9fe8224c",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "斯菲亚虚体": {
+   "id": "364d5b31",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "日向浩": {
+   "id": "cfc9e81d",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "日比野未来": {
+   "id": "cdeff0b4",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "旧日支配者": {
+   "id": "bdad6d38",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "早田进": {
+   "id": "6f38ac2e",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "旭川美利花": {
+   "id": "6076d880",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "明日见奏大": {
+   "id": "4690c4b0",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "星凉子": {
+   "id": "737ea762",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "星见光成": {
+   "id": "642ed8e5",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "春野武藏": {
+   "id": "d94ba87f",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "暗黑影法师": {
+   "id": "f2e4f3b2",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "朝仓陆": {
+   "id": "ce0d3ea4",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "朝日胜人": {
+   "id": "459796d7",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "末日使者": {
+   "id": "2e3b83e4",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "机械天才": {
+   "id": "d2f86f38",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "杰克辛德": {
+   "id": "944599e1",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "极恶狂徒": {
+   "id": "f2c46b53",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "格朗迪": {
+   "id": "149d379d",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "正木敬吾": {
+   "id": "16fdb9b9",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "武痴": {
+   "id": "c1e34a54",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "比嘉爱琉": {
+   "id": "71946647",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "比留间弦人": {
+   "id": "c6c723af",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "沟吕木真也": {
+   "id": "4d61168c",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "流离浪人": {
+   "id": "80eba7a6",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "热血青年": {
+   "id": "55d4576f",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "瓦拉隆": {
+   "id": "316cbac8",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "由美村良": {
+   "id": "e85d12dd",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "白井校长": {
+   "id": "5e277349",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "百特星精英": {
+   "id": "b39a3862",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "真中剑悟": {
+   "id": "90d61ae9",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "真伏佑树": {
+   "id": "1317b265",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "真木舜一": {
+   "id": "21e61922",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "真角大古": {
+   "id": "aa46b369",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "矢的猛": {
+   "id": "20b0c429",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "石刈亚璃依": {
+   "id": "f9df0837",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "石堀光彦": {
+   "id": "a755ff89",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "石堂柊": {
+   "id": "ec919077",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "石室章雄": {
+   "id": "6c39fc33",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "礼堂光": {
+   "id": "1b63e4e5",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "神乐元气": {
+   "id": "63b786dd",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "神社祭司": {
+   "id": "851fbc9f",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "空间驯兽师": {
+   "id": "a89b4e1b",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "红凯": {
+   "id": "830bc4b8",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "绿原川子": {
+   "id": "1d46f99a",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "绿川麻衣": {
+   "id": "5de26e74",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "翔": {
+   "id": "b3aa4b29",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "芹泽和也": {
+   "id": "f67cd8e4",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "苏仪德": {
+   "id": "30a5bf64",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "莫内拉星人": {
+   "id": "61201d97",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "藤原树里": {
+   "id": "173f4b23",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "藤宫博也": {
+   "id": "23eb41f8",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "诸星团": {
+   "id": "b4e45f74",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "贝利亚": {
+   "id": "3b717610",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "贝利亚的怨念": {
+   "id": "a2ea0e85",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "迫水真吾": {
+   "id": "268effd3",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "野心家": {
+   "id": "4771fc42",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "间谍刺客": {
+   "id": "b08884de",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "阿丽莎": {
+   "id": "7596ba7c",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "阿布索留特士兵": {
+   "id": "382c863d",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "阿蕾娜": {
+   "id": "d3262046",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "雷": {
+   "id": "65ad96da",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "雷古洛思": {
+   "id": "d34734d8",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "雷布朗多遗族": {
+   "id": "4ec6ad7d",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "雾崎": {
+   "id": "cbfecc0b",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "青年利布特": {
+   "id": "2a153818",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "飞世优马": {
+   "id": "ed14f705",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "飞鸟一马": {
+   "id": "3a325bd6",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "飞鸟信": {
+   "id": "edb65075",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "高山我梦": {
+   "id": "10f7b730",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "鸟羽来叶": {
+   "id": "dd23dfdd",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "黑暗气息": {
+   "id": "ad3d0920",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  }
+ }
+}

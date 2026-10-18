@@ -9,8 +9,8 @@
 <meta name="description" content="奥系光元工具站：光元收益预测器 + 奥系人间体大全 + 奥系攻略 + 角色被动版本收录">
 <!-- ===== PWA 安装元数据（缺任一项都会导致浏览器不满足「可安装」，从而不触发原生安装弹窗） ===== -->
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" type="image/png" href="assets/favicon-app.png">
 <!-- iOS Safari 专用：允许全屏运行，并指定添加到主屏幕后的名称 -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,6 +18,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <!-- 主题引导：首帧前定好亮/暗，避免闪色（早于样式表执行） -->
 <script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
 <style>
   :root {
     --bg: #0a0e1a;
@@ -66,6 +67,11 @@
     width: 72px; height: 72px; object-fit: contain;
     filter: drop-shadow(0 6px 20px rgba(59,130,246,.4));
     margin-bottom: 5px;
+  }
+  /* 视觉隐藏但仍可被读屏/SEO 读取（备用） */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
   header h1 {
     margin: 0 0 8px;
@@ -283,6 +289,7 @@
 </style>
 <link rel="stylesheet" href="assets/ak/ak-components.css">
 <link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
 </head>
 <body data-ak-progress>
 <div class="glow"></div>
@@ -291,7 +298,7 @@
 
   <!-- ✏️【1】站点名称与副标题 -->
   <header>
-    <img class="logo" src="assets/guangyuan.png" alt="光元">
+    <img class="logo" src="assets/logo-site.webp" alt="奥系工具站">
     <h1>奥系工具站</h1>
     <span class="ak-label-en">Aoxi Tools Station</span>
     <p class="sub">预测光元收益 <i>·</i> 人间体查询 <i>·</i> 攻略收录 <i>·</i> 被动版本收录</p>
@@ -309,7 +316,7 @@
     <!-- ✏️【2】第一张卡片：计算器 -->
     <a class="entry ak-corners" href="calculator.html" style="--accent:#3b82f6">
       <div class="top">
-        <div class="ico"><img src="assets/guangyuan.png" alt=""></div>
+        <div class="ico"><img src="assets/logo-crystal.webp" alt=""></div>
         <h2>光元收益预测器</h2>
         <span class="badge">工具</span>
       </div>
@@ -325,7 +332,7 @@
     <!-- ✏️【3】第二张卡片：人间体查询 -->
     <a class="entry ak-corners" href="guides.html" style="--accent:#fbbf24">
       <div class="top">
-        <div class="ico"><img src="assets/factions/star.png" alt=""></div>
+        <div class="ico"><img src="assets/entry-guides.webp" alt=""></div>
         <h2>奥系人间体/羁绊大全</h2>
         <span class="badge">工具</span>
       </div>
@@ -345,9 +352,9 @@
         <h2>奥系攻略</h2>
         <span class="badge">攻略</span>
       </div>
-      <p class="desc">收录玩家社区攻略：修炼数值表、趣味问答题库，按主题分板块，支持搜索与自测，每篇均标注原作者与出处。</p>
+      <p class="desc">收录玩家社区攻略：修炼数值表、趣味问答题库、兵非武斗转载攻略，按主题分板块，支持搜索与自测，每篇均标注原作者与出处。</p>
       <div class="meta">
-        <span>2 篇攻略</span>
+        <span>3 篇攻略</span>
         <span>作者署名</span>
         <span>可搜索</span>
         <span class="go">→</span>
@@ -357,7 +364,7 @@
     <!-- ✏️【3c】第四张卡片：角色被动版本收录 -->
     <a class="entry ak-corners" href="passive/index.html" style="--accent:#fbbf24">
       <div class="top">
-        <div class="ico"><img src="assets/factions/star.png" alt=""></div>
+        <div class="ico"><img src="assets/entry-passive.webp" alt=""></div>
         <h2>角色被动版本收录</h2>
         <span class="badge">收录</span>
       </div>
@@ -375,6 +382,9 @@
   <section class="changelog">
     <h3>更新记录</h3>
     <ul data-stagger>
+      <li><time>2026-10-18</time><p>更新了人间体的图片，添加了人间体特训所需的光元消耗；支持人间体图鉴跳转角色被动页面</p></li>
+      <li><time>2026-10-17</time><p>新增了域名更新公告</p></li>
+      <li><time>2026-10-16</time><p>为图鉴新增了图片版本，可以一键切换</p></li>
       <li><time>2026-10-14</time><p>趣味答题库新增 24 题；奥特之星 17 位角色的全版本被动收录完成</p></li>
       <li><time>2026-10-13</time><p>新增「角色被动版本收录」板块：按 4 大阵营收录角色被动（先期 9 位 UL 角色），支持版本切换与相邻版本对比，改动处按增强/调整/新增/移除着色</p></li>
       <li><time>2026-10-10</time><p>全站界面重构，新增亮／暗双主题与「添加到桌面」按钮；「奥系攻略」板块上线，修正人间体部分数据并新增「朝影雄一郎」；转载并非五斗的警备队攻略（3 图）</p></li>
@@ -411,6 +421,8 @@
 <script src="assets/ak/progress.js"></script>
 <script src="assets/ak/theme.js"></script>
 <script src="assets/ak/save.js"></script>
+<!-- 新域名公告弹窗（自包含，见 assets/ak/notice.js 头部说明） -->
+<script src="assets/ak/notice.js"></script>
 <script>
 /* ===== PWA Service Worker 注册（必须存在于首页！
    浏览器判定「可安装」要求当前页面所在作用域内已注册 Service Worker 且能离线响应。
