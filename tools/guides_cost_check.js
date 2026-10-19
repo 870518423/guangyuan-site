@@ -130,16 +130,18 @@ const check = (n, ok, extra) => {
   check("光元图标指向 webp", /guangyuan\.webp$/.test(ico.src), ico.src);
   check("光元图标实际加载成功", ico.ok === true, "naturalWidth=" + ico.w);
 
-  /* ---------- 6) 截图（卡片 / 表格 / 弹层） ---------- */
+  /* ---------- 6) 截图（卡片 / 文字版 / 弹层） ----------
+     ⚠️ 2026-10-19 修正：页面视图切换早已定为「文字版 / 图片版」（原「表格视图」已移除，
+     只剩空 thead/tbody 壳，数据行不再渲染）。旧脚本还点 [data-view=table] → 按钮不存在
+     → null.click 抛错 → 误报。改为验证两种现有视图下光元消耗都完整呈现。 */
   const cardShot = await shot("guides-cost-card.png");
-  await ev(`document.querySelector('.viewtoggle button[data-view="table"]').click()`);
+  await ev(`document.querySelector('.viewtoggle button[data-view="text"]').click()`);
   await sleep(600);
-  const tds = await ev(`(function(){var r=document.querySelector('#tbody tr');return r?r.children.length:0;})()`);
-  check("表格每行 7 个单元格", tds === 7, tds);
-  check("切到表格后每行都有光元消耗", (await ev(`document.querySelectorAll('#tbody tr td.c-cost .costval').length === 132`)) === true);
-  const tableShot = await shot("guides-cost-table.png");
-  await ev(`document.querySelector('.viewtoggle button[data-view="card"]').click()`);
-  await sleep(400);
+  const textCost = await ev(`document.querySelectorAll('#cardView .costval').length`);
+  check("文字版下光元消耗完整（132）", textCost === 132, textCost);
+  const textShot = await shot("guides-cost-text.png");
+  await ev(`document.querySelector('.viewtoggle button[data-view="image"]').click()`);
+  await sleep(500);
   await ev(`document.querySelector('#cardView .card-hd h3').click()`);
   await sleep(700);
   const modal = JSON.parse(await ev(`JSON.stringify((function(){
@@ -173,7 +175,7 @@ const check = (n, ok, extra) => {
   await sleep(400);
   const hiShot = await shot("guides-cost-high.png");
 
-  console.log("\n  截图：" + [cardShot, tableShot, modalShot, hiShot].join("  "));
+  console.log("\n  截图：" + [cardShot, textShot, modalShot, hiShot].join("  "));
   console.log("  " + (fail ? "FAILED" : "ALL PASS") + "  " + pass + " pass / " + fail + " fail");
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(2); });

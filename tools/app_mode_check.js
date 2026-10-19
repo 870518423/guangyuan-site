@@ -144,6 +144,15 @@ const check = (n, ok, extra) => {
   check("app 内显示「检查更新」卡", (await ev(`!!document.getElementById('updBtn') && getComputedStyle(document.querySelector('#dl .app-only')).display==='block'`)) === true);
   check("app 内无 APK 下载链接", (await ev(`!document.querySelector('#dl .app-only a[href*=".apk"]')`)) === true);
   check("app 内三包描述为「并非五斗」", (await ev(`document.body.textContent.indexOf('并非五斗')>=0`)) === true);
+  /* ---------- B2. 内容更新卡（第 18 轮，2026-10-19） ---------- */
+  const contentCard = await ev(`JSON.stringify({
+    card: getComputedStyle(document.getElementById('content-card')).display,
+    upd: !!document.getElementById('cUpdBtn'),
+    clr: !!document.getElementById('cClearBtn')
+  })`);
+  const cc = JSON.parse(contentCard);
+  check("app 内显示「内容更新」卡", cc.card === "block" && cc.upd && cc.clr, contentCard);
+  check("app 内容卡更新/删除按钮存在", cc.upd === true && cc.clr === true, contentCard);
   const appSettings = await shot("app-settings.png");
 
   /* ---------- D. 清单 ---------- */
@@ -169,6 +178,10 @@ const check = (n, ok, extra) => {
   check("web 下载卡有可用 APK 链接", (await ev(`!!document.querySelector('#dl a[href$=".apk"]')`)) === true);
   check("web 设置页无「技术栈」段", (await ev(`document.body.textContent.indexOf('技术栈')<0`)) === true);
   check("web 署名 chief和小娜", (await ev(`document.body.textContent.indexOf('chief和小娜')>=0`)) === true);
+  /* Web 端 app.html 不应出现内容更新卡（内容更新是 App 专属，第 18 轮） */
+  const webContentCard = await ev(`JSON.stringify({\n    exists: !!document.getElementById('content-card'),\n    disp: (function(){var e=document.getElementById('content-card');return e?getComputedStyle(e).display:null})()\n  })`);
+  const wcc = JSON.parse(webContentCard);
+  check("web 设置页无「内容更新」卡", !wcc.exists || wcc.disp === "none", webContentCard);
   const webSettings = await shot("app-settings-web.png");
 
   console.log("  " + (fail ? "FAILED" : "ALL PASS") + "  " + pass + " pass / " + fail + " fail");

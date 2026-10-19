@@ -82,6 +82,9 @@
      app.css 只在 App 模式加载，放那儿的话网页版两块会同时显示（第 17 轮修）。 */
   html:not([data-app]) #dl .app-only { display: none; }
   html[data-app] #dl .web-only { display: none; }
+  /* 内容更新卡（第 18 轮）：仅 App 内可用（网页版内容天然在线，无此卡）；
+     #content-card 必须写在内联样式里，不能放 app.css（原因同 #dl 的 a/b 两块） */
+  html:not([data-app]) #content-card { display: none; }
   .about p { margin: 0 0 9px; font-size: .82rem; color: var(--muted, #93a4bd); line-height: 1.75; }
   .about b { color: var(--gold, #ffb300); font-weight: 600; }
 </style>
@@ -97,20 +100,33 @@
   </header>
 
   <section class="card" id="dl">
-    <h2>下载 App <span class="tag">v0.1.1</span></h2>
+    <h2>下载 App <span class="tag">v0.2.0</span></h2>
     <div class="web-only">
-      <div class="kv">版本 <b>v0.1.1</b> · 安装包 <b>5.2 MB</b>（资源包另计，可按需下载）</div>
+      <div class="kv">版本 <b>v0.2.0</b> · 安装包 <b>5.2 MB</b>（资源包另计，可按需下载）</div>
       <ul class="log">
         <li>首版：完整离线核心（收益预测器 / 图鉴 / 攻略 / 被动收录）</li>
         <li>三类资源包可选下载：攻略 / 被动图鉴 / 人间体图鉴</li>
         <li>支持站内检查更新，资源包可增量补下</li>
+        <li>新增内容更新：不重装也能拉最新页面与数据</li>
       </ul>
-      <a class="btn solid" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="app/aoxi-tools-v0.1.1.apk" download="奥系工具站-v0.1.1.apk">下载安装包（5.2 MB）</a>
+      <a class="btn solid" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="app/aoxi-tools-v0.2.0.apk" download="奥系工具站-v0.2.0.apk">下载安装包（5.2 MB）</a>
     </div>
     <div class="app-only">
-      <div class="kv">当前版本 <b id="curVer">v0.1.1</b>（App 内已含完整离线核心）</div>
+      <div class="kv">当前版本 <b id="curVer">v0.2.0</b>（App 内已含完整离线核心）</div>
       <div class="kv" id="updResult" style="margin-top:8px">点击下方按钮，检查站点是否有新版本。</div>
       <button class="btn solid" style="margin-top:10px" type="button" id="updBtn">检查更新</button>
+    </div>
+  </section>
+
+  <section class="card" id="content-card">
+    <h2>内容更新 <span class="tag" id="cTag">—</span></h2>
+    <p class="hint">页面 / 角色数据 / 攻略 / 样式等内容通过<b>内容包</b>热更，不用重装 App。点「更新内容」下载；一键删除即回到 APK 内置版。</p>
+    <div class="kv" id="cResult" style="margin-top:2px"></div>
+    <div class="bar"><i id="cBar"></i></div>
+    <div class="pstat" id="cStat">正在检查…</div>
+    <div class="actions">
+      <button class="btn solid" type="button" id="cUpdBtn" disabled>更新内容</button>
+      <button class="btn" type="button" id="cClearBtn" disabled>删除内容包</button>
     </div>
   </section>
 
@@ -305,10 +321,27 @@
       r.textContent = "正在检查…";
       fetch("version.json").then(function (res) { return res.json(); }).then(function (local) {
         return fetch(SITE_URL + "/version.json", { cache: "no-store" }).then(function (res) { return res.json(); }).then(function (remote) {
-          if (remote.build && remote.build !== local.build) {
-            r.innerHTML = "发现新版本 <b>" + remote.build + "</b>（当前 " + local.build + "）。<br>请到网页版下载最新安装包覆盖安装。";
+          var newApk = remote.build && remote.build !== local.build;
+          function done(result) { r.innerHTML = result; }
+          /* 内容差异（第 18 轮）：APK 本体不变但内容更新了 → 引导去内容更新卡 */
+          function checkContent() {
+            if (!window.AkContent) return false;
+            return window.AkContent.status().then(function (st) {
+              if (st.ok && st.diff && st.diff.length > 0) {
+                done("App 已是最新，但发现<b>新内容</b>（" + st.diff.length + " 个文件）。<br>请到下方「内容更新」卡点「更新内容」。");
+                return true;
+              }
+              return false;
+            });
+          }
+          if (newApk) {
+            done("发现新版本 <b>" + remote.build + "</b>（当前 " + local.build + "）。<br>请到网页版下载最新安装包覆盖安装。");
           } else {
-            r.textContent = "已是最新版本（" + local.build + "）";
+            checkContent().catch(function () { return false; }).then(function (hasContent) {
+              if (!hasContent) {
+                if (remote.build && remote.build === local.build) done("已是最新版本（" + local.build + "）");
+              }
+            });
           }
         });
       }).catch(function () {
@@ -316,6 +349,71 @@
       }).then(function () { btn.disabled = false; });
     });
   })();
+</script>
+<script>
+/* 内容更新卡（第 18 轮，2026-10-19）：仅 App 内可用（AkContent 已在 app-shell.js 暴露）。
+   三态：有新内容 / 下载中 / 已最新；一键删除内容包回到 APK 内置版。 */
+(function () {
+  if (!document.documentElement.hasAttribute("data-app")) return;
+  if (!window.AkContent) return;
+  var tag = document.getElementById("cTag");
+  var res = document.getElementById("cResult");
+  var stat = document.getElementById("cStat");
+  var bar = document.getElementById("cBar");
+  var upd = document.getElementById("cUpdBtn");
+  var clr = document.getElementById("cClearBtn");
+  if (!tag || !res || !stat || !bar || !upd || !clr) return;
+
+  function fmtMB(b) { return (b / 1048576).toFixed(1) + " MB"; }
+
+  function render(st) {
+    if (!st.ok) { tag.textContent = "—"; res.textContent = "线上清单获取失败（可能断网）"; upd.disabled = true; clr.disabled = st.localCount <= 0; return; }
+    var diff = st.diff || [];
+    tag.textContent = st.remoteVersion || "—";
+    if (diff.length) {
+      res.innerHTML = "发现新内容 <b>" + diff.length + " 个文件</b> · 约 " + fmtMB(
+        diff.reduce(function (s, f) { return s + (f.bytes || 0); }, 0)) + "（本机已 " + st.localCount + " 个）";
+      upd.disabled = false;
+    } else {
+      res.textContent = "已是最新内容（" + st.remoteVersion + " · 本机 " + st.localCount + " 个文件）";
+      upd.disabled = true;
+    }
+    clr.disabled = st.localCount <= 0;
+  }
+
+  function refresh() {
+    stat.textContent = "正在检查…";
+    window.AkContent.status().then(function (st) { render(st); stat.textContent = "就绪"; })
+      .catch(function () { stat.textContent = "检查失败"; });
+  }
+
+  upd.addEventListener("click", function () {
+    upd.disabled = true; clr.disabled = true;
+    window.AkContent.download(function (info) {
+      if (!info) return;
+      if (bar) bar.style.width = (info.pct || 0) + "%";
+      stat.textContent = "正在下载：" + info.name + "（" + info.pct + "%）";
+    }).then(function (d) {
+      if (bar) bar.style.width = "100%";
+      stat.textContent = "更新完成：" + d.downloaded + "/" + d.total + " 个文件";
+      refresh();
+    }).catch(function () {
+      stat.textContent = "更新中断";
+      refresh();
+    });
+  });
+
+  clr.addEventListener("click", function () {
+    if (!window.AkContent) return;
+    window.AkContent.clear().then(function () {
+      if (bar) bar.style.width = "0";
+      stat.textContent = "已删除内容包，回到 APK 内置版";
+      refresh();
+    });
+  });
+
+  refresh();
+})();
 </script>
 </body>
 </html>

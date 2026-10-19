@@ -201,3 +201,94 @@
     if (img.parentNode) img.parentNode.replaceChild(ph, img);
   }, true);
 })();
+
+/* ============================================================
+   AkContent：内容覆盖层接口（页面侧）（第 18 轮 · 2026-10-19）
+   ------------------------------------------------------------
+   与 content 桶 `guangyuan-content` 直接读写。SW 覆盖层已建桶：
+   命中任意键即返回（在线离线都能看）；未命中回 APK 内置版
+   （这就是「内容包=披甲」的兜底 — 清桶即回内置版）。
+   信息比对外径：
+     · 线上 content.json 的 files[]（path/bytes/hash）+ contentVersion
+     · 本机 content 桶当前 key 的 pathname 集合
+   差量下载：只对「桶里不存在」的文件拉线上副本写桶（重进不重下）；
+   一键删除 = 清 content 桶 → SW 覆盖层未命中 → 回 APK 内置版。
+   ============================================================ */
+(function () {
+  "use strict";
+  if (!document.documentElement.hasAttribute("data-app")) return;
+  var CONTENT_CACHE = "guangyuan-content";
+  var SITE_URL = "https://m78calc.cn";
+  var manCache = null;
+
+  function fetchRemoteManifest() {
+    return fetch(SITE_URL + "/content.json", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("清单获取失败 " + r.status); return r.json(); })
+      .catch(function () { return null; });
+  }
+  function bucketPaths() {
+    if (!("caches" in window)) return Promise.resolve([]);
+    return caches.open(CONTENT_CACHE).then(function (c) { return c.keys(); })
+      .then(function (ks) {
+        /* pathname 形如 /index.html、/assets/ak/app.css —— 归一到与 content.json
+           files[].path（相对路径，无前导斜杠）一致的写法再比对。 */
+        return ks.map(function (k) {
+          var p = new URL(k.url).pathname;
+          return p.charAt(0) === "/" ? p.slice(1) : p;
+        });
+      })
+      .catch(function () { return []; });
+  }
+
+  window.AkContent = {
+    status: function () {
+      return Promise.all([fetchRemoteManifest(), bucketPaths()]).then(function (rs) {
+        var man = rs[0], cur = rs[1];
+        var files = (man && man.files) || [];
+        var out = {
+          ok: !!man,
+          remoteVersion: (man && man.contentVersion) || null,
+          remoteCount: files.length,
+          remoteBytes: (man && man.bytes) || 0,
+          localCount: cur.length,
+          diff: []
+        };
+        /* 差分：桶里已有（path 命中）就不算；content.json 自身不算内容文件 */
+        out.diff = files.filter(function (f) { return cur.indexOf(f.path) < 0; });
+        return out;
+      }).catch(function () {
+        return { ok: false, remoteVersion: null, remoteCount: 0, remoteBytes: 0, localCount: 0, diff: [] };
+      });
+    },
+    download: function (onProgress) {
+      var self = this;
+      return self.status().then(function (st) {
+        var todo = st.diff;
+        if (!todo.length) return { downloaded: 0, total: 0, bytes: 0 };
+        var total = todo.length, done = 0, bytes = 0, idx = 0;
+        var CONCURRENCY = 3;
+        function next(it) {
+          if (!it) return Promise.resolve();
+          var url = SITE_URL + "/" + it.path;
+          return fetch(url, { cache: "no-cache", credentials: "omit" }).then(function (r) {
+            if (r && r.ok) {
+              bytes += it.bytes || 0;
+              return caches.open(CONTENT_CACHE).then(function (c) { return c.put(url, r); });
+            }
+          }).catch(function () {}).then(function () {
+            done++;
+            if (onProgress) onProgress({ pct: Math.round(done / total * 100), name: it.path.split("/").pop(), done: done, total: total });
+            return next(todo[idx++]);
+          });
+        }
+        return Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, function () { return next(todo[idx++]); }))
+          .then(function () { return { downloaded: done, total: total, bytes: bytes }; });
+      });
+    },
+    clear: function () {
+      if (!("caches" in window)) return Promise.reject(new Error("环境不支持"));
+      return caches.delete(CONTENT_CACHE);
+    },
+    paths: bucketPaths
+  };
+})();

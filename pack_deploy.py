@@ -34,6 +34,7 @@ INCLUDES = [
     'app',                          # APK 安装包目录（第 15 轮，网页版「下载 App」用）
     'module.json',                  # 资源包清单（pack_deploy 自动生成，勿手改）
     'version.json',                 # 版本清单（同上）
+    'content.json',                 # 内容覆盖层更新清单（第 18 轮，pack_deploy 自动生成，勿手改）
     'manifest.json',
     'service-worker.js',
     'edgeone.json',
@@ -203,6 +204,76 @@ def check_unused_images():
 # ---------------- App 资源包清单（第 14 轮，2026-10-18） ----------------
 SITE_BASE = 'https://m78calc.cn'   # App 内下载资源包用（Capacitor origin 是 localhost）
 
+# ---------------- 内容覆盖层清单（第 18 轮，2026-10-19） ----------------
+# 内容文件集 = 打进 APK www 的那一批（与 sync_www.py 白名单同源）。
+# 复用它导出的 collect_www_files()，改白名单只改 sync_www.py 一处，
+# 线上 content.json 与 APK 内置 www 自动保持一致。
+_SYNC_WWW = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '..', 'apk-project-v2', 'sync_www.py')
+
+
+def _collect_www_files():
+    if os.path.isfile(_SYNC_WWW):
+        spec = importlib.util.spec_from_file_location('_sync_www', _SYNC_WWW)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        if hasattr(mod, 'collect_www_files'):
+            return mod.collect_www_files()
+    # sync_www.py 缺失时降级：直接扫本站点顶层 html + assets/passive（近似口径），
+    # 并如实打印告警（正常应命中上方精确路径）
+    print('  WARN 未找到 apk-project-v2/sync_www.py，content.json 用近似口径生成')
+    fallback = []
+    for item in ('index.html', 'calculator.html', 'guides.html', 'strategies.html',
+                 'strategy-xiulian.html', 'strategy-dati.html',
+                 'strategy-bingfeiwudou.html', 'app.html',
+                 'manifest.json', 'service-worker.js', 'ak-analytics.js',
+                 'module.json', 'version.json', 'content.json'):
+        p = os.path.join(SRC, item)
+        if os.path.isfile(p):
+            fallback.append(item)
+    for item in ('assets', 'passive'):
+        base = os.path.join(SRC, item)
+        if os.path.isdir(base):
+            for dp, _d, fns in os.walk(base):
+                for fn in fns:
+                    rel = os.path.relpath(os.path.join(dp, fn), SRC).replace('\\', '/')
+                    fallback.append(rel)
+    return sorted(fallback)
+
+
+def build_content_manifest(build):
+    """生成 content.json：内容文件清单（路径/字节/哈希）+ contentVersion。
+    与 version.json 同口径，不进 SW 预缓存、每次走网络（App 内比对更新用）。"""
+    import hashlib
+    files = _collect_www_files()
+    items = []
+    total = 0
+    for rel in files:
+        full = os.path.join(SRC, rel)
+        if not os.path.isfile(full):
+            continue          # 真源里没有但 sync_www 白名单允许的项（如 guides 在真源有）
+        with open(full, 'rb') as fh:
+            data = fh.read()
+        total += len(data)
+        items.append({
+            'path': rel,
+            'bytes': len(data),
+            'hash': hashlib.md5(data).hexdigest(),
+        })
+    manifest = {
+        'contentVersion': build,
+        'generated': __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M'),
+        'count': len(items),
+        'bytes': total,
+        'files': items,
+    }
+    import json as _json
+    with open(os.path.join(SRC, 'content.json'), 'w', encoding='utf-8') as fh:
+        _json.dump(manifest, fh, ensure_ascii=False, separators=(',', ':'))
+    print('  内容清单 content.json：%d 个文件 / %.2f MB / 版本 %s'
+          % (len(items), total / 1048576.0, build))
+    return manifest
+
 PACK_DEFS = [
     ('guide',   '攻略资源包',       ['assets/guides'],   ('.webp', '.png')),
     ('passive', '角色被动图鉴包',   ['passive/img'],     ('.webp', '.png')),
@@ -261,8 +332,10 @@ def build_pack_manifests():
         'generated': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
         'packs': packs,
     }
+    content = build_content_manifest(build)
     version = {
         'build': build,
+        'contentVersion': content['contentVersion'],   # 第 18 轮：内容覆盖层版本（取 BUILD 号）
         'generated': module['generated'],
         'packs': {k: {'version': v['version'], 'count': v['count'], 'bytes': v['bytes']} for k, v in packs.items()},
     }

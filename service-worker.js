@@ -318,7 +318,29 @@ const IS_NATIVE = self.location.hostname === 'localhost' || self.location.protoc
 //      「收藏本网站」（save.js 的 idle 文案统一，不再随 iOS/安卓变），旁边并排
 //      新增「下载 App」按钮（直达 app/aoxi-tools-v0.1.1.apk，仅网页版显示，
 //      App 内由 app.css 隐藏）。index.html / ak-components.css / save.js / app.css。
-const BUILD = 'v82';
+// v83：极恶贝利亚 diff 标注修正（2026-10-19，管理者逐条点名）
+//      v2 超越技：公告图只给精简版 → 对比以 v1 完整文本为底，开头台词与结尾句
+//      **原样保留**，只把两处概率（40%→50%、55%→80%）标为「数值调整」；
+//      v3 被动 +4：引擎误判「前半段调整为」→ 改标**重做**（触发对象与机制全换）；
+//      v3/v4 被动 +6：台词「贝利亚仍然怀有对同伴的恻隐之心。」四个版本都有，
+//      改用手写 diffs 让它**不被划掉**（v2→v3 逐处 adj；v3→v4 机制整段换 = del+new）；
+//      v3/v4 被动 +12：台词「奥特战士的荣耀早已舍弃。」同样保留（v3→v4 del+new）。
+//      仅数据文件 passive/data/极恶贝利亚.js（在 ASSETS 预缓存内 → 必须升 BUILD）。
+// v84：第 18 轮「内容覆盖层」（2026-10-19，SW 逻辑变更 → 必须升 BUILD）
+//      新增 App 内容覆盖层：固定名 content 桶 guangyuan-content（activate 不清、
+//      不占 packs/RUNTIME 名额，上限 1000 条）；仅 App 环境（localhost+https，
+//      与 SITE_BASE 同款判定）生效 —— Web 端行为**零变化**：
+//        ① 命中 content 桶 → 直接返回（秒开）+ waitUntil 后台向 SITE_BASE 发
+//           If-None-Match 条件请求换新（304 零流量，复用 condHeaders 纪律）；
+//        ② 未命中 → 返回 APK 本地副本（fetch 落到 Capacitor 本地服务器，永远有）
+//           + waitUntil 后台把线上新副本写进桶（双键：localhost 键 + 线上键）；
+//        ③ 断网 → 本地副本兜底。
+//      覆盖的内容路径 = 打进 APK www 的那批（顶层 html / manifest.json /
+//      assets/** / passive/** 除 img），与 sync_www.py / content.json 同源。
+//      ⚠️ content.json / version.json / module.json 是「每次走网络」的更新清单
+//         （计划口径），不进 content 桶 —— 由页面侧用 SITE_BASE 直接拉线上比对。
+//      SW 脚本自身变更 → 老用户触发一次 updatefound + 「新版本」提示（正常）。
+const BUILD = 'v85';
 const CACHE_NAME = 'guangyuan-static';   // ⚠️ 固定名，不要再往里加版本号
 const FORCE_FULL_REFRESH = false;        // 平时保持 false；出缓存事故才开一次
 
@@ -330,6 +352,9 @@ const RUNTIME = 'guangyuan-runtime';
 /* App 资源包专用桶（第 14 轮 v81）：固定名、activate 不清、不参与 RUNTIME 400 条裁剪 */
 const PACKS_CACHE = 'guangyuan-packs';
 const PACKS_MAX = 3000;   // packs 桶上限（浏览即缓存 + 预取共用），超出从最旧裁剪
+/* App 内容覆盖层专用桶（第 18 轮）：固定名、activate 不清、不占 packs/RUNTIME 名额 */
+const CONTENT_CACHE = 'guangyuan-content';
+const CONTENT_MAX = 1000; // content 桶上限（每个内容文件一条），超出从最旧裁剪
 /* App（Capacitor）里页面 origin 是 https://localhost，图片实际在线上：
    资源包按线上绝对 URL 下载，同时用「本地同路径」再存一份，页面请求才能命中。 */
 /* 浏览器同源测试（http://127.0.0.1:8099 等）用自身 origin；
@@ -547,6 +572,76 @@ async function imgFetch(cache, request, remote, local) {
   throw new Error('image unavailable: ' + remote);
 }
 
+/* ============================================================
+   App 内容覆盖层（第 18 轮 · v84）
+   ------------------------------------------------------------
+   目的：APK v0.2.0 起，纯内容更新（新角色数据/新攻略页/文案/样式）
+   全部热更，不再要求用户重装 App。
+
+   机制（仅 App 环境生效，Web 端行为零变化）：
+   ① 命中 content 桶 → 直接返回（秒开），waitUntil 后台向 SITE_BASE 发
+      If-None-Match 条件请求换新（304 = 零下载）；
+   ② 未命中 → 返回 APK 内本地副本（fetch 落在 Capacitor 本地服务器，
+      **永远存在**，这就是「内容包=披甲」的兜底——清桶即回内置版）+ 后台
+      把线上新副本写进桶（localhost 键 + 线上键双键）；
+   ③ 断网 → 本地副本自然兜底（离线时内容仍是内置/已更新版本）。
+
+   ⚠️ 内容文件 = 打进 APK www 的那批（顶层 html / manifest.json /
+      assets/** / passive/** 除图片），与 sync_www.py / content.json 同源。
+      content.json / version.json / module.json 是「每次走网络」的更新清单，
+      不进 content 桶（页面侧用 SITE_BASE 直接拉线上比对）。
+   ============================================================ */
+function isContentRequest(url) {
+  const p = url.pathname;
+  if (/\.(webp|png|jpe?g|gif|apk)$/.test(p)) return false;   // 图片/安装包走各自分支
+  if (p === '/') return false;                                // 根目录走页面导航（网络优先）
+  const top = ['/index.html', '/calculator.html', '/guides.html', '/strategies.html', '/app.html', '/manifest.json'];
+  if (top.indexOf(p) >= 0) return true;
+  if (/^\/strategy-/.test(p) && p.endsWith('.html')) return true;
+  if (p.startsWith('/assets/') || p.startsWith('/passive/')) return true;
+  return false;
+}
+
+function contentRemoteHref(url) {
+  return new URL(url.pathname + url.search, SITE_BASE).href;
+}
+
+async function trimContent() {
+  try {
+    const cache = await caches.open(CONTENT_CACHE);
+    const keys = await cache.keys();
+    if (keys.length <= CONTENT_MAX) return;
+    const excess = keys.length - CONTENT_MAX;
+    for (let i = 0; i < excess; i++) await cache.delete(keys[i]);
+  } catch (e) {}
+}
+
+async function contentPut(cache, remote, local, res) {
+  try {
+    await cache.put(local, res.clone());
+    if (local !== remote) { try { await cache.put(remote, res.clone()); } catch (e) {} }
+  } catch (e) {}
+  try { await trimContent(); } catch (e) {}
+}
+
+/* 命中桶后的后台换新（SWR）：带 ETag 条件请求，304 零下载，失败静默 */
+async function contentRefresh(cache, hit, remote, local) {
+  try {
+    const cond = condHeaders(hit);
+    const res = await fetch(remote, cond ? { headers: cond, credentials: 'omit' } : { credentials: 'omit' });
+    if (res.status === 304) return;
+    if (res && res.ok) await contentPut(cache, remote, local, res);
+  } catch (e) {}
+}
+
+/* 拉线上新副本并写桶（未命中时后台用） */
+async function contentPrefetch(cache, remote, local) {
+  try {
+    const res = await fetch(remote, { cache: 'no-cache', credentials: 'omit' });
+    if (res && res.ok) await contentPut(cache, remote, local, res);
+  } catch (e) {}
+}
+
 // 安装：预缓存核心资源
 // 2026-10-13 M2（审查 D-1）：原来用 cache.addAll(ASSETS) —— 它是「全有或全无」，
 // 任何一条资源 404 都会让整个 install 失败，老用户被永久卡在旧版本（且静默）。
@@ -629,7 +724,7 @@ self.addEventListener('activate', (event) => {
         // ⚠️ CACHE_NAME（预缓存，v66 起为固定名）与 RUNTIME（看过即缓存）都不清：
         //    发新版不该把用户攒的离线内容清掉，也不该把没变的静态资源重下一遍。
         //    历史版本桶（guangyuan-v65 等老名字）会在这里被一次性清掉。
-        keys.filter((k) => k !== CACHE_NAME && k !== RUNTIME && k !== PACKS_CACHE).map((k) => caches.delete(k))
+        keys.filter((k) => k !== CACHE_NAME && k !== RUNTIME && k !== PACKS_CACHE && k !== CONTENT_CACHE).map((k) => caches.delete(k))
       );
     }).then(() => self.clients.claim())
   );
@@ -666,6 +761,40 @@ self.addEventListener('fetch', (event) => {
         return hit;
       }
       return imgFetch(cache, request, remote, local);
+    })());
+    return;
+  }
+
+  /* ---- App 内容覆盖层（第 18 轮）----
+     仅 App 环境（IS_NATIVE 为 true）生效；Web 端直接跳过本分支。
+     ① content 命中 → 直接返回 + 后台条件请求换新；
+     ② 未命中 → 回退 APK 本地副本（fetch 落 Capacitor 本地服务器，永远存在）
+        + 后台把线上新副本写进桶；
+     ③ 断网 → 本地副本兜底。
+     ⚠️ 放在页面/静态分支**之前**：App 内请求本地地址命中覆盖桶后直接拿
+        线上新内容，而不走「网络优先连 localhost」拿内置版。 */
+  if (IS_NATIVE && isContentRequest(url)) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CONTENT_CACHE);
+      const remote = contentRemoteHref(url);
+      const local = url.href;                      // App 内就是 localhost 键
+      let hit = null;
+      try { hit = await cache.match(local); } catch (e) {}
+      if (!hit && remote !== local) { try { hit = await cache.match(remote); } catch (e) {} }
+      if (hit) {
+        event.waitUntil(contentRefresh(cache, hit, remote, local));
+        return hit;
+      }
+      /* 未命中：先回退 APK 本地副本（永远存在），再后台悄悄把线上新版写进桶 */
+      try {
+        const localRes = await fetch(local, { credentials: 'omit' });
+        event.waitUntil(contentPrefetch(cache, remote, local));
+        return localRes;
+      } catch (e) {
+        // 断网兜底：本地服务器异常时，content 桶里若有旧副本就用
+        if (hit) return hit;
+        throw e;
+      }
     })());
     return;
   }
