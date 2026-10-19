@@ -340,7 +340,17 @@ const IS_NATIVE = self.location.hostname === 'localhost' || self.location.protoc
 //      ⚠️ content.json / version.json / module.json 是「每次走网络」的更新清单
 //         （计划口径），不进 content 桶 —— 由页面侧用 SITE_BASE 直接拉线上比对。
 //      SW 脚本自身变更 → 老用户触发一次 updatefound + 「新版本」提示（正常）。
-const BUILD = 'v85';
+// v86：第 19 轮「App 两个报障修复」（2026-10-19，SW 逻辑变更 → 必须升 BUILD）
+//      ① 更新清单三件套（version.json / module.json / content.json）加「直通网络」
+//         分支：此前它们没有专属分支，落进下方通用静态资源 SWR → 会被写进 RUNTIME 桶，
+//         违反「这三个每次走网络」的铁律 8，还可能返回过期清单。现在一律 fetch 直出、
+//         不写任何缓存桶（断网时前端自己提示，不再拿旧名册凑数）；同时把它们从
+//         预缓存 ASSETS 里移除（预缓存也是缓存桶）。
+//      ② 内容覆盖层口径收紧：content.json / version.json / module.json **不再**列入
+//         内容清单（pack_deploy 侧过滤）。它们不是内容文件；而且清单自列会让「指纹
+//         比对」永远差几项（清单写完才记下自己的指纹，天生对不上）。
+//      Web 端：页面行为与布局零变化，仅这三个 json 不再进缓存（它们本来就是 no-cache 头）。
+const BUILD = 'v86';
 const CACHE_NAME = 'guangyuan-static';   // ⚠️ 固定名，不要再往里加版本号
 const FORCE_FULL_REFRESH = false;        // 平时保持 false；出缓存事故才开一次
 
@@ -393,8 +403,9 @@ const ASSETS = [
   './assets/ak/app.css',          // App 版适配层（第 14 轮）
   './assets/ak/app-shell.js',
   './app.html',                   // App 设置页
-  './module.json',                // 资源包清单（App 内下载用）
-  './version.json',
+  /* ⚠️ module.json / version.json 不在预缓存里（第 19 轮 v86 移除）：
+     铁律 8「这三个每次走网络、严禁进任何缓存桶」。它们已由下方 fetch 分支
+     直通网络（network-only），预缓存副本既不会被读到、又是纯占位，故删掉。 */
   './assets/ak-btn/left.webp',
   './assets/ak-btn/left-gray.webp',
   './assets/ak-btn/right.webp',
@@ -739,6 +750,15 @@ self.addEventListener('fetch', (event) => {
   let url;
   try { url = new URL(request.url); } catch (e) { return; }
   if (url.origin !== self.location.origin) return;
+
+  /* ---- 更新清单三件套（第 19 轮 v86）：每次走网络，绝不进任何缓存桶 ----
+     铁律 8：version.json / module.json / content.json 是「实时查询用」的名册，
+     必须每次问服务器。此前没有专属分支 → 落进下方通用 SWR → 被写进 RUNTIME 桶，
+     可能把过期清单喂给页面（顺带干扰「检查更新」的判断）。 */
+  if (url.pathname === '/version.json' || url.pathname === '/module.json' || url.pathname === '/content.json') {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
+    return;
+  }
 
   /* ---- APK 安装包（第 15 轮）：一次性下载，走网络且不写任何缓存 ---- */
   if (url.pathname.endsWith('.apk')) return;

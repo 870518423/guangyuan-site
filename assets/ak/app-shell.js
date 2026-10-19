@@ -46,11 +46,14 @@
     });
   }
 
-  /* ② 右上角齿轮 */
+  /* ② 设置入口（只在站内首页）
+     管理者 2026-10-18：二级页不浮动，返回/主题按钮已够用。
+     第 19 轮修正（2026-10-19 管理者报障）：passive/index.html 也以 index.html 结尾，
+     曾被误判成「首页」→ 齿轮浮在「角色被动版本收录」标题左上角。 */
   function addGear() {
-    /* 设置入口只在主页面（管理者 2026-10-18：二级页不浮动，返回/主题按钮已够用） */
+    var isSubPage = /\/passive\//.test(location.pathname);
     var isHome = /(^|\/)index\.html$/.test(location.pathname) || /\/$/.test(location.pathname);
-    if (!isHome || document.querySelector(".ak-app-gear")) return;
+    if (isSubPage || !isHome || document.querySelector(".ak-app-gear")) return;
     var b = document.createElement("button");
     b.className = "ak-app-gear";
     b.type = "button";
@@ -210,14 +213,20 @@
    （这就是「内容包=披甲」的兜底 — 清桶即回内置版）。
    信息比对外径：
      · 线上 content.json 的 files[]（path/bytes/hash）+ contentVersion
-     · 本机 content 桶当前 key 的 pathname 集合
-   差量下载：只对「桶里不存在」的文件拉线上副本写桶（重进不重下）；
-   一键删除 = 清 content 桶 → SW 覆盖层未命中 → 回 APK 内置版。
+     · 本机 content 桶当前 key 的 pathname 集合（决定「有没有」）
+     · 本机指纹台账 localStorage[ak-content-index]（决定「是不是同一份」）
+   差量下载：桶里没有 **或** 指纹与清单不一致（内容改过）才拉线上副本写桶。
+   第 19 轮（2026-10-19）修的两个问题：
+     ① 中文文件名（passive/data/*.js 共 11 个）在 URL 里是百分号编码，未清码
+        → 与清单原文永不相等 → 每次「检查更新」都报同样的 11 个文件、反复重下；
+     ② 只判「文件在不在」不判「内容变没变」→ 同名文件改了也发现不了。
+       现改为比 md5 指纹，清单换新（pack_deploy 重算指纹）后即成真正的增量更新。
    ============================================================ */
 (function () {
   "use strict";
   if (!document.documentElement.hasAttribute("data-app")) return;
   var CONTENT_CACHE = "guangyuan-content";
+  var INDEX_KEY = "ak-content-index";   // 本机指纹台账：{ files: { path: md5 } }
   var SITE_URL = "https://m78calc.cn";
   var manCache = null;
 
@@ -226,6 +235,21 @@
       .then(function (r) { if (!r.ok) throw new Error("清单获取失败 " + r.status); return r.json(); })
       .catch(function () { return null; });
   }
+  /* 本机指纹台账：记「已下载并已写桶」的文件指纹。
+     只查桶里有没有是不够的——同名文件内容改了看不出来（管理者 2026-10-19 报障根因之一）。 */
+  function readIndex() {
+    try {
+      var o = JSON.parse(localStorage.getItem(INDEX_KEY) || "null");
+      return (o && o.files) || {};
+    } catch (e) { return {}; }
+  }
+  function writeIndex(files) {
+    try { localStorage.setItem(INDEX_KEY, JSON.stringify({ files: files })); } catch (e) {}
+  }
+  function clearIndex() {
+    try { localStorage.removeItem(INDEX_KEY); } catch (e) {}
+  }
+
   function bucketPaths() {
     if (!("caches" in window)) return Promise.resolve([]);
     return caches.open(CONTENT_CACHE).then(function (c) { return c.keys(); })
@@ -234,7 +258,11 @@
            files[].path（相对路径，无前导斜杠）一致的写法再比对。 */
         return ks.map(function (k) {
           var p = new URL(k.url).pathname;
-          return p.charAt(0) === "/" ? p.slice(1) : p;
+          p = p.charAt(0) === "/" ? p.slice(1) : p;
+          /* 第 19 轮修正：URL 里的中文是百分号编码（%E6%9E%81…），必须清码，
+             否则与清单原文（极恶贝利亚.js）永不相等 → 每次都被判「缺失」。 */
+          try { p = decodeURIComponent(p); } catch (e) {}
+          return p;
         });
       })
       .catch(function () { return []; });
@@ -243,7 +271,7 @@
   window.AkContent = {
     status: function () {
       return Promise.all([fetchRemoteManifest(), bucketPaths()]).then(function (rs) {
-        var man = rs[0], cur = rs[1];
+        var man = rs[0], cur = rs[1], idx = readIndex();
         var files = (man && man.files) || [];
         var out = {
           ok: !!man,
@@ -253,8 +281,19 @@
           localCount: cur.length,
           diff: []
         };
-        /* 差分：桶里已有（path 命中）就不算；content.json 自身不算内容文件 */
-        out.diff = files.filter(function (f) { return cur.indexOf(f.path) < 0; });
+        /* 老版本升级上来时没有台账（第 19 轮之前只有「桶里有没有」这一把尺子）：
+           若桶里已有同名文件，就按清单指纹补齐台账，避免一次性重下全部 79 个。
+           之后清单再换新（指纹变）就能正常识别为「有更新」。 */
+        if (man && !Object.keys(idx).length && cur.length) {
+          var present = {};
+          cur.forEach(function (p) { present[p] = 1; });
+          files.forEach(function (f) { if (present[f.path]) idx[f.path] = f.hash; });
+          writeIndex(idx);
+        }
+        /* 差分 = 桶里没有 或 指纹与清单不一致（内容改过） */
+        out.diff = files.filter(function (f) {
+          return cur.indexOf(f.path) < 0 || idx[f.path] !== f.hash;
+        });
         return out;
       }).catch(function () {
         return { ok: false, remoteVersion: null, remoteCount: 0, remoteBytes: 0, localCount: 0, diff: [] };
@@ -264,29 +303,44 @@
       var self = this;
       return self.status().then(function (st) {
         var todo = st.diff;
-        if (!todo.length) return { downloaded: 0, total: 0, bytes: 0 };
-        var total = todo.length, done = 0, bytes = 0, idx = 0;
+        if (!todo.length) return { downloaded: 0, total: 0, bytes: 0, failed: [] };
+        var total = todo.length, done = 0, ok = 0, bytes = 0, idx = 0;
+        var failed = [];
+        var index = readIndex();
         var CONCURRENCY = 3;
-        function next(it) {
-          if (!it) return Promise.resolve();
+        /* 第 19 轮：单个文件失败不再被算成「下载成功」（原来 done 无差别自增，
+           失败也报「更新完成 11/11」）。只有确实写进桶才记指纹。 */
+        function one(it) {
           var url = SITE_URL + "/" + it.path;
           return fetch(url, { cache: "no-cache", credentials: "omit" }).then(function (r) {
-            if (r && r.ok) {
-              bytes += it.bytes || 0;
-              return caches.open(CONTENT_CACHE).then(function (c) { return c.put(url, r); });
-            }
-          }).catch(function () {}).then(function () {
+            if (!r || !r.ok) throw new Error("HTTP " + (r ? r.status : 0));
+            return caches.open(CONTENT_CACHE).then(function (c) { return c.put(url, r); });
+          }).then(function () {
+            ok++;
+            bytes += it.bytes || 0;
+            index[it.path] = it.hash;
+          }).catch(function () { failed.push(it.path); });
+        }
+        function next() {
+          if (idx >= total) return Promise.resolve();
+          var it = todo[idx++];
+          return one(it).then(function () {
             done++;
             if (onProgress) onProgress({ pct: Math.round(done / total * 100), name: it.path.split("/").pop(), done: done, total: total });
-            return next(todo[idx++]);
+            return next();
           });
         }
-        return Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, function () { return next(todo[idx++]); }))
-          .then(function () { return { downloaded: done, total: total, bytes: bytes }; });
+        var arms = [];
+        for (var i = 0; i < Math.min(CONCURRENCY, total); i++) arms.push(next());
+        return Promise.all(arms).then(function () {
+          if (ok > 0) writeIndex(index);
+          return { downloaded: ok, total: total, bytes: bytes, failed: failed };
+        });
       });
     },
     clear: function () {
       if (!("caches" in window)) return Promise.reject(new Error("环境不支持"));
+      clearIndex();     /* 台账与桶必须同步清，否则「清完还说已是最新」 */
       return caches.delete(CONTENT_CACHE);
     },
     paths: bucketPaths

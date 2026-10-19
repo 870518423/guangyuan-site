@@ -92,6 +92,19 @@
       ]
     },
     {
+      "source": "/content.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
       "source": "/service-worker.js",
       "headers": [
         {

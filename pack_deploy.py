@@ -245,7 +245,11 @@ def build_content_manifest(build):
     """生成 content.json：内容文件清单（路径/字节/哈希）+ contentVersion。
     与 version.json 同口径，不进 SW 预缓存、每次走网络（App 内比对更新用）。"""
     import hashlib
-    files = _collect_www_files()
+    # 第 19 轮（2026-10-19）：这三份是「每次走网络」的实时清单，**不是内容文件**。
+    #   ① 自列会让指纹比对永远差几项（content.json 写完才落盘，记下的是上一版指纹）；
+    #   ② 把它们列进内容清单 = 允许 App 把它们塞进内容桶，违反铁律 8。
+    LIVE_MANIFESTS = ('content.json', 'version.json', 'module.json')
+    files = [f for f in _collect_www_files() if f not in LIVE_MANIFESTS]
     items = []
     total = 0
     for rel in files:
@@ -279,6 +283,24 @@ PACK_DEFS = [
     ('passive', '角色被动图鉴包',   ['passive/img'],     ('.webp', '.png')),
     ('humans',  '人间体图鉴包',     ['images/humans'],   ('.webp',)),
 ]
+
+
+def read_apk_version():
+    """读 APK 的 versionName，写进 version.json 的 apk 字段（第 19 轮，2026-10-19）。
+    为什么要它：App 的「检查更新」要能分清两件事——「应用本身要重装」和「只是内容有更新」。
+    build/contentVersion 都是内容与内核的版本，跟安装包无关；拿它们判断重装会把每次
+    内容热更都误报成「请下载安装包」。app 字段缺省时 App 一律按「无需重装」处理。"""
+    gradle = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '..', 'apk-project-v2', 'android', 'app', 'build.gradle')
+    try:
+        import re as _re
+        txt = open(gradle, encoding='utf-8').read()
+        m = _re.search(r'versionName\s+"([^"]+)"', txt)
+        if m:
+            return m.group(1)
+    except Exception:
+        pass
+    return None
 
 
 def build_pack_manifests():
@@ -333,9 +355,11 @@ def build_pack_manifests():
         'packs': packs,
     }
     content = build_content_manifest(build)
+    apk_ver = read_apk_version()
     version = {
         'build': build,
         'contentVersion': content['contentVersion'],   # 第 18 轮：内容覆盖层版本（取 BUILD 号）
+        'apk': apk_ver,                                # 第 19 轮：安装包版本（判断是否需重装）
         'generated': module['generated'],
         'packs': {k: {'version': v['version'], 'count': v['count'], 'bytes': v['bytes']} for k, v in packs.items()},
     }
@@ -346,6 +370,8 @@ def build_pack_manifests():
         _json.dump(version, fh, ensure_ascii=False, separators=(',', ':'))
     for pid, v in packs.items():
         print('  资源包 %-8s %4d 个 / %6.2f MB / 版本 %s' % (pid, v['count'], v['bytes'] / 1048576, v['version']))
+    print('  安装包版本 apk = %s（写入 version.json.apk，App 判断是否需重装）'
+          % (apk_ver or '未读到 → App 端按「无需重装」处理'))
     return packs
 
 def main():
