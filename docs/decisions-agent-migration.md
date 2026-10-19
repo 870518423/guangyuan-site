@@ -32,6 +32,21 @@
 ### D5（2026-10-19）｜dsh 时代的任务组织
 - **结论**：A/B 双窗口模式随协作板退役；dsh 时代 = 管理者直接对话下任务，agent 单线执行。**每轮开工标准读物 = HANDOVER.md + 本文件 + 最近 memory 日志**。决策继续追加到本文件（格式：结论 + 理由 + 待定）。
 
+### D6（2026-10-19，dsh 接管后首次推送实测）｜推送通路与凭据（运维备注）
+- **现象**：交接后首次 `git push` 连续失败，四层原因叠加——
+  1. `workspace-write` 沙箱下 git 无法创建 `git-remote-https` 的子进程管道（`cannot create standard input pipe: Permission denied`）；
+  2. 全局 `http(s).proxy = socks5://127.0.0.1:7890` 指向的 Clash 未运行，端口无监听；
+  3. 绕开代理后直连 GitHub **间歇通**（实测 `200 → 200 → 超时` 交替，推送时 `Connection was reset`）；
+  4. DSH 自带 git 的凭据助手链在无终端环境取不到 PAT（`/dev/tty: No such device or address`），但 PAT 实际在 Windows 凭据管理器里（GCM 目标 `git:https://github.com`，账号 870518423）。
+- **结论（现行可用流程）**：
+  1. **全局代理配置已删除**（管理者同意，2026-10-19）；git 默认直连，需要代理时临时 `git -c http.proxy=...`。
+  2. 无终端环境下用**一次性凭据助手**：`git-credential-manager.exe get` 取 PAT → 经环境变量注入临时 shell helper → 用完即删；PAT 不落盘、不进命令行。
+  3. **大小文件分开提交**：5.3MB 的 APK 与源码同包会被 RST 掐断；拆开后源码包仅 23 KiB，一次通过。今后顺序 = 先源码/文档（小包），再二进制（APK）。
+  4. 推送成功**必须**用 `git ls-remote origin main` 核实远端 SHA——git 可能假报成功。
+  5. 运维习惯：推送/下载类操作**不在单次调用里跑长循环**，每次独立短超时、结果可见（本次因 660 秒大循环 + 命令替换缓冲进度，白等约 12 分钟）。
+- **理由**：链路质量属外部条件，代码侧无法解决；拆包 + 短超时重试把单次失败的代价压到最小。
+- **待定**：若直连长期不稳，考虑改用 SSH over 443（`ssh.github.com:443`），需生成密钥并在 GitHub 添加公钥（管理者操作）。
+
 ## 待定问题
 
 - O5：calc_regress 基线决策——「维护」周二次数 5→4 漂移导致 5/20 FAIL，根因未钉死（嫌疑：测试时日期冻结未生效 / 浏览器 localStorage 存档带偏窗口）。先复现钉死根因，再由管理者决定重采基线（`node tools/calc_regress.js --save`）或修代码。
