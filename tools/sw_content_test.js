@@ -10,12 +10,13 @@
      · 线上站点（https://m78calc.cn）：返回「线上新版」
    再跑一个「Web 端」桩（self.location = http://127.0.0.1:PORT）证明内容分支不生效。
 
-   断言（对应计划第 3 条验收的五条）：
-     ① 命中 content 桶 → 直接返回缓存响应（先秒开，不等网络）
-     ② 未命中 → 返回 APK 本地副本（内置版，永远有）
-     ③ 命中后后台换新（SWR）→ 缓存里已是线上新内容
-     ④ 断网（本地也挂）→ 有旧桶副本时回旧桶，不透传错误
-     ⑤ Web 端（origin ≠ localhost）→ 不进内容分支（走常规逻辑，不返回线上内容）
+   断言（第 18 轮五条 + 第 19 轮时序修复改写/新增）：
+     ① 命中 content 桶 → 直接返回缓存响应（先秒开，不等网络）；命中后后台换新（SWR）
+     ② 未命中 → 第 19 轮起**先试线上**：返回线上副本（x-src=remote）+ 双键入桶
+        ★②b 未命中且本地无此文件（新角色数据等 APK 外新增文件）→ 首请求即返回线上内容并入桶
+        ★②c 断网（线上失败）→ 回退 APK 本地副本（x-src=builtin）
+     ③ 断网（本地也挂）→ 有旧桶副本时回旧桶，不透传错误
+     ④ Web 端（origin ≠ localhost）→ 不进内容分支（走常规逻辑，不返回线上内容）
 
    用法：
      node tools/sw_content_test.js                 # 测当前 service-worker.js
@@ -197,18 +198,47 @@ const check = (name, ok, extra) => {
     afterBody === 'REMOTE-NEW', String(afterBody));
   await settle(evt);
 
-  /* ============ ② 未命中 → 返回 APK 本地副本（内置版，永远有）============ */
+  /* ============ ② 未命中 → 第 19 轮起先试线上（新文件首请求即得）============ */
   store.clear();
   seedRemote(REMOTE, 'REMOTE-NEW', '"e-new"');
   fetchLog = [];
   evt = ask(REL, 'navigate');
   let r = await settle(evt);
-  check('② 未命中 content 桶 → 返回 APK 本地副本（内置版 x-src=builtin，在线也先拿本地）',
-    r.res && r.res.status === 200 && srcOf(r.res) === 'builtin',
+  check('② 未命中 content 桶 → 返回线上副本（x-src=remote，先线上后本地）',
+    r.res && r.res.status === 200 && srcOf(r.res) === 'remote',
     r.res ? 'status=' + r.res.status + ' src=' + srcOf(r.res) : (r.err ? 'throw: ' + r.err.message : '(无响应)'));
   const dualKeys = await contentKeys();
   check('② 落桶线上键 + 本地键双份（两通道互相命中）',
     dualKeys.includes(REMOTE) && dualKeys.includes(LOCAL), dualKeys.join(' | ') || '(空)');
+
+  /* ★②b 新文件（本地没有、线上有）→ 首请求返回线上内容并入桶（盖亚/闪迪根因） */
+  store.clear();
+  const NEWREL = '/passive/data/gaiya-dadi-zhiguang.js';
+  const NEWREMOTE = SITE + NEWREL;
+  const NEWLOCAL = APP_ORIGIN + NEWREL;
+  seedRemote(NEWREMOTE, 'GAIYA-V1', '"e-g1"');
+  fetchLog = [];
+  evt = ask(NEWREL, 'no-cors');
+  r = await settle(evt);
+  const newBody = await bodyOf(r.res);
+  check('②b 新文件（本地无）→ 首请求直接返回线上内容（不再 404 等第二次）',
+    r.res && r.res.status === 200 && newBody === 'GAIYA-V1',
+    r.res ? 'status=' + r.res.status + ' body=' + String(newBody) : (r.err ? 'throw: ' + r.err.message : '(无响应)'));
+  const newKeys = await contentKeys();
+  check('②b 新文件落桶线上键 + 本地键双份（下次秒开）',
+    newKeys.includes(NEWREMOTE) && newKeys.includes(NEWLOCAL), newKeys.join(' | ') || '(空)');
+
+  /* ★②c 断网（线上失败）→ 回退 APK 本地副本 */
+  store.clear();
+  offline = false;                // 本地正常（Capacitor 本地服务器永远在）
+  server.clear();                 // 线上 404（断网等效：线上不可用）
+  fetchLog = [];
+  evt = ask(REL, 'navigate');
+  r = await settle(evt);
+  check('②c 线上失败（断网）→ 回退 APK 本地副本（x-src=builtin，内容包=披甲）',
+    r.res && r.res.status === 200 && srcOf(r.res) === 'builtin',
+    r.res ? 'status=' + r.res.status + ' src=' + srcOf(r.res) : (r.err ? 'throw: ' + r.err.message : '(无响应)'));
+  offline = false;
 
   /* ============ ③ 断网（本地也挂）→ 有旧桶副本时回旧桶 ============ */
   offline = true;

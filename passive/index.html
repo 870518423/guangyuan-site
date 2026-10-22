@@ -7,6 +7,7 @@
 <!-- ===== PWA 安装与主题元数据（与站点主页保持一致；2026-10-13 M3）===== -->
 <meta name="theme-color" content="#0a0e1a">
 <meta name="description" content="奥系角色被动版本收录：按版本查看主动技 / 被动技改动，支持相邻版本对比">
+<script>(function(){try{var t=localStorage.getItem("ak-theme");document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
 <link rel="manifest" href="../manifest.json">
 <link rel="apple-touch-icon" href="../assets/apple-touch-app.png">
 <link rel="icon" type="image/png" href="../assets/favicon-app.png">
@@ -20,22 +21,45 @@
 <link rel="stylesheet" href="akp.css">
 <!-- 2) 列表页外壳样式（并入站点时删掉，改用站点自己的页面壳） -->
 <link rel="stylesheet" href="akp-list.css">
+<link rel="stylesheet" href="../assets/ak/ak-theme.css">
+<link rel="stylesheet" href="../assets/ak/ak-motion.css">
+<link rel="stylesheet" href="../assets/ak/ak-light.css">
+<link rel="stylesheet" href="../assets/ak/aoxi-site-refresh.css">
+<script>(function(){var d=document.documentElement;d.classList.add("ak-js");try{if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("aoxi-motion-ready");}catch(e){}window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);})();</script>
+<noscript><style>[data-stagger]>*{opacity:1!important;transform:none!important}</style></noscript>
 <script defer src="/ak-analytics.js"></script>
 </head>
-<body>
+<body class="aoxi-refresh aoxi-passive">
 
-<div class="akc-wrap">
+<header class="aoxi-site-head"><div class="aoxi-site-head__inner">
+  <a class="aoxi-site-brand" data-aoxi-intro="rise" href="../index.html" aria-label="奥系工具站首页"><img src="../assets/logo-site.webp" alt=""><span><small>AOXI / INDEX</small></span></a>
+  <nav class="aoxi-site-nav" data-aoxi-intro="right" aria-label="主导航">
+      <a href="../index.html"><span>首页</span><small>HOME</small></a>
+      <a href="../calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+      <a href="../guides.html"><span>图鉴</span><small>GUIDES</small></a>
+      <a href="../strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
+      <a href="index.html" aria-current="page"><span>被动</span><small>PASSIVE</small></a>
+  </nav>
+  <details class="aoxi-mobile-nav" data-aoxi-intro="right"><summary><strong>菜单</strong><small>MENU</small></summary><nav class="aoxi-mobile-links" aria-label="手机导航">
+        <a href="../index.html"><span>首页</span><small>HOME</small></a>
+        <a href="../calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+        <a href="../guides.html"><span>图鉴</span><small>GUIDES</small></a>
+        <a href="../strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
+        <a href="index.html" aria-current="page"><span>被动</span><small>PASSIVE</small></a>
+  </nav></details>
+</div></header>
+<div class="akc-wrap" data-stagger>
 
   <!-- 返回站点主页：仅在并入站点（/passive/ 目录内）时显示，桌面独立预览时隐藏 -->
   <a class="akc-back" id="back-home" href="../index.html" hidden>← 返回主页</a>
 
-  <header class="akc-hd">
-    <h1>角色被动版本收录</h1>
-    <p>按阵营收录角色的技能版本（附带日期）。进入后查看该阵营角色的主动技与被动，可切换版本并开启版本对比。</p>
+  <header class="akc-hd" data-aoxi-intro="rise">
+    <h1 data-aoxi-intro="left">角色被动版本收录</h1>
+    <p><span class="ak-label-en">PASSIVE ARCHIVE</span><br>按阵营收录角色的技能版本（附带日期）。进入后查看该阵营角色的主动技与被动，可切换版本并开启版本对比。</p>
   </header>
 
   <!-- 阵营目录卡片：与人间体 4 大阵营一致，图标沿用人间体阵营图标 -->
-  <div class="akc-entries" id="list"></div>
+  <div class="akc-entries" id="list" data-stagger></div>
 
   <!-- 改动标注说明：按管理者口径，**统一写在这一页（导航页）**，不写进角色页 -->
   <section class="akc-foot">
@@ -76,6 +100,7 @@
 <script src="data/泽塔德尔塔天爪.js"></script>
 <script src="data/极恶贝利亚.js"></script>
 <script src="data/奥美迦朱雀装甲.js"></script>
+<script src="data/gaiya-dadi-zhiguang.js"></script>
 <script src="data/sailuo-wuxian.js"></script>
 <script src="data/sailuo-wuxian-chaoxian.js"></script>
 <script src="data/aotewang-by.js"></script>
@@ -85,6 +110,7 @@
 <script src="data/sailuo-shinyaoxing.js"></script>
 <script src="data/leiguluosi.js"></script>
 <script src="data/sailuo-yinhe-shanzhuo.js"></script>
+<script src="data/shanyaodijia.js"></script>
 
 <script>
 (function () {
@@ -165,5 +191,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<script src="../assets/ak/transitions.js"></script>
+<script src="../assets/ak/theme.js"></script>
 </body>
 </html>

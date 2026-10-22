@@ -247,7 +247,7 @@
 <!-- 明日方舟风格皮肤层（放在原 <style> 之后，覆盖旧变量与控件样式） -->
 <link rel="stylesheet" href="assets/ak/ak-theme.css">
 <link rel="stylesheet" href="assets/ak/ak-motion.css">
-<script>document.documentElement.className+=(" ak-js");window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);</script>
+<script>(function(){var d=document.documentElement;d.classList.add("ak-js");try{if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("aoxi-motion-ready");}catch(e){}window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);})();</script>
 <noscript><style>[data-stagger]>*{opacity:1!important;transform:none!important}</style></noscript>
 <style>
   /* ---------- 导航页专属：卡片 / 徽标 / 元信息 ---------- */
@@ -299,12 +299,7 @@
 <link rel="stylesheet" href="assets/ak/ak-components.css">
 <link rel="stylesheet" href="assets/ak/ak-light.css">
 <style>
-  /* ---------- 页头两个按钮（收藏本网站 + 下载 App）----------
-     ⚠️ 样式必须内联：SW 对静态资源是缓存优先，发版瞬间用户会拿到「新 HTML + 旧 CSS」，
-     裸 <a> 会缩成一小坨贴在按钮旁边（2026-10-19 管理者截图吐槽过）。这两个按钮只在
-     首页用，内联最稳；ak-components.css 里不再保留同名规则，避免两处漂移。
-     两个按钮**完全同款**：等高（min-height 46px）、等字号、同描边，中间留 12px 空隙，
-     是两个独立的按钮、不是一个控件的两半。 */
+  /* 首页 App 下载按钮样式内联，避免旧 CSS 缓存造成按钮变形。 */
   .ak-save {
     display: flex; justify-content: center; align-items: center;
     gap: 12px; flex-wrap: wrap; margin: 18px 0 0;
@@ -323,27 +318,40 @@
   .ak-save-btn.is-done .ak-save-ico { opacity: .85; }
 </style>
 <script defer src="/ak-analytics.js"></script>
+<link rel="stylesheet" href="assets/ak/aoxi-site-refresh.css">
 </head>
-<body data-ak-progress>
+<body class="aoxi-refresh aoxi-home" data-ak-progress>
+<header class="aoxi-site-head"><div class="aoxi-site-head__inner">
+  <a class="aoxi-site-brand" data-aoxi-intro="rise" href="index.html" aria-label="奥系工具站首页"><img src="assets/logo-site.webp" alt=""><span><small>AOXI / INDEX</small></span></a>
+  <nav class="aoxi-site-nav" data-aoxi-intro="right" aria-label="主导航">
+      <a href="index.html" aria-current="page"><span>首页</span><small>HOME</small></a>
+      <a href="calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+      <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
+      <a href="strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
+      <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
+  </nav>
+  <details class="aoxi-mobile-nav" data-aoxi-intro="right"><summary><strong>菜单</strong><small>MENU</small></summary><nav class="aoxi-mobile-links" aria-label="手机导航">
+        <a href="index.html" aria-current="page"><span>首页</span><small>HOME</small></a>
+        <a href="calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+        <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
+        <a href="strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
+        <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
+  </nav></details>
+</div></header>
 <div class="glow"></div>
 
 <div class="wrap">
 
   <!-- ✏️【1】站点名称与副标题 -->
   <header>
-    <img class="logo" src="assets/logo-site.webp" alt="奥系工具站">
-    <h1>奥系工具站</h1>
-    <span class="ak-label-en">Aoxi Tools Station</span>
-    <p class="sub">预测光元收益 <i>·</i> 人间体查询 <i>·</i> 攻略收录 <i>·</i> 被动版本收录</p>
-    <!-- ✏️【1b】收藏本网站（优先调起「安装到桌面 / 主屏幕」，不支持时给手动说明）
-                 + 下载 App（安卓安装包；2026-10-18 管理者：两个按钮并排放在副标题下方） -->
-    <div class="ak-save">
-      <button class="ak-btn ak-save-btn" id="ak-save-btn" type="button">
-        <svg class="ak-save-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4.2-5.5 4.2z"/></svg>
-        <span class="ak-save-label">收藏本网站</span>
-      </button>
+    <img class="logo" data-aoxi-intro="rise" src="assets/logo-site.webp" alt="奥系工具站">
+    <h1 data-aoxi-intro="left">奥系工具站</h1>
+    <span class="ak-label-en" data-aoxi-intro="left">Aoxi Tools Station</span>
+    <p class="sub" data-aoxi-intro="left" style="--aoxi-delay:120ms">预测光元收益 <i>·</i> 人间体查询 <i>·</i> 攻略收录 <i>·</i> 被动版本收录</p>
+    <!-- Android App 下载入口；PWA 安装元数据仍保留。 -->
+    <div class="ak-save" data-aoxi-intro="right" style="--aoxi-delay:180ms">
       <a class="ak-btn ak-dl-btn" id="ak-dl-btn"
-         href="app/aoxi-tools-v0.2.0.apk" download="奥系工具站-v0.2.0.apk"
+         href="app/aoxi-tools-v0.2.1.apk" download="奥系工具站-v0.2.1.apk"
          title="下载安卓安装包（5.2 MB）">
         <svg class="ak-dl-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0 3.6-3.6M12 14l-3.6-3.6M5 19h14"/></svg>
         <span class="ak-dl-label">下载 App</span>
@@ -351,7 +359,7 @@
     </div>
   </header>
 
-  <nav class="entries" data-stagger>
+  <nav class="entries" aria-label="工具与资料索引" data-stagger>
 
     <!-- ✏️【2】第一张卡片：计算器 -->
     <a class="entry ak-corners" href="calculator.html" style="--accent:#3b82f6">
@@ -419,9 +427,10 @@
   </nav>
 
   <!-- ✏️【5】更新记录（有新版本就在最上面加一行 <li>…</li>） -->
-  <section class="changelog">
-    <h3><span>更新记录</span><span class="cl-line"></span><button class="cl-toggle" id="clToggle" type="button" aria-expanded="false">展开</button></h3>
+  <section class="changelog" data-aoxi-intro="right" style="--aoxi-delay:120ms">
+    <h3><span>最近更新</span><span class="cl-line"></span><button class="cl-toggle" id="clToggle" type="button" aria-expanded="false">完整记录</button></h3>
     <ul data-stagger>
+      <li><time>2026-10-21</time><p>重构网站 UI 页面；新增闪耀迪迦（闪迪）被动版本收录</p></li>
       <li><time>2026-10-19</time><p>更新了工具站图标；新增 App 版本，可下载安装后离线读取全部内容</p></li>
       <li><time>2026-10-18</time><p>更新了人间体的图片，添加了人间体特训所需的光元消耗；支持人间体图鉴跳转角色被动页面</p></li>
       <li><time>2026-10-17</time><p>新增了域名更新公告</p></li>
@@ -461,7 +470,6 @@
 <script src="assets/ak/transitions.js"></script>
 <script src="assets/ak/progress.js"></script>
 <script src="assets/ak/theme.js"></script>
-<script src="assets/ak/save.js"></script>
 <!-- 新域名公告弹窗（自包含，见 assets/ak/notice.js 头部说明） -->
 <script src="assets/ak/notice.js"></script>
 <script>
@@ -543,8 +551,10 @@ if ('serviceWorker' in navigator) {
     if (!ul || !btn) return;
     var collapsed = true;
     function apply() {
-      ul.style.maxHeight = (collapsed ? ul.children[0].offsetHeight + 9 : ul.scrollHeight) + "px";
-      btn.textContent = collapsed ? "展开" : "收起";
+      var visibleHeight = 0;
+      Array.prototype.slice.call(ul.children, 0, 3).forEach(function (item) { visibleHeight += item.offsetHeight; });
+      ul.style.maxHeight = (collapsed ? visibleHeight : ul.scrollHeight) + "px";
+      btn.textContent = collapsed ? "完整记录" : "收起记录";
       btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
     }
     btn.addEventListener("click", function () { collapsed = !collapsed; apply(); });

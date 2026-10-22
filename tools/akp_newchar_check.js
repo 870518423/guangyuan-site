@@ -60,8 +60,8 @@ function get(p) {
     };})())`));
   ok("首页各阵营卡合计=清单 ready 数", home.sum === home.ready, home.stat + " 合计=" + home.sum + " / ready=" + home.ready);
   /* 清单总数：15→17（2026-10-13 超限/奥王BY/捷德终极）→19（2026-10-14 令迦/光辉赛罗/终极赛罗闪耀型/雷古洛思）
-     →20（2026-10-16 赛罗无限形态（银河闪耀））。新增角色后同步改这里。 */
-  ok("清单条目数=20", home.total === 20, "total=" + home.total);
+     →20（2026-10-16 赛罗无限形态（银河闪耀））→21（2026-10-20 盖亚大地之光）→22（2026-10-21 闪耀迪迦）。新增角色后同步改这里。 */
+  ok("清单条目数=22", home.total === 22, "total=" + home.total);
 
   await send("Page.navigate", { url: BASE + "/category.html?f=" + encodeURIComponent("奥特之星") });
   await new Promise(r => setTimeout(r, 2400));

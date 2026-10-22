@@ -34,6 +34,13 @@ function ok(name, cond, extra) {
   if (cond) { pass++; console.log('  PASS ' + name); }
   else { fail++; console.log('  FAIL ' + name + (extra ? '  → ' + extra : '')); }
 }
+/* 桶条目工厂：stamped = 带 x-ak-hash 章（download 落桶的产物）；bare = 裸响应（SW 后台换新写入，无章） */
+function stampedRes(body, hash) {
+  return { status: 200, ok: true, headers: { get: (k) => (String(k).toLowerCase() === 'x-ak-hash' ? hash : null) } };
+}
+function bareRes(body) {
+  return { status: 200, ok: true, headers: { get: () => null } };
+}
 
 /* ---------- 桩环境：caches / localStorage / fetch / document ---------- */
 function makeCaches() {
@@ -71,13 +78,28 @@ function boot(opts) {
   const storage = makeStorage();
   const fetched = [];
   const appended = [];   // 页面被注入的元素（用来断言齿轮是否出现）
+  /* 第 19 轮：download 会构造带 x-ak-hash 的 Response —— 桩里补齐浏览器全局件 */
+  class HeadersStub {
+    constructor(init) { this._m = new Map(); if (init) for (const k of Object.keys(init)) this._m.set(String(k).toLowerCase(), String(init[k])); }
+    get(k) { k = String(k).toLowerCase(); return this._m.has(k) ? this._m.get(k) : null; }
+  }
+  class ResponseStub {
+    constructor(body, init) {
+      init = init || {};
+      this.body = body; this.status = init.status || 200; this.ok = this.status >= 200 && this.status < 300;
+      this.headers = init.headers instanceof HeadersStub ? init.headers : new HeadersStub(init.headers);
+      this._text = typeof body === 'string' ? body : (body == null ? '' : JSON.stringify(body));
+    }
+    text() { return Promise.resolve(this._text); }
+    clone() { return this; }
+  }
   const sandbox = {
     console,
     setTimeout, clearTimeout, Promise, JSON, Math, Array, Object, String, Number, Date, Error, URL,
-    URLSearchParams,
+    URLSearchParams, Response: ResponseStub, Headers: HeadersStub,
     caches,
     localStorage: storage,
-    location: { pathname: opts.pathname || '/app.html', search: '' },
+    location: { origin: opts.origin || 'https://localhost', pathname: opts.pathname || '/app.html', search: '' },
     document: {
       documentElement: { hasAttribute: () => true, setAttribute: () => {} },
       addEventListener: () => {},
@@ -134,14 +156,21 @@ function boot(opts) {
       chinese.every((f) => st.diff.some((d) => d.path === f.path)));
   }
 
-  /* B/C. 全量下载 → 收敛 */
+  /* B/C. 全量下载 → 收敛（第 19 轮：双键 + x-ak-hash 指纹随文件走） */
   {
     const { Ak, caches } = boot({});
     const d = await Ak.download(() => {});
     ok('B1 全部成功', d.downloaded === total && d.failed.length === 0,
       `downloaded=${d.downloaded}/${total} failed=${d.failed.length}`);
     const keys = caches.keys('guangyuan-content');
-    ok('B2 桶里条目数 = 清单数', keys.length === total, `桶 ${keys.length} / 清单 ${total}`);
+    ok('B2 桶里条目数 = 清单数 × 2（localhost + 线上双键）', keys.length === total * 2,
+      `桶 ${keys.length} / 期望 ${total * 2}`);
+    const allDual = manifest.files.every((f) => {
+      const local = new URL('/' + f.path, 'https://localhost').href;
+      const remote = new URL(SITE + '/' + f.path).href;
+      return keys.indexOf(local) >= 0 && keys.indexOf(remote) >= 0;
+    });
+    ok('B2b 每个文件两把键都在（页面请求键 + 线上键）', allDual);
     /* 桶键由 URL 解析产生：斜杠保留、中文转 %XX（这是 Bug 的成因，也是本闸门要钉住的事实） */
     const expectedKeys = chinese.map((f) => new URL(SITE + '/' + f.path).href);
     const encoded = expectedKeys.filter((k) => keys.indexOf(k) >= 0);
@@ -150,7 +179,9 @@ function boot(opts) {
     const st2 = await Ak.status();
     ok('C1 下载后差分归零（不再重下）', st2.diff.length === 0, `仍有 ${st2.diff.length} 个`);
     const d2 = await Ak.download(() => {});
-    ok('C2 二次点击更新：无事可做', d2.total === 0 && d2.downloaded === 0);
+    ok('C2 二次点击更新：无事可做（死循环复现断言：第二轮 diff 必须为空）',
+      d2.total === 0 && d2.downloaded === 0,
+      d2.total ? `第二轮又想下 ${d2.total} 个` : '');
   }
 
   /* D. 清单里改一个指纹 → 恰好差 1 个，下载后归零 */
@@ -172,20 +203,23 @@ function boot(opts) {
     await env2.Ak.download(() => {});
     ok('D2 mutated 下全量后差分 = 0', (await env2.Ak.status()).diff.length === 0);
 
+    /* D3（第 19 轮单源化口径）：桶内指纹 ≠ 清单指纹 → 判「有更新」，下载后消账。
+       直接把该文件的桶条目换成带旧指纹的响应（指纹随文件走，台账不再参与判定）。 */
     const changed = JSON.parse(JSON.stringify(mutated));
     changed.files[idx].hash = 'cafebabecafebabecafebabecafebabe';
     const env3 = boot({ manifest: changed });
-    await env3.Ak.download(() => {});
-    // 仅替换清单内容无法改同一环境的 fetch 结果，故用「先下 mutated，再用 changed 覆盖 cache 的台账口径」模拟：
-    // 直接构造：桶已满 + 台账用 mutated 指纹 → 清单换成 changed → 差 1
-    env3.storage.setItem('ak-content-index', JSON.stringify({
-      files: mutated.files.reduce((acc, f) => { acc[f.path] = f.hash; return acc; }, {}),
-    }));
+    await env3.Ak.download(() => {});          // 按 changed 清单铺满桶（章 = changed 指纹）
+    const cf = changed.files[idx];
+    const ckey = new URL(SITE + '/' + cf.path).href;
+    const cLocalKey = new URL('/' + cf.path, 'https://localhost').href;
+    const c3 = await env3.caches.open('guangyuan-content');
+    await c3.put(ckey, stampedRes('old-content', 'deadbeefdeadbeefdeadbeefdeadbeef'));
+    await c3.put(cLocalKey, stampedRes('old-content', 'deadbeefdeadbeefdeadbeefdeadbeef'));
     const st3 = await env3.Ak.status();
-    ok('D3 同名文件指纹变了 → 恰好差 1 个', st3.diff.length === 1,
-      `实际差 ${st3.diff.length}`);
+    ok('D3 桶内指纹 ≠ 清单指纹 → 恰好差 1 个', st3.diff.length === 1 && st3.diff[0].path === cf.path,
+      `实际差 ${st3.diff.length}${st3.diff[0] ? '（' + st3.diff[0].path + '）' : ''}`);
     await env3.Ak.download(() => {});
-    ok('D4 补下后归零', (await env3.Ak.status()).diff.length === 0);
+    ok('D4 补下后归零（指纹随文件更新）', (await env3.Ak.status()).diff.length === 0);
   }
 
   /* E. 老用户升级：桶有文件、无台账 */
@@ -208,6 +242,40 @@ function boot(opts) {
     ok('F2 台账已清除', env.storage.getItem('ak-content-index') === null);
     const st = await env.Ak.status();
     ok('F3 删除后回到全部缺失', st.diff.length === total);
+  }
+
+  /* J.（第 19 轮单源化）SW 后台裸响应 + 兼容台账的边界行为 */
+  {
+    /* J1：桶条目被 SW 后台换新覆盖成裸响应（无章）+ 台账是旧指纹 + 清单是新指纹
+       → 判「有更新」；下载后条目带上新指纹章 → 消账。 */
+    const env = boot({});
+    await env.Ak.download(() => {});
+    const jf = manifest.files.find((f) => !/^[\x00-\x7F]+$/.test(f.path));
+    const jkey = new URL(SITE + '/' + jf.path).href;
+    const jc = await env.caches.open('guangyuan-content');
+    const jLocalKey = new URL('/' + jf.path, 'https://localhost').href;
+    await jc.put(jkey, bareRes('sw-refreshed-raw'));            // SW 后台换新：章没了
+    await jc.put(jLocalKey, bareRes('sw-refreshed-raw'));       // （SW 双键齐写，两把键都覆盖）
+    env.storage.setItem('ak-content-index', JSON.stringify({
+      files: manifest.files.reduce((acc, f) => { acc[f.path] = 'oldhash' + f.path.length; return acc; }, {}),
+    }));                                                        // 台账全是旧指纹 ≠ 清单
+    const stJ = await env.Ak.status();
+    ok('J1 裸响应 + 台账旧指纹 → 恰好该文件判「有更新」',
+      stJ.diff.length === 1 && stJ.diff[0].path === jf.path,
+      `实际差 ${stJ.diff.length}${stJ.diff[0] ? '（' + stJ.diff[0].path + '）' : ''}`);
+    await env.Ak.download(() => {});
+    const stJ2 = await env.Ak.status();
+    ok('J2 下载后消账（条目已带 x-ak-hash 章）', stJ2.diff.length === 0,
+      `仍有 ${stJ2.diff.length} 个`);
+    /* J3：裸响应 + 无台账 → 信桶不误报（防「永远差 N 个」死循环的根） */
+    const env2 = boot({});
+    await env2.Ak.download(() => {});
+    const c2 = await env2.caches.open('guangyuan-content');
+    await c2.put(jkey, bareRes('sw-refreshed-raw'));
+    env2.storage.removeItem('ak-content-index');                // 台账也没了
+    const stJ3 = await env2.Ak.status();
+    ok('J3 裸响应 + 无台账 → 信桶不误报（不进差分，防死循环）', stJ3.diff.length === 0,
+      `误报 ${stJ3.diff.length} 个`);
   }
 
   /* G. 清单卫生 */

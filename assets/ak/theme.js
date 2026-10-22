@@ -85,7 +85,8 @@
       apply(current() === "light" ? "dark" : "light", true);
     });
 
-    document.body.appendChild(btn);
+    var siteHead = root.hasAttribute("data-app") ? null : document.querySelector(".aoxi-site-head__inner");
+    (siteHead || document.body).appendChild(btn);
     apply(current(), false);
   }
 

@@ -306,6 +306,27 @@ window.AKP_IMAGES = {
       }
     ]
   },
+  "gaiya-dadi-zhiguang": {
+    "portrait": "img/gaiya-dadi-zhiguang/角色图_v1.webp",
+    "shots": [
+      {
+        "label": "主动技 v1",
+        "src": "img/gaiya-dadi-zhiguang/主动技_v1.webp"
+      },
+      {
+        "label": "主动技 v2",
+        "src": "img/gaiya-dadi-zhiguang/主动技_v2.webp"
+      },
+      {
+        "label": "被动技 v1",
+        "src": "img/gaiya-dadi-zhiguang/被动技_v1.webp"
+      },
+      {
+        "label": "被动技 v2",
+        "src": "img/gaiya-dadi-zhiguang/被动技_v2.webp"
+      }
+    ]
+  },
   "sailuo-wuxian": {
     "portrait": "img/sailuo-wuxian/角色图_v1.webp",
     "shots": [
@@ -455,7 +476,11 @@ window.AKP_IMAGES = {
       },
       {
         "label": "主动技 v2",
-        "src": "img/lingjia/主动技_v2.webp"
+        "src": "img/lingjia/主动技_v2_2023.webp"
+      },
+      {
+        "label": "主动技 v3",
+        "src": "img/lingjia/主动技_v3_2024.webp"
       },
       {
         "label": "被动技 v1",
@@ -463,7 +488,15 @@ window.AKP_IMAGES = {
       },
       {
         "label": "被动技 v2",
-        "src": "img/lingjia/被动技_v2.webp"
+        "src": "img/lingjia/被动技_v2_2023.webp"
+      },
+      {
+        "label": "被动技 v3",
+        "src": "img/lingjia/被动技_v3_2024.webp"
+      },
+      {
+        "label": "被动技 v4",
+        "src": "img/lingjia/被动技_v4_2025.webp"
       },
       {
         "label": "超越技 v1",
@@ -471,15 +504,19 @@ window.AKP_IMAGES = {
       },
       {
         "label": "超越技 v2",
-        "src": "img/lingjia/超越技_v2.webp"
+        "src": "img/lingjia/超越技_v2_2023.webp"
+      },
+      {
+        "label": "超越技 v3",
+        "src": "img/lingjia/超越技_v3_2024.webp"
       },
       {
         "label": "简介技 v1",
         "src": "img/lingjia/简介技_v1.webp"
       },
       {
-        "label": "简介技 v2",
-        "src": "img/lingjia/简介技_v2.webp"
+        "label": "简介技 v3",
+        "src": "img/lingjia/简介技_v3_2024.webp"
       }
     ]
   },
@@ -593,6 +630,21 @@ window.AKP_IMAGES = {
         "label": "简介技 v1",
         "src": "img/sailuo-yinhe-shanzhuo/简介技_v1.webp"
       }
+    ]
+  }
+,
+  "shanyaodijia": {
+    "portrait": "img/shanyaodijia/角色图_v1.webp",
+    "shots": [
+      { "label": "主动技 v1", "src": "img/shanyaodijia/主动技_v1.webp" },
+      { "label": "主动技 v5", "src": "img/shanyaodijia/主动技_v5.webp" },
+      { "label": "被动技 v1", "src": "img/shanyaodijia/被动技_v1.webp" },
+      { "label": "被动技 v2", "src": "img/shanyaodijia/被动技_v2.webp" },
+      { "label": "被动技 v3", "src": "img/shanyaodijia/被动技_v3.webp" },
+      { "label": "被动技 v4", "src": "img/shanyaodijia/被动技_v4.webp" },
+      { "label": "被动技 v5", "src": "img/shanyaodijia/被动技_v5.webp" },
+      { "label": "超越技 v1", "src": "img/shanyaodijia/超越技_v1.webp" },
+      { "label": "简介技 v1", "src": "img/shanyaodijia/简介技_v1.webp" }
     ]
   }
 };

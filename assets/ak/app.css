@@ -168,3 +168,182 @@ html[data-app] .ak-back-float {
 }
 html[data-app] .ak-back-float.on { opacity: 1; transform: translateY(0); pointer-events: auto; }
 html[data-app] .ak-back-float:active { transform: scale(.94); }
+
+/* ============================================================
+   ⑥ 视觉同步（第 19 轮 · 2026-10-22）：对齐网页端 aoxi-refresh 新视觉
+   ------------------------------------------------------------
+   范围 = body.aoxi-refresh 的五个主页面（首页/计算器/图鉴/攻略/被动入口），
+   与网页端完全一致：app.html 设置页、被动 category/char 详情页**保持旧观感**
+   （网页端这两处也没刷新）。
+   只动**色板 / 圆角 / 描边 / 质感 / 字重**，**不动布局**——①~⑤ 区的
+   2×2 首页、两列列表、设置页卡、齿轮/返回钮位置全部保留。
+   令牌走别名层（--bg/--panel/…），声明在 body 上带动全部基础组件；
+   亮暗双主题数值取自 aoxi-site-refresh.css 的实测值。
+   ============================================================ */
+
+/* —— 令牌层：暗色（默认）—— */
+html[data-app] body.aoxi-refresh {
+  --aoxi-bg: #091317; --aoxi-bg-2: #0d1c21; --aoxi-panel: #102228; --aoxi-panel-2: #152a30;
+  --aoxi-line: #294248; --aoxi-line-strong: #52747b; --aoxi-text: #edf3ee; --aoxi-muted: #a7bec0;
+  --aoxi-quiet: #708b90; --aoxi-cyan: #51e4e6; --aoxi-signal: #ff6847;
+  /* 别名层整体切到新色板：卡片/输入框/按钮自动跟随 */
+  --bg: var(--aoxi-bg);
+  --panel: var(--aoxi-panel);
+  --panel2: var(--aoxi-panel-2);
+  --border: var(--aoxi-line);
+  --border2: var(--aoxi-line-strong);
+  --text: var(--aoxi-text);
+  --muted: var(--aoxi-muted);
+  --dim: var(--aoxi-quiet);
+  --blue: var(--aoxi-cyan);                 /* 实心按钮 / 勾选 accent → 青 */
+  --card-bg: rgba(16, 34, 40, .88);
+  --card-border: var(--aoxi-line);
+  --card-border-hover: var(--aoxi-line-strong);
+  --radius: 3px;
+  /* --gold 不动：光元价签 / tier 金色是语义色，网页端也没改 */
+}
+
+/* —— 令牌层：亮色 —— */
+html[data-app][data-theme="light"] body.aoxi-refresh {
+  --aoxi-bg: #e9f1ed; --aoxi-bg-2: #dce8e4; --aoxi-panel: #f4f8f5; --aoxi-panel-2: #e6f0ed;
+  --aoxi-line: #b8cdca; --aoxi-line-strong: #7eaaa9; --aoxi-text: #102428; --aoxi-muted: #45656a;
+  --aoxi-quiet: #617d80; --aoxi-cyan: #087e88; --aoxi-signal: #c3472f;
+  --card-bg: rgba(244, 248, 245, .92);
+}
+
+/* —— 页面底纹：青色细网格 + 右上辉光（与网页端同源） —— */
+html[data-app] body.aoxi-refresh {
+  background-color: var(--aoxi-bg);
+  background-image: linear-gradient(rgba(81,228,230,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(81,228,230,.025) 1px, transparent 1px),
+    radial-gradient(ellipse at 74% 0%, rgba(37,118,128,.2), transparent 38%);
+  background-size: 52px 52px, 52px 52px, auto;
+  background-attachment: fixed;
+  color: var(--aoxi-text);
+}
+html[data-app][data-theme="light"] body.aoxi-refresh {
+  background-image: linear-gradient(rgba(8,126,136,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(8,126,136,.045) 1px, transparent 1px),
+    radial-gradient(ellipse at 74% 0%, rgba(8,126,136,.07), transparent 38%);
+}
+html[data-app] body.aoxi-refresh :focus-visible { outline: 2px solid var(--aoxi-cyan); outline-offset: 3px; }
+
+/* —— 通用面层：方角 3px / 1px 线框 / 去投影去毛玻璃（只动表面，不动盒型） —— */
+html[data-app] body.aoxi-refresh .entry,
+html[data-app] body.aoxi-refresh .akc-entries .entry,
+html[data-app] body.aoxi-refresh .akc-card,
+html[data-app] body.aoxi-refresh .changelog,
+html[data-app] body.aoxi-refresh .wrap > header,
+html[data-app] body.aoxi-refresh .akc-hd,
+html[data-app] body.aoxi-refresh .toolbar,
+html[data-app] body.aoxi-refresh .search-row,
+html[data-app] body.aoxi-calc .header,
+html[data-app] body.aoxi-calc .time-section,
+html[data-app] body.aoxi-calc .footer-section,
+html[data-app] body.aoxi-calc .resources-grid .resource-card {
+  border-color: var(--aoxi-line);
+  border-radius: 3px;
+  background: var(--aoxi-panel);
+  box-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+/* 首页英雄区 / 各页页头：面板渐变 + 左对齐标题（与网页端 hero 同质） */
+html[data-app] body.aoxi-refresh .wrap > header,
+html[data-app] body.aoxi-calc .header {
+  background: linear-gradient(135deg, var(--aoxi-panel), var(--aoxi-bg-2));
+}
+html[data-app] body.aoxi-refresh .wrap > header h1 {
+  background: none; color: var(--aoxi-text);
+  -webkit-text-fill-color: currentColor; text-shadow: none;
+}
+html[data-app] body.aoxi-refresh .ak-label-en {
+  color: var(--aoxi-cyan); font-family: var(--ak-mono, ui-monospace, Consolas, monospace);
+  font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+}
+html[data-app] body.aoxi-refresh .sub { color: var(--aoxi-muted); }
+/* 悬停：线提亮 + 面板提一档（与网页端一致；被动角色卡网页端无位移） */
+html[data-app] body.aoxi-refresh .entry:hover,
+html[data-app] body.aoxi-refresh .akc-entries .entry:hover,
+html[data-app] body.aoxi-refresh .akc-card:hover {
+  border-color: var(--aoxi-line-strong); background: var(--aoxi-panel-2); transform: none;
+}
+html[data-app] body.aoxi-refresh #cardView .card,
+html[data-app] body.aoxi-refresh #cards .card {
+  border-color: var(--aoxi-line); border-radius: 3px !important;
+  background: var(--aoxi-panel); box-shadow: none !important;
+}
+html[data-app] body.aoxi-refresh #cardView .card:hover,
+html[data-app] body.aoxi-refresh #cards .card:hover {
+  border-color: var(--aoxi-line-strong) !important; background: var(--aoxi-panel-2);
+}
+/* 图标座 / 徽标 / 标签：小方角 + 青强调 */
+html[data-app] body.aoxi-refresh .entry .ico,
+html[data-app] body.aoxi-refresh .akc-entries .entry .ico,
+html[data-app] body.aoxi-refresh .akc-entries .entry .badge {
+  border-radius: 2px; border-color: var(--aoxi-line); background: var(--aoxi-bg-2);
+}
+html[data-app] body.aoxi-refresh .entry .badge { color: var(--aoxi-cyan); }
+html[data-app] body.aoxi-refresh .entry .desc,
+html[data-app] body.aoxi-refresh .akc-entries .entry .desc { color: var(--aoxi-muted); }
+
+/* —— 输入与按钮：方角 2px、深底、青聚焦（布局/尺寸沿用 ①~⑤） —— */
+html[data-app] body.aoxi-refresh input {
+  border-color: var(--aoxi-line-strong); border-radius: 2px;
+  background: var(--aoxi-bg-2); color: var(--aoxi-text);
+}
+html[data-app][data-page="guides"] .search-row input { border-radius: 2px; }
+html[data-app][data-page="guides"] .search-row input:focus {
+  border-color: var(--aoxi-cyan); box-shadow: 0 0 0 3px rgba(81,228,230,.13);
+}
+html[data-app] body.aoxi-refresh .chips button,
+html[data-app] body.aoxi-refresh .viewtoggle button {
+  border-radius: 2px; border-color: var(--aoxi-line);
+  background: var(--aoxi-bg-2); color: var(--aoxi-muted);
+}
+html[data-app] body.aoxi-refresh .chips button.on,
+html[data-app] body.aoxi-refresh .viewtoggle button.on {
+  border-color: var(--aoxi-cyan); color: var(--aoxi-cyan);
+}
+/* 计算器：产出数字与开关的强调色 → 青（网页端同款） */
+html[data-app] body.aoxi-calc .total-value,
+html[data-app] body.aoxi-calc .days-display .value { color: var(--aoxi-cyan); text-shadow: none; }
+html[data-app] body.aoxi-calc .toggle-switch input:checked + .toggle-slider {
+  border-color: var(--aoxi-cyan); background: rgba(81,228,230,.17);
+}
+html[data-app] body.aoxi-calc .toggle-switch input:checked + .toggle-slider::before { background: var(--aoxi-cyan); }
+html[data-app] body.aoxi-calc .mobile-total-bar {
+  border-top-color: var(--aoxi-line-strong); background: var(--aoxi-panel); color: var(--aoxi-text);
+}
+html[data-app] body.aoxi-calc .section-header { border-bottom-color: var(--aoxi-line); }
+html[data-app] body.aoxi-calc .section-header.pay-header h2 { color: var(--aoxi-cyan); }
+
+/* —— 攻略 / 更新记录：时间戳青色等宽（网页端 news 面板同款） —— */
+html[data-app] body.aoxi-refresh .changelog time {
+  color: var(--aoxi-cyan); font-family: var(--ak-mono, ui-monospace, Consolas, monospace);
+  font-size: 9px; letter-spacing: .06em;
+}
+html[data-app] body.aoxi-refresh .changelog li { border-bottom-color: var(--aoxi-line); }
+
+/* —— App 专属控件跟随新语言（位置/尺寸不变，见 ①⑤ 区） —— */
+html[data-app] body.aoxi-refresh .ak-app-gear {
+  border-radius: 3px; background: var(--aoxi-panel);
+  border-color: var(--aoxi-line); color: var(--aoxi-muted);
+}
+html[data-app] body.aoxi-refresh .ak-app-gear:active { border-color: var(--aoxi-cyan); color: var(--aoxi-cyan); }
+html[data-app] body.aoxi-refresh .ak-back-float {
+  border-radius: 3px; background: var(--aoxi-panel);
+  border-color: var(--aoxi-line); color: var(--aoxi-text);
+}
+html[data-app] body.aoxi-refresh .ak-back-float.on { border-color: var(--aoxi-line-strong); }
+html[data-app] body.aoxi-refresh .ak-theme-toggle {
+  border-radius: 2px; border-color: var(--aoxi-line-strong);
+  background: var(--aoxi-panel); color: var(--aoxi-muted);
+}
+html[data-app] body.aoxi-refresh .ak-theme-toggle:hover { border-color: var(--aoxi-cyan); color: var(--aoxi-cyan); }
+html[data-app] body.aoxi-refresh .akp-pack-sheet { border-radius: 3px 3px 0 0; background: var(--aoxi-panel); border-color: var(--aoxi-line); }
+html[data-app] body.aoxi-refresh .akp-pack-row { border-top-color: var(--aoxi-line); }
+html[data-app] body.aoxi-refresh .akp-pack-actions .ghost { border-color: var(--aoxi-line-strong); color: var(--aoxi-muted); border-radius: 2px; }
+html[data-app] body.aoxi-refresh .akp-pack-actions .solid { background: var(--aoxi-cyan); border-radius: 2px; color: #072025; }
+html[data-app] body.aoxi-refresh .ak-pack-ph { border-color: var(--aoxi-line-strong); background: var(--aoxi-bg-2); color: var(--aoxi-quiet); border-radius: 2px; }
+/* 亮色主题下 solid 按钮用深青底白字，保证对比度 */
+html[data-app][data-theme="light"] body.aoxi-refresh .akp-pack-actions .solid { background: var(--aoxi-cyan); color: #ffffff; }

@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="assets/calc/calc-base.css">
 <link rel="stylesheet" href="assets/ak/ak-theme.css">
 <link rel="stylesheet" href="assets/ak/ak-motion.css">
-<script>document.documentElement.className+=(" ak-js");window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);</script>
+<script>(function(){var d=document.documentElement;d.classList.add("ak-js");try{if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("aoxi-motion-ready");}catch(e){}window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);})();</script>
 <noscript><style>[data-stagger]>*{opacity:1!important;transform:none!important}</style></noscript>
 <link rel="stylesheet" href="assets/calc/calc-override.css">
 <link rel="stylesheet" href="assets/ak/ak-components.css">
@@ -29,13 +29,31 @@
 </style>
 <link rel="stylesheet" href="assets/ak/ak-light.css">
 <script defer src="/ak-analytics.js"></script>
+<link rel="stylesheet" href="assets/ak/aoxi-site-refresh.css">
 </head>
-<body data-ak-progress>
-<div class="container">
+<body class="aoxi-refresh aoxi-calc" data-ak-progress>
+<header class="aoxi-site-head"><div class="aoxi-site-head__inner">
+  <a class="aoxi-site-brand" data-aoxi-intro="rise" href="index.html" aria-label="奥系工具站首页"><img src="assets/logo-site.webp" alt=""><span><small>AOXI / INDEX</small></span></a>
+  <nav class="aoxi-site-nav" data-aoxi-intro="right" aria-label="主导航">
+      <a href="index.html"><span>首页</span><small>HOME</small></a>
+      <a href="calculator.html" aria-current="page"><span>计算器</span><small>CALCULATOR</small></a>
+      <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
+      <a href="strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
+      <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
+  </nav>
+  <details class="aoxi-mobile-nav" data-aoxi-intro="right"><summary><strong>菜单</strong><small>MENU</small></summary><nav class="aoxi-mobile-links" aria-label="手机导航">
+        <a href="index.html"><span>首页</span><small>HOME</small></a>
+        <a href="calculator.html" aria-current="page"><span>计算器</span><small>CALCULATOR</small></a>
+        <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
+        <a href="strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
+        <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
+  </nav></details>
+</div></header>
+<div class="container" data-stagger>
   <!-- 顶部标题 -->
   <a class="back-home" href="index.html">← 返回首页</a>
 
-  <div class="header">
+  <div class="header" data-aoxi-intro="rise">
     <img src="assets/guangyuan.webp" alt="光元" class="title-icon" />
     <div class="ttl">
       <h1>光元收益预测器</h1>

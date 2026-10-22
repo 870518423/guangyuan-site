@@ -90,7 +90,8 @@ const check = (n, ok, extra) => {
   check("app 首页文案已换成精简版", copyOk === true);
   const gear = await ev(`(function(){var g=document.querySelector('.ak-app-gear');if(!g)return null;var r=g.getBoundingClientRect();return {left:Math.round(r.left),top:Math.round(r.top),pos:getComputedStyle(g).position};})()`);
   check("app 首页齿轮 fixed 左上", gear && gear.pos === "fixed" && gear.left < 120 && gear.top < 120, JSON.stringify(gear));
-  check("app 首页更新记录默认收起", (await ev(`document.getElementById('clToggle').textContent`)) === "展开");
+  /* 第 19 轮：新 UI 把收起态文案从「展开」改为「完整记录」（默认显示前 3 条） */
+  check("app 首页更新记录默认收起", (await ev(`document.getElementById('clToggle').textContent`)) === "完整记录");
   const appHome = await shot("app-home.png");
 
   await go("/guides.html?app=1", 3600); await clean();

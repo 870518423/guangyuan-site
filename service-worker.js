@@ -350,7 +350,9 @@ const IS_NATIVE = self.location.hostname === 'localhost' || self.location.protoc
 //         内容清单（pack_deploy 侧过滤）。它们不是内容文件；而且清单自列会让「指纹
 //         比对」永远差几项（清单写完才记下自己的指纹，天生对不上）。
 //      Web 端：页面行为与布局零变化，仅这三个 json 不再进缓存（它们本来就是 no-cache 头）。
-const BUILD = 'v86';
+// v88：主页与四主入口 UI、完整品牌 Logo、主题按钮位置和动效更新（2026-10-21）。
+// v89：补充首页 UI/被动收录更新日志并重新打包（2026-10-21）。
+const BUILD = 'v89';
 const CACHE_NAME = 'guangyuan-static';   // ⚠️ 固定名，不要再往里加版本号
 const FORCE_FULL_REFRESH = false;        // 平时保持 false；出缓存事故才开一次
 
@@ -425,6 +427,7 @@ const ASSETS = [
   './assets/ak/ak-motion.css',
   './assets/ak/ak-components.css',
   './assets/ak/ak-light.css',
+  './assets/ak/aoxi-site-refresh.css',
   './assets/ak/ripple.js',
   './assets/ak/transitions.js',
   './assets/ak/progress.js',
@@ -453,6 +456,7 @@ const ASSETS = [
   './passive/data/泰迦三重斯特利姆.js',
   './passive/data/极恶贝利亚.js',
   './passive/data/奥美迦朱雀装甲.js',
+  './passive/data/gaiya-dadi-zhiguang.js',
   './passive/data/sailuo-wuxian.js',
   './passive/data/sailuo-wuxian-chaoxian.js',
   './passive/data/aotewang-by.js',
@@ -462,6 +466,7 @@ const ASSETS = [
   './passive/data/sailuo-shinyaoxing.js',
   './passive/data/leiguluosi.js',
   './passive/data/sailuo-yinhe-shanzhuo.js',
+  './passive/data/shanyaodijia.js',
   './passive/img/factions/star.png',
   './passive/img/factions/multiverse.png',
   './passive/img/factions/alien.png',
@@ -592,10 +597,11 @@ async function imgFetch(cache, request, remote, local) {
    机制（仅 App 环境生效，Web 端行为零变化）：
    ① 命中 content 桶 → 直接返回（秒开），waitUntil 后台向 SITE_BASE 发
       If-None-Match 条件请求换新（304 = 零下载）；
-   ② 未命中 → 返回 APK 内本地副本（fetch 落在 Capacitor 本地服务器，
-      **永远存在**，这就是「内容包=披甲」的兜底——清桶即回内置版）+ 后台
-      把线上新副本写进桶（localhost 键 + 线上键双键）；
-   ③ 断网 → 本地副本自然兜底（离线时内容仍是内置/已更新版本）。
+   ② 未命中 → **先试线上**（第 19 轮修复）：成功 → 返回线上副本 + 双键入桶
+      （localhost 键 + 线上键）。旧逻辑「先回本地副本」对新增文件（不在 APK 里）
+      首请求必 404，是「盖亚/闪迪第二次刷新才出现」的根因；
+   ③ 线上失败（断网/线上 404）→ 回退 APK 内本地副本（fetch 落在 Capacitor
+      本地服务器，**内置文件永远存在**，「内容包=披甲」的兜底——清桶即回内置版）。
 
    ⚠️ 内容文件 = 打进 APK www 的那批（顶层 html / manifest.json /
       assets/** / passive/** 除图片），与 sync_www.py / content.json 同源。
@@ -785,12 +791,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  /* ---- App 内容覆盖层（第 18 轮）----
+  /* ---- App 内容覆盖层（第 18 轮引入，第 19 轮修时序）----
      仅 App 环境（IS_NATIVE 为 true）生效；Web 端直接跳过本分支。
      ① content 命中 → 直接返回 + 后台条件请求换新；
-     ② 未命中 → 回退 APK 本地副本（fetch 落 Capacitor 本地服务器，永远存在）
-        + 后台把线上新副本写进桶；
-     ③ 断网 → 本地副本兜底。
+     ② 未命中 → **先试线上**（fetch remote）：成功 → 返回线上副本 + 双键入桶。
+        ⚠️ 第 19 轮修复：旧逻辑「未命中先回 APK 本地副本」对**新增文件**
+        （新角色数据等不在 APK 里的）首请求必 404——这正是「盖亚/闪迪下载了
+        也不出现、第二次刷新才有」的根因。线上放行 CORS 后首请求直连即得。
+     ③ 线上失败（断网/404）→ 回退 APK 本地副本（fetch 落 Capacitor 本地服务器，
+        内置文件永远存在）；两者都没有 → 交回页面走 onerror 占位。
      ⚠️ 放在页面/静态分支**之前**：App 内请求本地地址命中覆盖桶后直接拿
         线上新内容，而不走「网络优先连 localhost」拿内置版。 */
   if (IS_NATIVE && isContentRequest(url)) {
@@ -805,13 +814,21 @@ self.addEventListener('fetch', (event) => {
         event.waitUntil(contentRefresh(cache, hit, remote, local));
         return hit;
       }
-      /* 未命中：先回退 APK 本地副本（永远存在），再后台悄悄把线上新版写进桶 */
+      /* 未命中：先试线上（新文件首请求即得；成功后双键入桶，下次秒开） */
+      try {
+        const remoteRes = await fetch(remote, { cache: 'no-cache', credentials: 'omit' });
+        if (remoteRes && remoteRes.ok) {
+          event.waitUntil(contentPut(cache, remote, local, remoteRes));
+          return remoteRes;
+        }
+      } catch (e) {}
+      /* 线上不可用（断网/404）→ 回退 APK 本地副本；同时仍尝试后台把线上写进桶 */
       try {
         const localRes = await fetch(local, { credentials: 'omit' });
         event.waitUntil(contentPrefetch(cache, remote, local));
         return localRes;
       } catch (e) {
-        // 断网兜底：本地服务器异常时，content 桶里若有旧副本就用
+        // 本地服务器也异常：content 桶里若有旧副本就用（极小概率：上面 match 过了）
         if (hit) return hit;
         throw e;
       }

@@ -25,6 +25,7 @@ window.AKP_MANIFEST = [
   { id: "zeta-delta", name: "泽塔德尔塔天爪", file: "data/泽塔德尔塔天爪.js", category: "奥特之星", tier: "UL" },
   { id: "jiebeibeiliya", name: "极恶贝利亚", file: "data/极恶贝利亚.js", category: "宇宙人", tier: "BY" },
   { id: "oumeijia-zhuque", name: "奥美迦朱雀装甲", file: "data/奥美迦朱雀装甲.js", category: "多宇宙", tier: "BY" },
+  { id: "gaiya-dadi-zhiguang", name: "盖亚大地之光", file: "data/gaiya-dadi-zhiguang.js", category: "多宇宙", tier: "UL" },
   { id: "sailuo-wuxian", name: "赛罗无限形态", file: "data/sailuo-wuxian.js", category: "奥特之星", tier: "UL" },
   { id: "sailuo-wuxian-chaoxian", name: "赛罗无限形态（超限）", file: "data/sailuo-wuxian-chaoxian.js", category: "奥特之星", tier: "UL" },
   { id: "aotewang-by", name: "奥特之王（BY）", file: "data/aotewang-by.js", category: "奥特之星", tier: "BY" },
@@ -34,4 +35,6 @@ window.AKP_MANIFEST = [
   { id: "sailuo-shinyaoxing", name: "终极赛罗闪耀型", file: "data/sailuo-shinyaoxing.js", category: "奥特之星", tier: "BY" },
   { id: "leiguluosi", name: "雷古洛思", file: "data/leiguluosi.js", category: "奥特之星", tier: "BY" },
   { id: "sailuo-yinhe-shanzhuo", name: "赛罗无限形态（银河闪耀）", file: "data/sailuo-yinhe-shanzhuo.js", category: "奥特之星", tier: "BY" },
+
+  { id: "shanyaodijia", name: "闪耀迪迦", file: "data/shanyaodijia.js", category: "多宇宙", tier: "BY" },
 ];

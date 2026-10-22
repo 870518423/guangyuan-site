@@ -206,37 +206,41 @@
 })();
 
 /* ============================================================
-   AkContent：内容覆盖层接口（页面侧）（第 18 轮 · 2026-10-19）
+   AkContent：内容覆盖层接口（页面侧）（第 18 轮引入 · 第 19 轮单源化）
    ------------------------------------------------------------
    与 content 桶 `guangyuan-content` 直接读写。SW 覆盖层已建桶：
-   命中任意键即返回（在线离线都能看）；未命中回 APK 内置版
-   （这就是「内容包=披甲」的兜底 — 清桶即回内置版）。
-   信息比对外径：
+   命中任意键即返回（在线离线都能看）；未命中先试线上、失败回 APK
+   内置版（这就是「内容包=披甲」的兜底 — 清桶即回内置版）。
+   信息比对外径（第 19 轮起**以 content 桶为唯一事实源**）：
      · 线上 content.json 的 files[]（path/bytes/hash）+ contentVersion
-     · 本机 content 桶当前 key 的 pathname 集合（决定「有没有」）
-     · 本机指纹台账 localStorage[ak-content-index]（决定「是不是同一份」）
-   差量下载：桶里没有 **或** 指纹与清单不一致（内容改过）才拉线上副本写桶。
-   第 19 轮（2026-10-19）修的两个问题：
-     ① 中文文件名（passive/data/*.js 共 11 个）在 URL 里是百分号编码，未清码
-        → 与清单原文永不相等 → 每次「检查更新」都报同样的 11 个文件、反复重下；
-     ② 只判「文件在不在」不判「内容变没变」→ 同名文件改了也发现不了。
-       现改为比 md5 指纹，清单换新（pack_deploy 重算指纹）后即成真正的增量更新。
+     · 本机 content 桶逐文件 cache.match（键 = 页面请求同款 localhost 键，
+        中文自动百分号编码，与 SW/页面三处同源）
+     · 指纹随文件走：下载时构造带 `x-ak-hash` 头的新 Response 写桶，
+        差分 = 读响应头与清单 hash 比对 —— 不再依赖第二账本
+     · localStorage[ak-content-index] 降级为**只读兼容**：仅当桶内条目
+        没有 x-ak-hash 头（SW 后台换新写入的裸响应）时才查它；无台账可查
+        时**信桶不误报**（防「永远差 N 个文件」死循环的根）
+   第 19 轮修的问题：
+     ① 中文文件名百分号编码 ≠ 清单原文 → 永远差 11 个（D7 已修，保留）；
+     ② 下载只写线上键 + 判定靠 localStorage 台账（第二账本）→ 台账/桶/请求键
+        三处不同源 = 「11 文件死循环」根因域 → 本轮单源化；
+     ③ 下载原子化：fetch → ok → 双键 put → 记指纹，任一步失败进 failed
+        并自动重试一轮；全部成功才算完成。
    ============================================================ */
 (function () {
   "use strict";
   if (!document.documentElement.hasAttribute("data-app")) return;
   var CONTENT_CACHE = "guangyuan-content";
-  var INDEX_KEY = "ak-content-index";   // 本机指纹台账：{ files: { path: md5 } }
+  var INDEX_KEY = "ak-content-index";   // 兼容台账（只读降级）：{ files: { path: md5 } }
   var SITE_URL = "https://m78calc.cn";
-  var manCache = null;
+  var LOC = (typeof location !== "undefined" && location.origin) ? location.origin : "https://localhost";
 
   function fetchRemoteManifest() {
     return fetch(SITE_URL + "/content.json", { cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error("清单获取失败 " + r.status); return r.json(); })
       .catch(function () { return null; });
   }
-  /* 本机指纹台账：记「已下载并已写桶」的文件指纹。
-     只查桶里有没有是不够的——同名文件内容改了看不出来（管理者 2026-10-19 报障根因之一）。 */
+  /* 兼容台账（只读降级）：仅用于没有 x-ak-hash 头的旧条目。 */
   function readIndex() {
     try {
       var o = JSON.parse(localStorage.getItem(INDEX_KEY) || "null");
@@ -250,28 +254,81 @@
     try { localStorage.removeItem(INDEX_KEY); } catch (e) {}
   }
 
+  /* 清单 path → 两个桶键：页面请求同款 localhost 键 + 线上键（与 SW 双键一致） */
+  function keysOf(path) {
+    return {
+      local: new URL("/" + path, LOC).href,
+      remote: new URL(path, SITE_URL + "/").href
+    };
+  }
+  function openContent() {
+    if (!("caches" in window)) return Promise.resolve(null);
+    return caches.open(CONTENT_CACHE).catch(function () { return null; });
+  }
+
   function bucketPaths() {
     if (!("caches" in window)) return Promise.resolve([]);
     return caches.open(CONTENT_CACHE).then(function (c) { return c.keys(); })
       .then(function (ks) {
-        /* pathname 形如 /index.html、/assets/ak/app.css —— 归一到与 content.json
-           files[].path（相对路径，无前导斜杠）一致的写法再比对。 */
-        return ks.map(function (k) {
+        /* 键的 pathname 归一成与 content.json files[].path 一致的写法（清码 + 去斜杠），
+           再按文件去重（双键制下同一文件有 localhost / 线上两个键）。 */
+        var seen = {};
+        var out = [];
+        ks.forEach(function (k) {
           var p = new URL(k.url).pathname;
           p = p.charAt(0) === "/" ? p.slice(1) : p;
-          /* 第 19 轮修正：URL 里的中文是百分号编码（%E6%9E%81…），必须清码，
-             否则与清单原文（极恶贝利亚.js）永不相等 → 每次都被判「缺失」。 */
           try { p = decodeURIComponent(p); } catch (e) {}
-          return p;
+          if (!seen[p]) { seen[p] = 1; out.push(p); }
         });
+        return out;
       })
       .catch(function () { return []; });
   }
 
+  /* 逐清单文件判差：桶（页面请求同款键）为唯一事实源，指纹读 x-ak-hash 头；
+     没头的旧条目查兼容台账；台账也没有 → 信桶不误报（防死循环）。 */
+  function judge(files, cache, idx) {
+    var diffs = [];
+    var chain = Promise.resolve();
+    files.forEach(function (f) {
+      chain = chain.then(function () {
+        if (!cache) { diffs.push(f); return; }
+        var k = keysOf(f.path);
+        return cache.match(k.local)
+          .catch(function () { return null; })
+          .then(function (hit) { return hit || cache.match(k.remote).catch(function () { return null; }); })
+          .then(function (hit) {
+            if (!hit) { diffs.push(f); return; }
+            var h = null;
+            try { h = hit.headers && hit.headers.get ? hit.headers.get("x-ak-hash") : null; } catch (e) {}
+            if (h) { if (h !== f.hash) diffs.push(f); return; }   // 桶内指纹与清单不符 → 真更新
+            var l = idx[f.path];
+            if (l === undefined) return;                           // 无指纹可查 → 信桶（防死循环）
+            if (l !== f.hash) diffs.push(f);                       // 旧条目 + 台账说不一致 → 更新
+          });
+      });
+    });
+    return chain.then(function () { return diffs; });
+  }
+
+  /* 给响应盖上 x-ak-hash 指纹章（指纹随文件走）；Response 不可用时原样返回 */
+  function stampHash(r, hash) {
+    try {
+      var h = { "x-ak-hash": hash };
+      if (r.headers && r.headers.forEach) {
+        r.headers.forEach(function (v, k) { if (String(k).toLowerCase() !== "x-ak-hash") h[k] = v; });
+      } else if (r.headers && r.headers.get) {
+        var ct = r.headers.get("content-type"); if (ct) h["content-type"] = ct;
+        var et = r.headers.get("etag"); if (et) h["etag"] = et;
+      }
+      return new Response(r.body, { status: r.status, headers: h });
+    } catch (e) { return r; }
+  }
+
   window.AkContent = {
     status: function () {
-      return Promise.all([fetchRemoteManifest(), bucketPaths()]).then(function (rs) {
-        var man = rs[0], cur = rs[1], idx = readIndex();
+      return Promise.all([fetchRemoteManifest(), openContent(), bucketPaths()]).then(function (rs) {
+        var man = rs[0], cache = rs[1], cur = rs[2], idx = readIndex();
         var files = (man && man.files) || [];
         var out = {
           ok: !!man,
@@ -281,20 +338,21 @@
           localCount: cur.length,
           diff: []
         };
-        /* 老版本升级上来时没有台账（第 19 轮之前只有「桶里有没有」这一把尺子）：
-           若桶里已有同名文件，就按清单指纹补齐台账，避免一次性重下全部 79 个。
-           之后清单再换新（指纹变）就能正常识别为「有更新」。 */
-        if (man && !Object.keys(idx).length && cur.length) {
+        if (!man) return out;
+        /* 老用户兼容（只读降级的一次性补齐）：无台账且桶里有条目 →
+           按清单指纹补台账，避免把「桶里已有」误判成要重下。 */
+        var prep;
+        if (!Object.keys(idx).length && cache && cur.length) {
           var present = {};
           cur.forEach(function (p) { present[p] = 1; });
           files.forEach(function (f) { if (present[f.path]) idx[f.path] = f.hash; });
           writeIndex(idx);
+          prep = Promise.resolve();
+        } else {
+          prep = Promise.resolve();
         }
-        /* 差分 = 桶里没有 或 指纹与清单不一致（内容改过） */
-        out.diff = files.filter(function (f) {
-          return cur.indexOf(f.path) < 0 || idx[f.path] !== f.hash;
-        });
-        return out;
+        return prep.then(function () { return judge(files, cache, idx); })
+          .then(function (diffs) { out.diff = diffs; return out; });
       }).catch(function () {
         return { ok: false, remoteVersion: null, remoteCount: 0, remoteBytes: 0, localCount: 0, diff: [] };
       });
@@ -304,37 +362,54 @@
       return self.status().then(function (st) {
         var todo = st.diff;
         if (!todo.length) return { downloaded: 0, total: 0, bytes: 0, failed: [] };
-        var total = todo.length, done = 0, ok = 0, bytes = 0, idx = 0;
-        var failed = [];
         var index = readIndex();
         var CONCURRENCY = 3;
-        /* 第 19 轮：单个文件失败不再被算成「下载成功」（原来 done 无差别自增，
-           失败也报「更新完成 11/11」）。只有确实写进桶才记指纹。 */
+
+        /* 单文件原子化：fetch → ok → 构造带 x-ak-hash 的新 Response → 双键 put →
+           记指纹。任一步失败抛错，由外层计入 failed。 */
         function one(it) {
           var url = SITE_URL + "/" + it.path;
+          var k = keysOf(it.path);
           return fetch(url, { cache: "no-cache", credentials: "omit" }).then(function (r) {
             if (!r || !r.ok) throw new Error("HTTP " + (r ? r.status : 0));
-            return caches.open(CONTENT_CACHE).then(function (c) { return c.put(url, r); });
+            var stamped = stampHash(r, it.hash);
+            return caches.open(CONTENT_CACHE).then(function (c) {
+              return Promise.all([c.put(k.local, stamped.clone()), c.put(k.remote, stamped)]);
+            });
           }).then(function () {
-            ok++;
-            bytes += it.bytes || 0;
             index[it.path] = it.hash;
-          }).catch(function () { failed.push(it.path); });
-        }
-        function next() {
-          if (idx >= total) return Promise.resolve();
-          var it = todo[idx++];
-          return one(it).then(function () {
-            done++;
-            if (onProgress) onProgress({ pct: Math.round(done / total * 100), name: it.path.split("/").pop(), done: done, total: total });
-            return next();
           });
         }
-        var arms = [];
-        for (var i = 0; i < Math.min(CONCURRENCY, total); i++) arms.push(next());
-        return Promise.all(arms).then(function () {
-          if (ok > 0) writeIndex(index);
-          return { downloaded: ok, total: total, bytes: bytes, failed: failed };
+        function run(list, label) {
+          var total = list.length, done = 0, okN = 0, bytes = 0, idx2 = 0;
+          var failed = [];
+          function next() {
+            if (idx2 >= total) return Promise.resolve();
+            var it = list[idx2++];
+            return one(it).then(function () {
+              okN++; bytes += it.bytes || 0;
+            }).catch(function () { failed.push(it); }).then(function () {
+              done++;
+              if (onProgress) onProgress({ pct: Math.round(done / total * 100), name: it.path.split("/").pop(), done: done, total: total });
+              return next();
+            });
+          }
+          var arms = [];
+          for (var i = 0; i < Math.min(CONCURRENCY, total); i++) arms.push(next());
+          return Promise.all(arms).then(function () {
+            return { okN: okN, bytes: bytes, failed: failed };
+          });
+        }
+        return run(todo, "first").then(function (r1) {
+          /* 失败自动重试一轮（有界，最多两遍）——网络抖动不留给用户手点 */
+          if (!r1.failed.length) {
+            writeIndex(index);
+            return { downloaded: r1.okN, total: todo.length, bytes: r1.bytes, failed: [] };
+          }
+          return run(r1.failed, "retry").then(function (r2) {
+            writeIndex(index);
+            return { downloaded: r1.okN + r2.okN, total: todo.length, bytes: r1.bytes + r2.bytes, failed: r2.failed.map(function (f) { return f.path; }) };
+          });
         });
       });
     },
