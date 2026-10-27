@@ -1,0 +1,25 @@
+# Dependencies and generated web copy
+node_modules/
+www/
+__pycache__/
+*.pyc
+*.log
+$null
+
+# Android build output
+android/.gradle/
+android/**/build/
+android/capacitor-cordova-android-plugins/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/app/src/main/res/xml/config.xml
+
+# Local machine and signing secrets - never commit
+android/local.properties
+android/keystore/
+android/keystore.properties
+*.jks
+*.keystore
+*.apk
+*.aab

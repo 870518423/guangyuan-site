@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-18",
+ "generated": "2026-10-27",
  "portrait": {
   "size": 420,
   "quality": 86,
@@ -685,6 +685,15 @@
   },
   "朝仓陆": {
    "id": "ce0d3ea4",
+   "forms": [
+    "base",
+    "awaken",
+    "transcend"
+   ],
+   "avatar": true
+  },
+  "朝影雄一郎": {
+   "id": "4101dbd5",
    "forms": [
     "base",
     "awaken",

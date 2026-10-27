@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>老虎机抽取推荐从夯到拉 · 奥系攻略</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="老虎机UL卡抽取推荐：从夯到拉分档，快速查看角色抽取优先级">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="奥系工具站">
+<!-- 主题引导：首帧前定好亮/暗，避免闪色（早于样式表执行） -->
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #101828; --panel2: #0d1526;
+    --border: #1e2a41; --border2: #263449;
+    --text: #e6ebf5; --muted: #8b98ad; --dim: #64748b;
+    --blue: #3b82f6; --gold: #fbbf24; --radius: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px; line-height: 1.6; min-height: 100vh;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  .back-home {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .82rem; color: var(--muted); text-decoration: none;
+    margin-bottom: 12px; padding: 5px 11px 5px 8px;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--panel2);
+    transition: color .15s, border-color .15s;
+  }
+  .back-home:hover { color: #93c5fd; border-color: var(--blue); }
+
+  header { text-align: center; padding: 8px 0 16px; }
+  header h1 {
+    margin: 0 0 6px; font-size: 1.7rem; font-weight: 700; letter-spacing: .5px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--dim); font-size: .8rem; letter-spacing: .3px; }
+  header .sub b { color: var(--gold); font-weight: 600; }
+
+  .author {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 9px;
+    background: linear-gradient(90deg, rgba(251,191,36,.10), rgba(251,191,36,.02));
+    border: 1px solid rgba(251,191,36,.30);
+    border-radius: var(--radius);
+    padding: 11px 14px; margin-bottom: 16px;
+  }
+  .author .lab { font-size: .72rem; color: var(--muted); letter-spacing: 1px; }
+  .author .avatar {
+    display: block; flex: 0 0 44px; width: 44px; height: 44px; padding: 3px;
+    border-radius: 50%; background: var(--ring, #fbbf24); line-height: 0;
+    box-shadow: 0 0 0 1px rgba(15,23,42,.35);
+  }
+  .author .avatar img {
+    display: block; width: 100%; height: 100%; border-radius: 50%;
+    object-fit: cover; background: var(--panel2);
+  }
+  .author a {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--gold); font-size: .96rem; font-weight: 650;
+    text-decoration: none; border-bottom: 1px dashed rgba(251,191,36,.55);
+  }
+  .author a:hover { color: #fde68a; border-bottom-color: #fde68a; }
+  .author a::after { content: "↗"; font-size: .78rem; opacity: .8; }
+  .author .hint { margin-left: auto; font-size: .74rem; color: var(--dim); }
+  .author .date {
+    display: inline-flex; align-items: center; gap: 7px; padding-left: 11px;
+    border-left: 1px solid rgba(251,191,36,.28);
+  }
+  .author .date time {
+    color: var(--text); font-size: .84rem; font-weight: 650;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  @media (max-width: 560px) {
+    .author .hint { margin-left: 0; width: 100%; }
+    .author .date { padding-left: 0; border-left: 0; width: 100%; }
+  }
+
+  .note {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 11px 14px; margin: 0 0 16px;
+    color: var(--muted); font-size: .84rem; line-height: 1.75;
+  }
+  .note b { color: var(--gold); font-weight: 600; }
+  .bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .bar button {
+    border: 1px solid var(--border2); background: var(--panel2); color: var(--muted);
+    font-size: .78rem; padding: 6px 13px; border-radius: 8px; cursor: pointer;
+    font-family: inherit; transition: all .15s;
+  }
+  .bar button:hover { color: var(--text); border-color: var(--blue); }
+  .bar .tip { margin-left: auto; font-size: .74rem; color: var(--dim); }
+
+  .blk {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px 16px; margin-bottom: 13px;
+  }
+  .blk > h2 {
+    margin: 0; font-size: 1.02rem; font-weight: 680; color: var(--gold);
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+    user-select: none; letter-spacing: .3px;
+  }
+  .blk > h2::before { content: "▾"; font-size: .8rem; opacity: .8; transition: transform .15s; }
+  .blk.folded > h2::before { transform: rotate(-90deg); }
+  .blk > h2 .cnt {
+    margin-left: auto; font-size: .72rem; font-weight: 400;
+    color: var(--dim); letter-spacing: .5px;
+  }
+
+  /* ---------- 图片展示 ---------- */
+  .shot { margin-top: 12px; }
+  .shot a {
+    display: block; position: relative;
+    border: 1px solid var(--border2); border-radius: 10px;
+    overflow: hidden; background: var(--bg);
+    transition: border-color .15s;
+  }
+  .shot a:hover { border-color: var(--blue); }
+  .shot img {
+    display: block; width: 100%; height: auto;   /* 宽度撑满，高度自然（超长图可滚动） */
+  }
+  .shot .cap {
+    margin: 8px 0 0; font-size: .74rem; color: var(--dim); text-align: center;
+  }
+
+  /* ---------- 视频文字稿与阵营 UI ---------- */
+  .transcript-intro {
+    margin-top: 12px; padding: 13px 15px; background: var(--panel2);
+    border: 1px solid var(--border); border-left: 3px solid var(--gold);
+    border-radius: 10px;
+  }
+  .transcript-intro p {
+    margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.9;
+  }
+  .transcript-intro p + p { margin-top: 8px; }
+  .faction {
+    margin-top: 18px; overflow: hidden; background: var(--bg);
+    border: 1px solid var(--border2); border-radius: 12px;
+  }
+  .faction-head {
+    display: flex; align-items: center; gap: 12px; padding: 11px 13px;
+    background: linear-gradient(90deg, var(--faction-soft), transparent 72%);
+    border-bottom: 1px solid var(--faction-soft);
+  }
+  .faction-icon {
+    display: grid; place-items: center; flex: 0 0 56px;
+    width: 56px; height: 58px; background: rgba(7,12,22,.42);
+    border: 1px solid var(--faction); border-radius: 11px;
+  }
+  .faction-icon img {
+    display: block; width: 50px; height: 52px; object-fit: contain;
+    filter: drop-shadow(0 0 7px var(--faction));
+  }
+  .faction-title { min-width: 0; }
+  .faction-title small {
+    display: block; color: var(--faction); opacity: .72; line-height: 1;
+    font-family: var(--ak-mono, monospace); font-size: .64rem; letter-spacing: 1.2px;
+  }
+  .faction-title strong {
+    display: block; margin-top: 5px; color: var(--faction);
+    font-size: 1.04rem; line-height: 1.15; letter-spacing: .5px;
+  }
+  .faction-count {
+    margin-left: auto; flex: 0 0 auto; padding: 3px 8px;
+    color: var(--muted); background: rgba(7,12,22,.34);
+    border: 1px solid var(--border); border-radius: 6px;
+    font-size: .68rem; font-variant-numeric: tabular-nums;
+  }
+  .faction-copy { padding: 2px 15px 13px; }
+  .faction-copy p {
+    margin: 0; padding: 10px 0; color: var(--muted);
+    border-bottom: 1px dashed var(--border); font-size: .88rem; line-height: 1.9;
+  }
+  .faction-copy p:last-child { padding-bottom: 2px; border-bottom: 0; }
+  .faction-copy strong { color: var(--text); font-weight: 680; }
+
+  footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: .76rem; line-height: 2; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<script>document.documentElement.className+=(" ak-js");window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);</script>
+<noscript><style>[data-stagger]>*{opacity:1!important;transform:none!important}</style></noscript>
+<style>
+  /* 明日方舟风格覆盖：直角、描边、扫描线 */
+  .card { background: var(--ak-bg-1); }
+  .card:hover { background: var(--ak-bg-2); }
+  header h1 { letter-spacing: 2px; }
+  .author { border-radius: var(--ak-radius); }
+  /* 折叠：grid-template-rows 方案（比 max-height / display 更平滑） */
+  .blk:not(.folded) .blk-inner { animation: ak-in var(--dur-base) var(--ease-out) both; }
+  .blk-fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 320ms var(--ease); }
+  .blk.folded .blk-fold { grid-template-rows: 0fr; transition: grid-template-rows 200ms var(--ease-in); }
+  /* 裁剪层不能带 padding —— border-box 下 padding 会把折叠到 0 的行撑出一截 */
+  .blk-fold > .blk-inner { overflow: hidden; min-height: 0; }
+  .card .tags span.cat { font-family: var(--ak-mono); }
+  .shot a { border-radius: var(--ak-radius); }
+  footer { border-top: 0; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
+</head>
+<body data-ak-progress>
+<div class="wrap">
+  <a class="back-home" href="strategies.html">← 返回奥系攻略</a>
+
+  <header>
+    <h1>老虎机抽取推荐从夯到拉</h1>
+    <span class="ak-label-en">Tiger Machine Pick Guide</span>
+    <p class="sub">转载自玩家社区 · 内容版权归原作者所有</p>
+  </header>
+
+  <div class="author"><span class="avatar" style="--ring:#fbbf24"><img src="assets/authors/number1.webp" width="44" height="44" alt="没救了number1头像" loading="lazy" decoding="async"></span><span class="lab">攻略作者</span><a href="https://space.bilibili.com/305577636" target="_blank" rel="noopener noreferrer">没救了number1</a><span class="date"><span class="lab">攻略日期</span><time datetime="2026-10-19">2026.10.19</time></span><span class="hint">B 站主页 · 点击前往作者主页</span></div>
+
+  <p class="note">本页包含<b>图片攻略与视频文字稿</b>，内容版权归原作者所有；点击图片可查看原图，文字稿按 AI 字幕原文分段。</p>
+
+  <div id="body" data-stagger>
+    <section class="blk">
+      <h2>抽取推荐总览<span class="cnt">1 张图</span></h2>
+      <div class="ak-fold blk-fold"><div class="blk-inner">
+        <div class="shot">
+          <a href="assets/guides/huluji/1-tiger-machine-pick.webp" target="_blank" rel="noopener noreferrer">
+            <img src="assets/guides/huluji/1-tiger-machine-pick.webp"
+                 width="1920" height="864"
+                 alt="老虎机UL卡抽取推荐从夯到拉强度分档图" loading="eager" decoding="async">
+          </a>
+          <p class="cap">点击图片查看原图</p>
+        </div>
+      </div></div>
+    </section>
+    <section class="blk transcript-block" id="transcript">
+      <h2>视频文字稿</h2>
+      <div class="ak-fold blk-fold"><div class="blk-inner">
+        <div class="transcript-intro">
+          <p>今年3月16日，YX策划做出了一个重大改动</p>
+          <p>超强角色卡池 也就是老虎机</p>
+          <p>UL的光能等级限制由五级下降到了一级</p>
+          <p>这么改的好处是，以前最少要75块钱才能玩的UL卡，现在充个六元礼包就能攒资源抽了，对学生党尤其是初中生特别友好。</p>
+          <p>那么我就趁着这次机会给小伙伴们盘点一下老虎机UL的抽取建议。</p>
+          <p>（本盘点不包含秘藏卡、融合卡和红变UL）</p>
+        </div>
+        <section class="faction" aria-labelledby="faction-1-title" style="--faction:#34d399;--faction-soft:rgba(52,211,153,.13)">
+          <div class="faction-head">
+            <span class="faction-icon"><img src="assets/factions/star.png" width="67" height="69" alt="奥星阵营图标" loading="lazy" decoding="async"></span>
+            <span class="faction-title"><small>FACTION 01</small><strong id="faction-1-title">奥星阵营</strong></span>
+            <span class="faction-count">4 位角色</span>
+          </div>
+          <div class="faction-copy">
+          <p><strong>奥特之王：</strong>作为一张老牌UL卡，奥王不管是机制还是数值完全跟不上现在的版本，并且还有突破奥王的存在，只能给拉完了</p>
+          <p><strong>泰迦三重斯特利姆形态：</strong>曾经的奥阵大C，现在是要坦度有伤害，要伤害打不出，成于二段能量技也败于二段能量技，给到NPC</p>
+          <p><strong>利捕头（利布特）：</strong>他的出现直接击垮了当年泰迦在奥阵的统治，是第一个由二段伤害的地图炮。但是现版本启动太慢，很容易在前几个回合被秒，甚至还有叠层bug，这对打本的影响很大。介于启动后有一些强度，给到人上人</p>
+          <p><strong>捷德银河初升：</strong>本来是奥星顶级挂件炮灰，却在去年加强后修复了良性bug，现在不管是打本还是PVP都被亚克踩头，给到人上人</p>
+          </div>
+        </section>
+        <section class="faction" aria-labelledby="faction-2-title" style="--faction:#38bdf8;--faction-soft:rgba(56,189,248,.13)">
+          <div class="faction-head">
+            <span class="faction-icon"><img src="assets/factions/multiverse.png" width="67" height="69" alt="多宇宙阵营图标" loading="lazy" decoding="async"></span>
+            <span class="faction-title"><small>FACTION 02</small><strong id="faction-2-title">多宇宙阵营</strong></span>
+            <span class="faction-count">4 位角色</span>
+          </div>
+          <div class="faction-copy">
+          <p><strong>赛迦：</strong>跟奥王同时期的卡，也是吃了出场早的亏，曾经有多风光，现在就有多落魄，给到NPC</p>
+          <p><strong>布莱泽：</strong>高效二段地图炮，高额暴击，能量技跟瓦龙一样的同款加强，续航更加稳定，还能给敌方全体挂封技和燃烧，最重要的是加强了简介技，现在只要吃一次奶就能解锁二命。不过因为强绑奶妈且自身较脆，加强后也依旧是顶级，主要也是作为主C被一个神秘红脸给踩头了。</p>
+          <p><strong>奥美迦白虎装甲：</strong>（请输入文本）配合保镖就能做到拳打诺亚，脚踢雷杰多，现版本奥阵UL最强主C卡，毫无疑问给到夯。</p>
+          <p><strong>灼日亚刻：</strong>直接说优点，启动快，伤害高，坦度高，抽了还有皓月亚刻这个奥阵UL顶级辅助兜底，必须夯</p>
+          </div>
+        </section>
+        <section class="faction" aria-labelledby="faction-3-title" style="--faction:#fb7185;--faction-soft:rgba(251,113,133,.13)">
+          <div class="faction-head">
+            <span class="faction-icon"><img src="assets/factions/monster.png" width="67" height="69" alt="怪兽阵营图标" loading="lazy" decoding="async"></span>
+            <span class="faction-title"><small>FACTION 03</small><strong id="faction-3-title">怪兽阵营</strong></span>
+            <span class="faction-count">9 位角色</span>
+          </div>
+          <div class="faction-copy">
+          <p><strong>海帕杰顿：</strong>奥系第一张UL卡。立绘是帅的，强度是没有的，直接拉完了</p>
+          <p><strong>加拉特隆MK-2：</strong>加强后把能量技从随机三连改成了地图炮，新增的受伤率也大大加强了辅助打本能力，不过特效依旧是南蚌能量棍<br>+12给了经典的UL加强通用模板，现在白龙的数值也算是一张正常的UL卡了，不过续航依旧是落后的格挡回血。数据化在目前的UL局还是相当有用的，不过会被保镖挡住，最好能先手释放。自身没有二命，伤害也偏低，被动还是更偏向于光环辅助卡，可以做母体的队友，综合可以给到顶级。</p>
+          <p><strong>宝石兽：</strong>奥系第一张机制卡，宝石化属于控制效果，会被新时代BY免疫，不过在UL对局还是很恶心的。并且加强后的宝石兽在加七和加12被动的加持下，有着不俗的伤害，缺点还是自身太脆，吃队友，给到人上人</p>
+          <p><strong>黑蜧：</strong>曾经的赛迦杀手，现在的时代眼泪。跟泰迦一样，是非常自私的主C卡，对全队没有增益所以排不到人上人，再往上的顶级主C卡黑蜧数值又跟不上，给到NPC</p>
+          <p><strong>机械赛罗：</strong>机械阵增伤辅助，主要靠污染之章吃饭，主堆可以打本，但是数值跟不上了，只能给到人上人</p>
+          <p><strong>乌拉：</strong>邪阵的续航救星，第一张UL奶，加强后有稳定的增伤能力，并且加12被动叠起来后也非常的恶心 ，给到顶级</p>
+          <p><strong>斯菲亚母体：</strong>（请输入文本）现版本UL最强超模卡，必须夯</p>
+          <p><strong>瓦拉隆：</strong>能量技从三回合叠满加强到两回合叠满，并且加12被动叠满后，每回合都会生出一个魔丸（生物炸弹·超爆炸），<br>但是这个魔丸的倍率对比普通能量技，是提高了下限降低了上限，输出变高了，但爆发变低了。，依旧渔村爆料“加强力度最大之人”，依旧反向加强第一龙，降级到NPC</p>
+          <p><strong>基尔巴格：</strong>奥系作为一个Q版卡牌游戏，我一开始还以为YX会把猪头做成，非常可爱的那种，结果等实装后却是这个吊样。不过猪头强度这方面没得说，作为打本辅助可以给到夯</p>
+          </div>
+        </section>
+        <section class="faction" aria-labelledby="faction-4-title" style="--faction:#a78bfa;--faction-soft:rgba(167,139,250,.13)">
+          <div class="faction-head">
+            <span class="faction-icon"><img src="assets/factions/alien.png" width="67" height="69" alt="宇宙人阵营图标" loading="lazy" decoding="async"></span>
+            <span class="faction-title"><small>FACTION 04</small><strong id="faction-4-title">宇宙人阵营</strong></span>
+            <span class="faction-count">5 位角色</span>
+          </div>
+          <div class="faction-copy">
+          <p><strong>终极贝利亚：</strong>曾经一口咬爆了土豆服务器，更多的时间是作为打本黑奴而存在，而如今数值跟不上，打本卡也越来越多，UL兽贝几乎没有存在感了，给到拉完了</p>
+          <p><strong>雷布朗多星人：</strong>以前的贝利亚专辅，加强后放开了限制，可辅助所有角色，这一个附体Buff就超越了其他大部分辅助，死亡时甚至还有高额真伤自爆，毫无疑问给到夯</p>
+          <p><strong>奇美拉贝洛斯：</strong>除了前两个回合能靠无敌盾苟活，整体强度并不高</p>
+          <p>可以看成是低配版母体，只能给到人上人</p>
+          <p><strong>苏仪德：</strong>从能量技来看，应该是在对标奥阵的皓月亚刻，但是与皓月亚刻的闪避抗暴加成不同，苏仪德给的居然是格挡韧性加强，这就导致他的生存能力远没有皓月亚刻稳定，而且没有二命，相当吃资源还强绑猪，只能给到NPC</p>
+          <p><strong>特拉菲扎：</strong>机械阵专辅，皓月亚刻同款能量技，，瓦隆同款触发技，效果献祭还更强。作为一个副C，伤害倍率给的也相当慷慨。但增伤<br>被动较少，哪怕对机械阵的打本提升也不如皓月亚刻。但是修二命之后直接给到夯，只凭这个二命效果就足够了。因为庇护不同于无敌，庇护可以阻断除次元卡外的所有效果和伤害，是真正意义上的无敌一回合。特拉菲扎可以看成是乌拉的完全上位，非常推荐平民阵抽取，只要给点资源就能有非常大的作用。</p>
+          </div>
+        </section>
+      </div></div>
+    </section>
+  </div>
+
+  <footer>攻略图片与视频文字稿版权归原作者所有，以作者发布内容为准</footer>
+</div>
+
+<script>
+document.querySelectorAll('.blk > h2').forEach(h => {
+  h.addEventListener('click', () => h.parentElement.classList.toggle('folded'));
+});
+</script>
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
+</body>
+</html>

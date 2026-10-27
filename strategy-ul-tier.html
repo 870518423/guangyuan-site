@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>UL强度排行榜 · 奥系攻略</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="UL强度排行榜：仅考虑PVP、不计成本，按T0至T5分档，并补充部分角色的献祭被动排位说明">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="奥系工具站">
+<!-- 主题引导：首帧前定好亮/暗，避免闪色（早于样式表执行） -->
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #101828; --panel2: #0d1526;
+    --border: #1e2a41; --border2: #263449;
+    --text: #e6ebf5; --muted: #8b98ad; --dim: #64748b;
+    --blue: #3b82f6; --gold: #fbbf24; --radius: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px; line-height: 1.6; min-height: 100vh;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  .back-home {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .82rem; color: var(--muted); text-decoration: none;
+    margin-bottom: 12px; padding: 5px 11px 5px 8px;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--panel2);
+    transition: color .15s, border-color .15s;
+  }
+  .back-home:hover { color: #93c5fd; border-color: var(--blue); }
+
+  header { text-align: center; padding: 8px 0 16px; }
+  header h1 {
+    margin: 0 0 6px; font-size: 1.7rem; font-weight: 700; letter-spacing: .5px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--dim); font-size: .8rem; letter-spacing: .3px; }
+  header .sub b { color: var(--gold); font-weight: 600; }
+
+  .author {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 9px;
+    background: linear-gradient(90deg, rgba(251,191,36,.10), rgba(251,191,36,.02));
+    border: 1px solid rgba(251,191,36,.30);
+    border-radius: var(--radius);
+    padding: 11px 14px; margin-bottom: 16px;
+  }
+  .author .lab { font-size: .72rem; color: var(--muted); letter-spacing: 1px; }
+  .author .avatar {
+    display: block; flex: 0 0 44px; width: 44px; height: 44px; padding: 3px;
+    border-radius: 50%; background: var(--ring, #fbbf24); line-height: 0;
+    box-shadow: 0 0 0 1px rgba(15,23,42,.35);
+  }
+  .author .avatar img {
+    display: block; width: 100%; height: 100%; border-radius: 50%;
+    object-fit: cover; background: var(--panel2);
+  }
+  .author a {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--gold); font-size: .96rem; font-weight: 650;
+    text-decoration: none; border-bottom: 1px dashed rgba(251,191,36,.55);
+  }
+  .author a:hover { color: #fde68a; border-bottom-color: #fde68a; }
+  .author a::after { content: "↗"; font-size: .78rem; opacity: .8; }
+  .author .hint { margin-left: auto; font-size: .74rem; color: var(--dim); }
+  .author .date {
+    display: inline-flex; align-items: center; gap: 7px; padding-left: 11px;
+    border-left: 1px solid rgba(251,191,36,.28);
+  }
+  .author .date time {
+    color: var(--text); font-size: .84rem; font-weight: 650;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  @media (max-width: 560px) {
+    .author .hint { margin-left: 0; width: 100%; }
+    .author .date { padding-left: 0; border-left: 0; width: 100%; }
+  }
+
+  .note {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 11px 14px; margin: 0 0 16px;
+    color: var(--muted); font-size: .84rem; line-height: 1.75;
+  }
+  .note b { color: var(--gold); font-weight: 600; }
+  .guide-notes {
+    background: linear-gradient(135deg, rgba(167,139,250,.11), rgba(13,21,38,.82));
+    border: 1px solid rgba(167,139,250,.32); border-left: 3px solid #a78bfa;
+    border-radius: var(--radius); padding: 13px 15px; margin: 0 0 16px;
+    color: var(--muted); font-size: .84rem; line-height: 1.75;
+  }
+  .guide-notes h2 {
+    margin: 0 0 8px; color: #c4b5fd; font-size: .86rem; letter-spacing: .8px;
+  }
+  .guide-notes ol { margin: 0; padding-left: 1.35rem; }
+  .guide-notes li + li { margin-top: 5px; }
+  .guide-notes strong { color: var(--text); font-weight: 650; }
+  .guide-notes .order { color: var(--gold); font-weight: 650; letter-spacing: .2px; }
+  .guide-notes .supplement {
+    margin-top: 11px; padding-top: 10px; border-top: 1px solid rgba(167,139,250,.20);
+  }
+  .guide-notes .supplement b { color: #c4b5fd; }
+  .guide-notes .supplement p { margin: 4px 0 0; }
+  @media (max-width: 560px) { .guide-notes { padding: 12px 13px; } }
+  .bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .bar button {
+    border: 1px solid var(--border2); background: var(--panel2); color: var(--muted);
+    font-size: .78rem; padding: 6px 13px; border-radius: 8px; cursor: pointer;
+    font-family: inherit; transition: all .15s;
+  }
+  .bar button:hover { color: var(--text); border-color: var(--blue); }
+  .bar .tip { margin-left: auto; font-size: .74rem; color: var(--dim); }
+
+  .blk {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px 16px; margin-bottom: 13px;
+  }
+  .blk > h2 {
+    margin: 0; font-size: 1.02rem; font-weight: 680; color: var(--gold);
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+    user-select: none; letter-spacing: .3px;
+  }
+  .blk > h2::before { content: "▾"; font-size: .8rem; opacity: .8; transition: transform .15s; }
+  .blk.folded > h2::before { transform: rotate(-90deg); }
+  .blk > h2 .cnt {
+    margin-left: auto; font-size: .72rem; font-weight: 400;
+    color: var(--dim); letter-spacing: .5px;
+  }
+
+  /* ---------- 图片展示 ---------- */
+  .shot { margin-top: 12px; }
+  .shot a {
+    display: block; position: relative;
+    border: 1px solid var(--border2); border-radius: 10px;
+    overflow: hidden; background: var(--bg);
+    transition: border-color .15s;
+  }
+  .shot a:hover { border-color: var(--blue); }
+  .shot img {
+    display: block; width: 100%; height: auto;   /* 宽度撑满，高度自然（超长图可滚动） */
+  }
+  .shot .cap {
+    margin: 8px 0 0; font-size: .74rem; color: var(--dim); text-align: center;
+  }
+
+  footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: .76rem; line-height: 2; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<script>document.documentElement.className+=(" ak-js");window.__akReady=0;setTimeout(function(){if(!window.__akReady){document.querySelectorAll("[data-stagger]>*").forEach(function(e){e.style.transition="none";e.style.opacity="1";e.style.transform="none";});}},3000);</script>
+<noscript><style>[data-stagger]>*{opacity:1!important;transform:none!important}</style></noscript>
+<style>
+  /* 明日方舟风格覆盖：直角、描边、扫描线 */
+  .card { background: var(--ak-bg-1); }
+  .card:hover { background: var(--ak-bg-2); }
+  header h1 { letter-spacing: 2px; }
+  .author { border-radius: var(--ak-radius); }
+  /* 折叠：grid-template-rows 方案（比 max-height / display 更平滑） */
+  .blk:not(.folded) .blk-inner { animation: ak-in var(--dur-base) var(--ease-out) both; }
+  .blk-fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 320ms var(--ease); }
+  .blk.folded .blk-fold { grid-template-rows: 0fr; transition: grid-template-rows 200ms var(--ease-in); }
+  /* 裁剪层不能带 padding —— border-box 下 padding 会把折叠到 0 的行撑出一截 */
+  .blk-fold > .blk-inner { overflow: hidden; min-height: 0; }
+  .card .tags span.cat { font-family: var(--ak-mono); }
+  .shot a { border-radius: var(--ak-radius); }
+  footer { border-top: 0; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
+</head>
+<body data-ak-progress>
+<div class="wrap">
+  <a class="back-home" href="strategies.html">← 返回奥系攻略</a>
+
+  <header>
+    <h1>UL强度排行榜</h1>
+    <span class="ak-label-en">UL Tier List</span>
+    <p class="sub">PVP 向 · 不计成本 · 内容版权归原作者所有</p>
+  </header>
+
+  <div class="author"><span class="avatar" style="--ring:#60a5fa"><img src="assets/authors/xiaoma-pilot.webp" width="44" height="44" alt="一只路过的小马飞行员头像" loading="lazy" decoding="async"></span><span class="lab">攻略作者</span><a href="https://tieba.baidu.com/p/11124979561" target="_blank" rel="noopener noreferrer">一只路过的小马飞行员</a><span class="date"><span class="lab">攻略日期</span><time datetime="2026-10-21">2026.10.21</time></span><span class="hint">百度贴吧 · 点击前往原帖</span></div>
+
+  <section class="guide-notes" aria-labelledby="guide-notes-title">
+    <h2 id="guide-notes-title">阅读前提</h2>
+    <ol>
+      <li><strong>只考虑 PVP。</strong></li>
+      <li><strong>不考虑成本。</strong></li>
+      <li>排列顺序为 <span class="order">突破 ＞ 奥星 ＞ 多宇宙 ＞ 宇宙人 ＞ 怪兽</span>，该顺序与强度无关。</li>
+    </ol>
+    <div class="supplement">
+      <b>转载者补充（来自贴吧评论）</b>
+      <p>格利扎、宙达、龙虾、大蛇1形态的排位考虑了献祭被动。</p>
+    </div>
+  </section>
+
+  <p class="note">本页为<b>图片攻略</b>，内容版权归原作者所有；点击图片可查看原图。</p>
+
+  <div id="body" data-stagger>
+    <section class="blk">
+      <h2>UL强度总览<span class="cnt">1 张图</span></h2>
+      <div class="ak-fold blk-fold"><div class="blk-inner">
+        <div class="shot">
+          <a href="assets/guides/ul-tier/1-ul-tier-ranking.webp" target="_blank" rel="noopener noreferrer">
+            <img src="assets/guides/ul-tier/1-ul-tier-ranking.webp"
+                 width="1920" height="1878"
+                 alt="UL强度排行榜强T0至T5分档图" loading="eager" decoding="async">
+          </a>
+          <p class="cap">点击图片查看原图</p>
+        </div>
+      </div></div>
+    </section>
+  </div>
+
+  <footer>原文数据未作删改，以作者发布内容为准</footer>
+</div>
+
+<script>
+document.querySelectorAll('.blk > h2').forEach(h => {
+  h.addEventListener('click', () => h.parentElement.classList.toggle('folded'));
+});
+</script>
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
+</body>
+</html>

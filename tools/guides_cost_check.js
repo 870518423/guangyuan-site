@@ -1,13 +1,13 @@
-/* 人间体图鉴「光元消耗 / 商店价着色」验收（tools/guides_cost_check.js，2026-10-17）
+/* 人间体图鉴「特训光元消耗 / 商店价着色」验收（tools/guides_cost_check.js，2026-10-17）
    前置：node ../tools/serve.js . 8099  +  无头 Chrome 开 9222
    用法：NO_PROXY='*' NODE_PATH=<ws>/node_modules node tools/guides_cost_check.js [baseUrl]
 
    检查：
-     1. 132 张卡片每张都有「光元消耗」行；表格多出第 7 列且每行有值
+     1. 133 张卡片每张都有「特训光元消耗」行；表格多出第 7 列且每行有值
      2. 特训名单里：6000 → .p6000（金）、未标价商店 → .p11280（橙）；其它栏位不误染
      3. 卡片上的数值 / 标题明细 = 该角色 traits 价格之和（与 GUIDE 数据独立复算）
      4. 光元图标已换成 webp 且能成功加载
-     5. 详情弹层也有「光元消耗」
+     5. 详情弹层也有「特训光元消耗」
    截图：.workbuddy/shots/guides-cost-{card,table,modal}.png */
 const http = require("http");
 const fs = require("fs");
@@ -68,9 +68,9 @@ const check = (n, ok, extra) => {
             p11:document.querySelectorAll('#cardView .tag.nam.p11280').length,
             plainNam:document.querySelectorAll('#cardView .tag.nam:not(.p6000):not(.p11280)').length};
   })())`));
-  check("卡片 132 张", st.cards === 132, st.cards);
-  check("每张卡片都有「光元消耗」", st.cost === st.cards, st.cost + "/" + st.cards);
-  check("表格表头多出「光元消耗」列", st.ths.length === 7 && st.ths[6] === "光元消耗", st.ths.join("|"));
+  check("卡片 133 张", st.cards === 133, st.cards);
+  check("每张卡片都有「特训光元消耗」", st.cost === st.cards, st.cost + "/" + st.cards);
+  check("表格表头多出「特训光元消耗」列", st.ths.length === 7 && st.ths[6] === "特训光元消耗", st.ths.join("|"));
   check("特训名单出现金色（6000）标签", st.p6 > 0, st.p6 + " 个");
   check("特训名单出现橙色（11280）标签", st.p11 > 0, st.p11 + " 个");
 
@@ -112,7 +112,7 @@ const check = (n, ok, extra) => {
     });
     return {n:n, bad:bad.slice(0,5), nbad:bad.length, zeros:zeros};
   })())`));
-  check("132 张卡片的光元消耗全部等于价格之和", calc.nbad === 0, "复算 " + calc.n + " 张，不一致 " + calc.nbad);
+  check("133 张卡片的特训光元消耗全部等于价格之和", calc.nbad === 0, "复算 " + calc.n + " 张，不一致 " + calc.nbad);
   check("无消耗的角色显示 0（不是空白）", calc.zeros > 0, calc.zeros + " 张");
 
   /* ---------- 4) 明细 tooltip ---------- */
@@ -133,12 +133,12 @@ const check = (n, ok, extra) => {
   /* ---------- 6) 截图（卡片 / 文字版 / 弹层） ----------
      ⚠️ 2026-10-19 修正：页面视图切换早已定为「文字版 / 图片版」（原「表格视图」已移除，
      只剩空 thead/tbody 壳，数据行不再渲染）。旧脚本还点 [data-view=table] → 按钮不存在
-     → null.click 抛错 → 误报。改为验证两种现有视图下光元消耗都完整呈现。 */
+     → null.click 抛错 → 误报。改为验证两种现有视图下特训光元消耗都完整呈现。 */
   const cardShot = await shot("guides-cost-card.png");
   await ev(`document.querySelector('.viewtoggle button[data-view="text"]').click()`);
   await sleep(600);
   const textCost = await ev(`document.querySelectorAll('#cardView .costval').length`);
-  check("文字版下光元消耗完整（132）", textCost === 132, textCost);
+  check("文字版下特训光元消耗完整（133）", textCost === 133, textCost);
   const textShot = await shot("guides-cost-text.png");
   await ev(`document.querySelector('.viewtoggle button[data-view="image"]').click()`);
   await sleep(500);
@@ -150,7 +150,7 @@ const check = (n, ok, extra) => {
             cost: (document.querySelector('#mBody .costval')||{}).textContent||''};
   })())`));
   check("详情弹层打开", modal.open === true);
-  check("弹层里有「光元消耗」小节", modal.secs.indexOf("光元消耗") >= 0, modal.secs.join(" | "));
+  check("弹层里有「特训光元消耗」小节", modal.secs.indexOf("特训光元消耗") >= 0, modal.secs.join(" | "));
   const modalShot = await shot("guides-cost-modal.png");
 
   /* ---------- 7) 最高价角色：确认金/橙两色同时可见 ---------- */

@@ -6,6 +6,8 @@
   strategies.html         板块首页（子版块列表 + 搜索）
   strategy-xiulian.html   修炼数值表
   strategy-dati.html      奥特曼答题库
+  strategy-huluji.html    老虎机抽取推荐（图片攻略）
+  strategy-ul-tier.html   UL 强度排行榜（图片攻略）
 
 数据源：sources/修炼.md、sources/奥特曼答题.txt
 用法：python build_strategies.py
@@ -29,6 +31,12 @@ DATI_TXT = os.path.join(SOURCES, '奥特曼答题.txt')
 # 作者署名
 AUTHOR_NAME = '故稔'
 AUTHOR_URL = 'https://space.bilibili.com/505753055'
+# 攻略日期：修炼按首次收录日；答题按最近更新日；转载攻略按原文发布日期
+XIULIAN_DATE = '2026.10.9'
+XIULIAN_DATE_ISO = '2026-10-09'
+DATI_DATE = '于2026-10-23更新'
+DATI_DATE_ISO = '2026-10-23'
+DATI_UPDATE = '2026-10-23改动：调整了27的题目，32的答案，新增了9道题目'
 # 板块首页小字
 SECTION_SUB = '收录自玩家社区 · 内容版权归原作者所有'
 # 修炼页顶部说明：{lv} 会被替换成金色的「6级」
@@ -47,20 +55,28 @@ SECTIONS = [
         'title': '修炼数值表',
         'cat': '修炼',
         'file': 'strategy-xiulian.html',
-        'icon': 'assets/strategy-book.png',
+        'author': '故稔',
+        'avatar': 'assets/authors/guren.webp',
+        'ring': '#60a5fa',
         'accent': '#fbbf24',
-        'desc': '按修炼条目分组，收录四维、全伤／全免、高级属性、增幅与抗性的非完美属性数值，由低到高排列。',
+        'desc': '转载故稔的修炼数值表：按修炼条目分组，收录四维、全伤／全免、高级属性、增幅与抗性的非完美属性数值，由低到高排列。',
         'tags': ['6级词条', '数值区间', '升序排列'],
+        'date': XIULIAN_DATE,
+        'date_iso': XIULIAN_DATE_ISO,
     },
     {
         'id': 'dati',
         'title': '趣味问答题库',
         'cat': '答题',
         'file': 'strategy-dati.html',
-        'icon': 'assets/strategy-book.png',
+        'author': '故稔',
+        'avatar': 'assets/authors/guren.webp',
+        'ring': '#60a5fa',
         'accent': '#38bdf8',
-        'desc': '__NQ__ 道奥特曼知识题。答案默认隐藏，可当题库自测；也能一键展开当速查手册，支持题号与关键词搜索。',
+        'desc': '转载故稔的趣味问答题库：__NQ__ 道奥特曼知识题。答案默认隐藏，可当题库自测；也能一键展开当速查手册，支持题号与关键词搜索。',
         'tags': ['__NQ__ 题', '可自测', '一键展开'],
+        'date': DATI_DATE,
+        'date_iso': DATI_DATE_ISO,
     },
     {
         # 图片型攻略：页面 strategy-bingfeiwudou.html 是手工维护的静态页，
@@ -69,10 +85,70 @@ SECTIONS = [
         'title': '并非五斗的警备队攻略',
         'cat': '警备队',
         'file': 'strategy-bingfeiwudou.html',
-        'icon': 'assets/strategy-book.png',
+        'author': '并非五斗',
+        'avatar': 'assets/authors/bingfeiwudou.webp',
+        'ring': '#fbbf24',
         'accent': '#34d399',
         'desc': '转载并非五斗的警备队图文攻略：警备队商店兑换建议、源晶掉落表，以及 16 到 20 章章节怪物站位图，含三张可折叠长图。',
         'tags': ['3 张图', '警备队兑换', '章节站位'],
+        'date': '2026.9.10',
+        'date_iso': '2026-09-10',
+    },
+    {
+        'id': 'huluji',
+        'title': '老虎机抽取推荐从夯到拉',
+        'cat': '抽取推荐',
+        'file': 'strategy-huluji.html',
+        'author': '没救了number1',
+        'avatar': 'assets/authors/number1.webp',
+        'ring': '#fbbf24',
+        'accent': '#fb7185',
+        'desc': '转载没救了number1的老虎机抽取推荐图与视频文字稿：按「夯、顶级、人上人、NPC、拉完了」分档，并按奥星、多宇宙、怪兽、宇宙人四个阵营整理抽取建议。',
+        'tags': ['从夯到拉', '四阵营', '图文整理'],
+        'date': '2026.10.19',
+        'date_iso': '2026-10-19',
+    },
+    {
+        'id': 'ul-tier',
+        'title': 'UL强度排行榜',
+        'cat': '强度榜',
+        'file': 'strategy-ul-tier.html',
+        'author': '一只路过的小马飞行员',
+        'avatar': 'assets/authors/xiaoma-pilot.webp',
+        'ring': '#60a5fa',
+        'accent': '#a78bfa',
+        'desc': '转载一只路过的小马飞行员的 PVP 向 UL 强度排行榜：不计成本，按强 T0 至 T5 分档；部分角色的排位考虑了献祭被动。',
+        'tags': ['仅 PVP', '不计成本', 'T0–T5', '1 张图'],
+        'date': '2026.10.21',
+        'date_iso': '2026-10-21',
+    },
+    {
+        'id': 'mizang',
+        'title': '光之秘藏',
+        'cat': '秘藏',
+        'file': 'strategy-mizang.html',
+        'author': '并非五斗',
+        'avatar': 'assets/authors/bingfeiwudou.webp',
+        'ring': '#fbbf24',
+        'accent': '#f59e0b',
+        'desc': '转载并非五斗的光之秘藏攻略：整理碎星锤消耗、突破碎片收益与毕业成本，并提供文字版与完整原图。',
+        'tags': ['抽取建议'],
+        'date': '2026.8.05',
+        'date_iso': '2026-08-05',
+    },
+    {
+        'id': 'zhuanpan',
+        'title': '奥特转盘',
+        'cat': '转盘攻略',
+        'file': 'strategy-zhuanpan.html',
+        'author': '并非五斗',
+        'avatar': 'assets/authors/bingfeiwudou.webp',
+        'ring': '#fbbf24',
+        'accent': '#f59e0b',
+        'desc': '转载并非五斗的奥特转盘图文攻略：整理转盘券消耗、四圈奖励、核心奖励优先级与突破UL、红装毕业成本。',
+        'tags': [],
+        'date': '2026.8.05',
+        'date_iso': '2026-08-05',
     },
 ]
 
@@ -112,6 +188,7 @@ BASE_CSS = """
   }
   header .sub { margin: 0; color: var(--dim); font-size: .8rem; letter-spacing: .3px; }
   header .sub b { color: var(--gold); font-weight: 600; }
+  header .update-note { margin-top: 5px; color: var(--muted); }
 """
 
 # 作者署名条
@@ -124,6 +201,15 @@ AUTHOR_CSS = """
     padding: 11px 14px; margin-bottom: 16px;
   }
   .author .lab { font-size: .72rem; color: var(--muted); letter-spacing: 1px; }
+  .author .avatar {
+    display: block; flex: 0 0 44px; width: 44px; height: 44px; padding: 3px;
+    border-radius: 50%; background: var(--ring, #fbbf24); line-height: 0;
+    box-shadow: 0 0 0 1px rgba(15,23,42,.35);
+  }
+  .author .avatar img {
+    display: block; width: 100%; height: 100%; border-radius: 50%;
+    object-fit: cover; background: var(--panel2);
+  }
   .author a {
     display: inline-flex; align-items: center; gap: 5px;
     color: var(--gold); font-size: .96rem; font-weight: 650;
@@ -132,7 +218,18 @@ AUTHOR_CSS = """
   .author a:hover { color: #fde68a; border-bottom-color: #fde68a; }
   .author a::after { content: "↗"; font-size: .78rem; opacity: .8; }
   .author .hint { margin-left: auto; font-size: .74rem; color: var(--dim); }
-  @media (max-width: 560px) { .author .hint { margin-left: 0; width: 100%; } }
+  .author .date {
+    display: inline-flex; align-items: center; gap: 7px; padding-left: 11px;
+    border-left: 1px solid rgba(251,191,36,.28);
+  }
+  .author .date time {
+    color: var(--text); font-size: .84rem; font-weight: 650;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  @media (max-width: 560px) {
+    .author .hint { margin-left: 0; width: 100%; }
+    .author .date { padding-left: 0; border-left: 0; width: 100%; }
+  }
 """
 
 
@@ -278,7 +375,7 @@ TPL_INDEX = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>奥系攻略</title>
 <meta name="theme-color" content="#0a0e1a">
-<meta name="description" content="奥系攻略板块：修炼数值表、趣味问答题库等玩家社区攻略收录">
+<meta name="description" content="奥系攻略板块：修炼数值表、趣味问答题库、老虎机抽取推荐、UL强度排行榜等玩家社区攻略收录">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/apple-touch-app.png">
 <link rel="icon" href="assets/favicon-app.png">
@@ -327,10 +424,27 @@ TPL_INDEX = """<!DOCTYPE html>
   .card:hover { transform: translateY(-3px); border-color: var(--border2); box-shadow: 0 12px 30px rgba(0,0,0,.4); }
   .card:hover::after { opacity: .17; }
   .card-hd { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
-  .card-hd img { width: 34px; height: 34px; object-fit: contain; flex: 0 0 34px; border-radius: 8px; }
+  .card-hd .card-avatar {
+    display: block; flex: 0 0 38px; width: 38px; height: 38px; padding: 3px;
+    border-radius: 50%; background: var(--ring, var(--accent)); line-height: 0;
+    box-shadow: 0 0 0 1px rgba(15,23,42,.35);
+  }
+  .card-hd .card-avatar img {
+    display: block; width: 100%; height: 100%; object-fit: cover;
+    border-radius: 50%; background: var(--panel2);
+  }
   .card-hd h3 { margin: 0; font-size: 1.06rem; font-weight: 680; flex: 1; min-width: 0; }
   .card-hd .go { color: var(--accent); opacity: .5; font-size: 1rem; }
   .card:hover .go { opacity: 1; }
+  .card-date {
+    display: inline-flex; align-items: center; gap: 7px; margin: 0 0 10px;
+    padding: 2px 8px; border: 1px solid var(--border2); border-radius: 6px;
+    color: var(--dim); font-size: .7rem; line-height: 1.55;
+  }
+  .card-date span { letter-spacing: .4px; }
+  .card-date time {
+    color: var(--accent); font-weight: 650; font-variant-numeric: tabular-nums;
+  }
   .card .desc { margin: 0 0 11px; color: var(--muted); font-size: .83rem; line-height: 1.72; }
   .card .tags { display: flex; flex-wrap: wrap; gap: 6px; }
   .card .tags span {
@@ -381,14 +495,28 @@ TPL_INDEX = """<!DOCTYPE html>
   <a class="aoxi-site-brand" data-aoxi-intro="rise" href="index.html" aria-label="奥系工具站首页"><img src="assets/logo-site.webp" alt=""><span><small>AOXI / INDEX</small></span></a>
   <nav class="aoxi-site-nav" data-aoxi-intro="right" aria-label="主导航">
       <a href="index.html"><span>首页</span><small>HOME</small></a>
-      <a href="calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+      <details class="aoxi-nav-menu">
+        <summary><span>计算器</span><small>CALCULATOR</small></summary>
+        <div class="aoxi-calc-dropdown">
+          <a href="calculator.html"><span>光元收益预测器</span><small>RESOURCE FORECAST</small></a>
+          <a href="mizang-zhuanpan-calculator.html?tab=zhuanpan"><span>转盘</span><small>DRAW CALCULATOR</small></a>
+          <a href="mizang-zhuanpan-calculator.html?tab=mizang"><span>光之秘藏</span><small>VAULT CALCULATOR</small></a>
+        </div>
+      </details>
       <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
       <a href="strategies.html" aria-current="page"><span>攻略</span><small>STRATEGIES</small></a>
       <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
   </nav>
   <details class="aoxi-mobile-nav" data-aoxi-intro="right"><summary><strong>菜单</strong><small>MENU</small></summary><nav class="aoxi-mobile-links" aria-label="手机导航">
         <a href="index.html"><span>首页</span><small>HOME</small></a>
-        <a href="calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+        <details class="aoxi-mobile-submenu">
+          <summary><span>计算器</span><small>CALCULATOR</small></summary>
+          <div class="aoxi-mobile-submenu-panel">
+            <a href="calculator.html"><span>光元收益预测器</span><small>RESOURCE FORECAST</small></a>
+            <a href="mizang-zhuanpan-calculator.html?tab=zhuanpan"><span>转盘</span><small>DRAW CALCULATOR</small></a>
+            <a href="mizang-zhuanpan-calculator.html?tab=mizang"><span>光之秘藏</span><small>VAULT CALCULATOR</small></a>
+          </div>
+        </details>
         <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
         <a href="strategies.html" aria-current="page"><span>攻略</span><small>STRATEGIES</small></a>
         <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
@@ -404,7 +532,7 @@ TPL_INDEX = """<!DOCTYPE html>
   </header>
 
   <div class="search-row">
-    <input id="q" type="search" placeholder="搜索攻略名称、简介或标签…" autocomplete="off">
+    <input id="q" type="search" placeholder="搜索攻略名称、简介、作者、标签或日期…" autocomplete="off" aria-label="搜索攻略">
     <button id="clearQ" type="button" aria-label="清空">✕</button>
   </div>
   <p class="count">共 <b id="n">0</b> 篇攻略</p>
@@ -433,10 +561,11 @@ function render(list){
   cardsEl.innerHTML = list.map(s => `
     <a class="card" href="${esc(s.file)}" style="--accent:${esc(s.accent)}">
       <div class="card-hd">
-        <img src="${esc(s.icon)}" alt="">
+        <span class="card-avatar" style="--ring:${esc(s.ring || s.accent)}"><img src="${esc(s.avatar)}" alt="${esc(s.author)}头像"></span>
         <h3>${esc(s.title)}</h3>
         <span class="go">→</span>
       </div>
+      <div class="card-date"><span>攻略日期</span><time datetime="${esc(s.date_iso)}">${esc(s.date)}</time></div>
       <p class="desc">${esc(s.desc)}</p>
       <div class="tags">${s.cat ? `<span class="cat">${esc(s.cat)}</span>` : ''}${s.tags.map(t => `<span>${esc(t)}</span>`).join('')}</div>
     </a>`).join('');
@@ -449,7 +578,7 @@ function apply(){
   clearEl.classList.toggle('on', !!k);
   if (!k) return render(SECTIONS);
   render(SECTIONS.filter(s =>
-    (s.title + ' ' + s.desc + ' ' + s.tags.join(' ')).toLowerCase().indexOf(k) !== -1
+    (s.title + ' ' + s.author + ' ' + s.desc + ' ' + s.tags.join(' ') + ' ' + s.date).toLowerCase().indexOf(k) !== -1
   ));
 }
 
@@ -730,6 +859,7 @@ TPL_DATI = """<!DOCTYPE html>
     <h1>趣味问答题库</h1>
     <span class="ak-label-en">Quiz Database</span>
     <p class="sub">__SUB__</p>
+    <p class="sub update-note">__DATIUPDATE__</p>
   </header>
 
   __AUTHOR__
@@ -826,14 +956,34 @@ render(QUIZ);
 """
 
 
-def author_block():
+def author_block(date_text, date_iso, hint, name=None, url=None, avatar=None, ring='#fbbf24'):
+    name = name or AUTHOR_NAME
+    url = url or AUTHOR_URL
+    avatar_html = ''
+    if avatar:
+        avatar_html = (
+            '<span class="avatar" style="--ring:{ring}">'
+            '<img src="{avatar}" width="44" height="44" alt="{name}头像" '
+            'loading="lazy" decoding="async">'
+            '</span>'
+        ).format(
+            ring=html.escape(ring, quote=True),
+            avatar=html.escape(avatar, quote=True),
+            name=html.escape(name, quote=True),
+        )
     return (
-        '<div class="author">'
-        '<span class="lab">作者</span>'
+        '<div class="author">' + avatar_html +
+        '<span class="lab">攻略作者</span>'
         '<a href="{url}" target="_blank" rel="noopener noreferrer">{name}</a>'
-        '<span class="hint">点击前往作者的 B 站主页</span>'
+        '<span class="date"><span class="lab">攻略日期</span>'
+        '<time datetime="{date_iso}">{date_text}</time></span>'
+        '<span class="hint">{hint}</span>'
         '</div>'
-    ).format(url=html.escape(AUTHOR_URL, quote=True), name=html.escape(AUTHOR_NAME))
+    ).format(
+        url=html.escape(url, quote=True), name=html.escape(name),
+        date_iso=html.escape(date_iso, quote=True), date_text=html.escape(date_text),
+        hint=html.escape(hint),
+    )
 
 
 
@@ -907,7 +1057,7 @@ def build():
         TPL_XIULIAN
         .replace('__CSS__', BASE_CSS)
         .replace('__AUTHORCSS__', AUTHOR_CSS)
-        .replace('__AUTHOR__', author_block())
+        .replace('__AUTHOR__', author_block(XIULIAN_DATE, XIULIAN_DATE_ISO, '首次收录日期', avatar='assets/authors/guren.webp', ring='#60a5fa'))
         .replace('__SUB__', html.escape(SECTION_SUB))
         .replace('__NOTE__', note)
         .replace('__BODY__', xiulian_body)
@@ -926,8 +1076,9 @@ def build():
         TPL_DATI
         .replace('__CSS__', BASE_CSS)
         .replace('__AUTHORCSS__', AUTHOR_CSS)
-        .replace('__AUTHOR__', author_block())
+        .replace('__AUTHOR__', author_block(DATI_DATE, DATI_DATE_ISO, '最近更新日期', avatar='assets/authors/guren.webp', ring='#60a5fa'))
         .replace('__SUB__', html.escape(SECTION_SUB))
+        .replace('__DATIUPDATE__', html.escape(DATI_UPDATE))
         .replace('__NQ__', nq)
         .replace('__DATA__', json.dumps(quiz, ensure_ascii=False))
     )

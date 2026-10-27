@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>奥特转盘 · 奥系攻略</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="并非五斗的奥特转盘图文攻略：整理转盘券消耗、四圈奖励、核心奖励优先级与突破UL、红装毕业成本。">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="奥系工具站">
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #101828; --panel2: #0d1526;
+    --border: #1e2a41; --border2: #263449;
+    --text: #e6ebf5; --muted: #8b98ad; --dim: #64748b;
+    --blue: #3b82f6; --gold: #fbbf24; --radius: 12px;
+    --red: #fb7185; --green: #34d399; --violet: #a78bfa;
+  }
+  [data-theme="light"] {
+    --bg: #f5f7fb; --panel: #ffffff; --panel2: #f8fafc;
+    --border: #e2e8f0; --border2: #cbd5e1;
+    --text: #172033; --muted: #526176; --dim: #718096;
+    --blue: #2563eb; --gold: #b77900; --red: #be123c; --green: #047857; --violet: #6d28d9;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px; line-height: 1.7;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px 60px; }
+  .top-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .back-home, .calc-link {
+    display: inline-flex; align-items: center; gap: 5px; font-size: .82rem;
+    color: var(--muted); text-decoration: none; padding: 5px 11px 5px 8px;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--panel2);
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .back-home:hover { color: #93c5fd; border-color: var(--blue); }
+  .calc-link { margin-left: auto; color: var(--gold); border-color: rgba(251,191,36,.42); background: rgba(251,191,36,.08); font-weight: 650; }
+  .calc-link:hover { color: #fde68a; border-color: var(--gold); }
+  header { text-align: center; padding: 8px 0 16px; }
+  header h1 {
+    margin: 0 0 6px; font-size: 1.7rem; font-weight: 750; letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--dim); font-size: .8rem; letter-spacing: .3px; }
+  .author {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 9px;
+    background: linear-gradient(90deg, rgba(251,191,36,.10), rgba(251,191,36,.02));
+    border: 1px solid rgba(251,191,36,.30); border-radius: var(--radius);
+    padding: 11px 14px; margin-bottom: 16px;
+  }
+  .author .lab { font-size: .72rem; color: var(--muted); letter-spacing: 1px; }
+  .author .avatar {
+    display: block; flex: 0 0 44px; width: 44px; height: 44px; padding: 3px;
+    border-radius: 50%; background: var(--ring, #fbbf24); line-height: 0;
+    box-shadow: 0 0 0 1px rgba(15,23,42,.35);
+  }
+  .author .avatar img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: var(--panel2); }
+  .author .author-name { color: var(--gold); font-size: .96rem; font-weight: 700; border-bottom: 1px dashed rgba(251,191,36,.55); text-decoration: none; }
+  .author a.author-name:hover { color: #fde68a; border-bottom-style: solid; }
+  .author .hint { margin-left: auto; font-size: .74rem; color: var(--dim); }
+  .author .date { display: inline-flex; align-items: center; gap: 7px; padding-left: 11px; border-left: 1px solid rgba(251,191,36,.28); }
+  .author .date time { color: var(--text); font-size: .84rem; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  @media (max-width: 600px) {
+    .calc-link { margin-left: 0; }
+    .author .hint { margin-left: 0; width: 100%; }
+    .author .date { padding-left: 0; border-left: 0; width: 100%; }
+  }
+  .view-bar { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; padding: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; }
+  .view-tabs { display: inline-flex; gap: 5px; padding: 3px; background: var(--panel2); border: 1px solid var(--border); border-radius: 9px; }
+  .view-tabs button {
+    appearance: none; border: 0; background: transparent; color: var(--muted);
+    padding: 7px 15px; border-radius: 6px; cursor: pointer; font: inherit;
+    font-size: .82rem; font-weight: 650; transition: background .15s, color .15s;
+  }
+  .view-tabs button[aria-selected="true"] { background: var(--gold); color: #17130a; }
+  .view-tabs button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .view-hint { color: var(--dim); font-size: .75rem; }
+  [hidden] { display: none !important; }
+  @media (max-width: 620px) {
+    .view-bar { align-items: stretch; flex-wrap: wrap; }
+    .view-tabs { width: 100%; }
+    .view-tabs button { flex: 1; }
+    .view-hint { order: 3; width: 100%; padding: 0 4px 2px; }
+  }
+  .article-sheet {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: clamp(20px, 4vw, 38px); box-shadow: 0 12px 34px rgba(0,0,0,.10);
+  }
+  .article-body { max-width: 800px; margin: 0 auto; }
+  .article-body p { margin: 0 0 1.05em; }
+  .article-body p:last-child { margin-bottom: 0; }
+  .article-body strong { font-weight: 760; }
+  .article-body .gold { color: var(--gold); }
+  .article-body .red { color: var(--red); }
+  .article-body .muted { color: var(--muted); }
+  .article-body h2 { margin: 1.9em 0 .9em; font-size: 1.05rem; line-height: 1.4; }
+  .article-body h2::before { content: ""; display: inline-block; width: 4px; height: .95em; margin-right: 8px; border-radius: 2px; background: var(--gold); vertical-align: -.06em; }
+  .article-body .line-tight { margin-bottom: .28em; }
+  .article-body .line-tight + .line-tight { margin-top: -.1em; }
+  .article-figure { margin: 1.4em 0 1.6em; }
+  .article-figure a { display: block; overflow: hidden; background: var(--bg); border: 1px solid var(--border2); border-radius: 10px; transition: border-color .15s; }
+  .article-figure a:hover { border-color: var(--blue); }
+  .article-figure img { display: block; width: 100%; height: auto; }
+  .article-figure figcaption { margin-top: 7px; color: var(--dim); font-size: .72rem; text-align: center; }
+  .key-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 1.25em 0 1.5em; }
+  .fact { min-width: 0; padding: 12px 13px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel2); }
+  .fact span { display: block; color: var(--dim); font-size: .7rem; }
+  .fact strong { display: block; margin-top: 3px; color: var(--gold); font-size: 1.08rem; line-height: 1.3; }
+  .fact:nth-child(2) strong { color: var(--blue); }
+  .fact:nth-child(3) strong { color: var(--red); }
+  @media (max-width: 560px) { .key-facts { grid-template-columns: 1fr; } }
+  .ring-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 1em 0 1.5em; }
+  .ring-card { min-width: 0; padding: 13px 14px; background: var(--panel2); border: 1px solid var(--border); border-radius: 11px; }
+  .ring-card .ring-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+  .ring-card h3 { margin: 0; font-size: .9rem; line-height: 1.35; }
+  .ring-card .draw-range { flex: none; border-radius: 999px; padding: 2px 7px; color: var(--gold); background: rgba(251,191,36,.1); font-size: .66rem; }
+  .ring-card ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: .78rem; }
+  .ring-card li { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--border); padding-bottom: 4px; }
+  .ring-card .reward-label { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .ring-card .reward-icon {
+    display: block; flex: 0 0 24px; width: 24px; height: 24px; padding: 1px;
+    border: 1px solid var(--border2); border-radius: 6px; background: var(--bg);
+    object-fit: cover;
+  }
+  .ring-card li b { flex: none; }
+  .ring-card li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .ring-card li b { color: var(--muted); font-weight: 400; text-align: right; }
+  .ring-card li.is-key { color: var(--text); font-weight: 720; }
+  .ring-card li.is-key b { color: var(--text); font-weight: 720; }
+  .ring-card.core { border-color: rgba(251,191,36,.35); }
+  .ring-card.core .draw-range { color: var(--red); background: rgba(251,113,133,.1); }
+  @media (max-width: 580px) { .ring-list { grid-template-columns: 1fr; } }
+  .table-wrap { overflow-x: auto; margin: 1.25em 0 1em; border: 1px solid var(--border2); border-radius: 10px; }
+  .priority-table { width: 100%; min-width: 480px; border-collapse: collapse; font-size: .8rem; }
+  .priority-table th, .priority-table td { padding: 9px 11px; border-bottom: 1px solid var(--border); text-align: left; }
+  .priority-table th { color: var(--gold); background: var(--panel2); font-weight: 650; }
+  .priority-table tr:last-child td { border-bottom: 0; }
+  .priority-table td:last-child, .priority-table th:last-child { text-align: right; }
+  .priority-rule { margin: 1em 0 1.5em; padding: 11px 13px; border: 1px solid rgba(251,113,133,.3); border-left: 3px solid var(--red); border-radius: 8px; background: rgba(251,113,133,.06); color: var(--muted); }
+  .plan { margin: 0 0 14px; border: 1px solid var(--border); border-radius: 11px; overflow: hidden; background: var(--panel2); }
+  .plan-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 13px; border-bottom: 1px solid var(--border); background: linear-gradient(90deg, rgba(251,191,36,.08), transparent); }
+  .plan-head h3 { margin: 0; font-size: .9rem; }
+  .plan-head span { color: var(--gold); font-size: .76rem; font-weight: 700; white-space: nowrap; }
+  .plan-body { padding: 11px 13px 12px; color: var(--muted); font-size: .8rem; }
+  .plan-body p { margin-bottom: .32em; }
+  .plan-body .result { color: var(--text); font-weight: 650; }
+  .plan.warn .plan-head span { color: var(--red); }
+  .combo { margin: 1.2em 0; padding: 15px 16px; border-radius: 11px; border: 1px solid rgba(52,211,153,.34); background: linear-gradient(135deg, rgba(52,211,153,.09), rgba(59,130,246,.05)); }
+  .combo p { margin-bottom: .4em; }
+  .combo .total { color: var(--green); font-weight: 760; }
+  .original-sheet { padding: clamp(12px, 2.5vw, 22px); }
+  .original-head { max-width: 780px; margin: 0 auto 13px; color: var(--muted); font-size: .8rem; text-align: center; }
+  .original-frame { display: block; overflow: hidden; background: var(--bg); border: 1px solid var(--border2); border-radius: 10px; }
+  .original-frame img { display: block; width: 100%; height: auto; }
+  .original-frame:hover { border-color: var(--blue); }
+  @media (max-width: 560px) {
+    .article-sheet { padding: 20px 17px 22px; }
+    .article-body { font-size: 14.5px; line-height: 1.82; }
+  }
+  footer { margin-top: 28px; text-align: center; color: var(--dim); font-size: .75rem; line-height: 2; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
+</head>
+<body data-ak-progress>
+<div class="wrap">
+  <div class="top-actions">
+    <a class="back-home" href="strategies.html">← 返回奥系攻略</a>
+    <a class="calc-link" href="mizang-zhuanpan-calculator.html?tab=zhuanpan">打开转盘计算器 →</a>
+  </div>
+
+  <header>
+    <h1>奥特转盘</h1>
+    <span class="ak-label-en">Ultra Roulette Guide</span>
+    <p class="sub">获取突破角色和红装的方式之一 · 内容版权归原作者所有</p>
+  </header>
+
+  <div class="author">
+    <span class="avatar" style="--ring:#fbbf24"><img src="assets/authors/bingfeiwudou.webp" width="44" height="44" alt="并非五斗头像" loading="lazy" decoding="async"></span>
+    <span class="lab">攻略作者</span>
+    <a class="author-name" href="https://tieba.baidu.com/p/10920330651" target="_blank" rel="noopener noreferrer">并非五斗</a>
+    <span class="date"><span class="lab">攻略日期</span><time datetime="2026-08-05">2026.8.05</time></span>
+    <span class="hint">图片转载 · 默认文字版</span>
+  </div>
+
+  <div class="view-bar">
+    <div class="view-tabs" role="tablist" aria-label="攻略显示方式">
+      <button type="button" role="tab" id="tab-text" aria-selected="true" aria-controls="text-view" data-view="text">文字版</button>
+      <button type="button" role="tab" id="tab-original" aria-selected="false" aria-controls="original-view" data-view="original">原图版</button>
+    </div>
+    <span class="view-hint">原图仅在切换后加载</span>
+  </div>
+
+  <section id="text-view" role="tabpanel" aria-labelledby="tab-text">
+    <article class="article-sheet">
+      <div class="article-body">
+        <p>获取突破角色和红装的方式之一</p>
+
+        <figure class="article-figure">
+          <a href="assets/guides/zhuanpan/2-zhuanpan-rules.webp" target="_blank" rel="noopener noreferrer">
+            <img src="assets/guides/zhuanpan/2-zhuanpan-rules.webp" width="975" height="939" alt="奥特转盘活动界面与四圈奖励" loading="lazy" decoding="async">
+          </a>
+          <figcaption>点击图片查看原图</figcaption>
+        </figure>
+
+        <p class="line-tight">奥特转盘使用<strong>转盘券</strong>抽取</p>
+        <p class="line-tight">转盘券价格为<strong>50光元/个</strong>，10连抽只花<strong>9个转盘券</strong>，即<strong>450光元</strong></p>
+        <p class="line-tight">活动期间，每天可<strong>免费抽1次</strong></p>
+        <p class="line-tight">奥特试炼中，每<strong>700抽</strong>给<strong>4片红装碎片</strong>，每<strong>1,000抽</strong>给<strong>10片红装碎片</strong>；每轮按1,000抽计，最多领4轮</p>
+
+        <div class="key-facts" aria-label="转盘关键数据">
+          <div class="fact"><span>单抽价格</span><strong>50 光元</strong></div>
+          <div class="fact"><span>10 连消耗</span><strong>450 光元</strong></div>
+          <div class="fact"><span>试炼奖励</span><strong>700抽4片 · 1000抽10片</strong></div>
+        </div>
+
+        <h2>四圈奖励</h2>
+        <p>转盘有<strong>4圈</strong>，4圈奖励各不相同，随时间流逝按顺序更换。</p>
+        <p>核心奖励：</p>
+
+        <div class="ring-list">
+          <div class="ring-card">
+            <div class="ring-head"><h3>第 1 圈</h3><span class="draw-range">0～9 点</span></div>
+            <ul>
+              <li class="is-key"><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/red-equipment-fragment.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>红装碎片</span></span><b>4 片</b></li>
+              <li class="is-key"><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/treasure-box-3.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>宝物材料选择箱 III</span></span><b>1 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-spark-core.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>火花核心</span></span><b>15 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-merit-medal.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>功绩勋章</span></span><b>10 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-universal-fragment.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>L 万能碎片</span></span><b>8 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-earth-block.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>土块</span></span><b>40 个</b></li>
+            </ul>
+          </div>
+          <div class="ring-card">
+            <div class="ring-head"><h3>第 2 圈</h3><span class="draw-range">9～12 点</span></div>
+            <ul>
+              <li class="is-key"><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/breakthrough-fragment.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>突破碎片</span></span><b>45 片</b></li>
+              <li class="is-key"><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/treasure-box-1.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>宝物材料选择箱 I</span></span><b>1 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-spark-core.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>火花核心</span></span><b>15 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-merit-medal.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>功绩勋章</span></span><b>10 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-exp-medal-1.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>1 级经验勋章袋</span></span><b>1 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-neo-summon-card.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>新生代召唤卡</span></span><b>2 个</b></li>
+            </ul>
+          </div>
+          <div class="ring-card">
+            <div class="ring-head"><h3>第 3 圈</h3><span class="draw-range">12～18 点</span></div>
+            <ul>
+              <li class="is-key"><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/red-equipment-fragment.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>红装碎片</span></span><b>4 片</b></li>
+              <li class="is-key"><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-crimson-crystal.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>赤红晶石</span></span><b>8 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-green-key-bag.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>绿色钥匙袋</span></span><b>1 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-honor-ribbon.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>荣誉绶带</span></span><b>2 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-neo-summon-card.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>新生代召唤卡</span></span><b>6 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-universal-fragment.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>L 万能碎片</span></span><b>3 个</b></li>
+            </ul>
+          </div>
+          <div class="ring-card core">
+            <div class="ring-head"><h3>第 4 圈</h3><span class="draw-range">18～24 点</span></div>
+            <ul>
+              <li class="is-key"><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/breakthrough-fragment.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>突破碎片</span></span><b>45 片</b></li>
+              <li class="is-key"><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/treasure-box-2.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>宝物材料选择箱 II</span></span><b>1 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-green-key-bag.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>绿色钥匙袋</span></span><b>1 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-merit-medal.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>功绩勋章</span></span><b>10 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-universal-fragment.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>L 万能碎片</span></span><b>8 个</b></li>
+              <li><span class="reward-label"><img class="reward-icon" src="assets/guides/zhuanpan/reward-purple-jade.webp" width="24" height="24" alt="" loading="lazy" decoding="async"><span>紫翠玉</span></span><b>10 个</b></li>
+            </ul>
+          </div>
+        </div>
+
+        <p>下图转盘的三个宝物箱能换到的宝物（橙宝物主要是用来塞奥特之塔的）</p>
+
+        <figure class="article-figure">
+          <a href="assets/guides/zhuanpan/3-zhuanpan-treasure.webp" target="_blank" rel="noopener noreferrer">
+            <img src="assets/guides/zhuanpan/3-zhuanpan-treasure.webp" width="980" height="411" alt="转盘三个宝物箱可兑换的宝物列表" loading="lazy" decoding="async">
+          </a>
+          <figcaption>点击图片查看原图</figcaption>
+        </figure>
+
+        <p>转盘是没有运气之说的，<strong>核心奖励都是固定抽数出的</strong>：以第4圈为例（其他圈皆是如此）</p>
+
+        <div class="table-wrap">
+          <table class="priority-table">
+            <thead><tr><th>核心奖励</th><th>抽数与优先级</th></tr></thead>
+            <tbody>
+              <tr><td>45 片突破碎片</td><td>每 100 抽出 1 次；第一优先级</td></tr>
+              <tr><td>1 个宝物材料选择箱 II</td><td>每 65 抽出 1 次；第二优先级</td></tr>
+              <tr><td>1 个绿色钥匙袋</td><td>每 32 抽出 1 次；第三优先级</td></tr>
+              <tr><td>10 个功勋勋章</td><td>每 30 抽出 1 次；第四优先级</td></tr>
+              <tr><td>8 个 L 万能碎片</td><td>每 25 抽出 1 次；第五优先级</td></tr>
+              <tr><td>10 个紫翠玉</td><td>每 10 抽出 1 次；第六优先级</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="priority-rule">当出现奖励冲突时，按优先级高低发放奖励，<strong>优先级高的会吞掉优先级低的奖励</strong>。</p>
+
+        <p>毕业一张突破 UL 要 <strong>1400 个突破碎片</strong>，故抽取建议如下（光元花费没算送的抽奖券）：</p>
+
+        <div class="plan">
+          <div class="plan-head"><h3>（1）一次毕业突破 UL</h3><span>13.95w 光元</span></div>
+          <div class="plan-body">
+            <p>突破圈抽 <strong>3100 次</strong>（根据自己所需资源选择圈数）</p>
+            <p class="result">得 1395 片突破碎片和 42 片红装碎片</p>
+          </div>
+        </div>
+
+        <div class="plan">
+          <div class="plan-head"><h3>（2）分两次毕业突破 UL</h3><span>合计 14.4w 光元</span></div>
+          <div class="plan-body">
+            <p><strong>第一次：</strong>突破圈抽 1900 次 + 红装圈抽 100 次，得 855 片突破碎片和 32 片红装碎片，花费 <strong>9w 光元</strong>。</p>
+            <p><strong>第二次：</strong>突破圈抽 1200 次，得 540 片突破碎片和 14 片红装碎片，花费 <strong>5.4w 光元</strong>。</p>
+            <p class="result">共计 1395 片突破碎片和 46 片红装碎片，花费 14.4w 光元</p>
+            <p>这种抽法主要是能吃两次消费返利，并且在第一次转盘后，可以用 L 突破角色过渡；抽完第二次后，就把 L 角色拆了，去毕业 UL 换堆了。</p>
+          </div>
+        </div>
+
+        <div class="plan">
+          <div class="plan-head"><h3>（3）分两次 + 17 个突破 UL</h3><span>18w 光元</span></div>
+          <div class="plan-body">
+            <p>两次都这样抽：突破圈抽 1900 次 + 红装圈抽 100 次。</p>
+            <p class="result">共计 1710 片突破碎片和 64 片红装碎片，花费 18w 光元。</p>
+          </div>
+        </div>
+
+        <div class="plan warn">
+          <div class="plan-head"><h3>（4）单纯搞红装</h3><span>不推荐</span></div>
+          <div class="plan-body"><p>单纯为了红装碎片抽转盘，性价比不理想，建议结合突破资源需求一起规划。</p></div>
+        </div>
+
+        <p>然后提一嘴秘藏，秘藏毕业一个突破 UL 大约是 <strong>12w 光元</strong>。但转盘同时还能获得红装和橙宝物材料，橙宝物用来塞奥塔还是很不错的。综合来说，<strong>秘藏性价比是不如转盘的</strong>。</p>
+
+        <p>最后还要说的是，转盘和秘藏又不冲突，想要什么资源了，动态调整自己的抽法/敲法，结合自己情况来规划就行。比如还有下面这种两个都搞的玩法：</p>
+
+        <div class="combo">
+          <p><strong>秘藏敲 19 轮 +（转盘 1900 次突破圈 + 转盘 100 次红装圈）</strong></p>
+          <p class="total">得 1405 片突破碎片和 32 片红装碎片，花费 13.56w 光元。</p>
+          <p class="muted">转载者注：作者原图此处将 1900 次误写为 19000 次；按碎片与光元结果核算，应为 1900 次。</p>
+        </div>
+
+      </div>
+    </article>
+  </section>
+
+  <section id="original-view" role="tabpanel" aria-labelledby="tab-original" hidden>
+    <article class="article-sheet original-sheet">
+      <p class="original-head">作者原图完整保留。图片较大，因此仅在切换到原图版时加载。</p>
+      <a class="original-frame" href="assets/guides/zhuanpan/1-zhuanpan.webp" target="_blank" rel="noopener noreferrer">
+        <img id="original-full" data-src="assets/guides/zhuanpan/1-zhuanpan.webp" width="1159" height="4901" alt="并非五斗的奥特转盘攻略原图" decoding="async">
+      </a>
+    </article>
+  </section>
+
+  <footer>原文内容版权归原作者并非五斗所有 · 文字版仅作阅读整理</footer>
+</div>
+
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"][data-view]'));
+  var panels = { text: document.getElementById('text-view'), original: document.getElementById('original-view') };
+  var originalImg = document.getElementById('original-full');
+  var originalLoaded = false;
+  function showView(name) {
+    tabs.forEach(function (tab) {
+      var active = tab.dataset.view === name;
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      tab.setAttribute('tabindex', active ? '0' : '-1');
+    });
+    Object.keys(panels).forEach(function (key) { panels[key].hidden = key !== name; });
+    if (name === 'original' && !originalLoaded) {
+      originalImg.src = originalImg.dataset.src;
+      originalLoaded = true;
+    }
+  }
+  tabs.forEach(function (tab, index) {
+    tab.addEventListener('click', function () { showView(tab.dataset.view); });
+    tab.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      var next = (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[next].focus();
+      showView(tabs[next].dataset.view);
+    });
+  });
+})();
+</script>
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
+</body>
+</html>

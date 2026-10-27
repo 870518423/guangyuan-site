@@ -222,7 +222,7 @@
   /* 亮色主题下橙色要加深，否则浅橙在浅底上看不清（金色走 var(--gold)，ak-light 已重映射） */
   html[data-theme="light"] .tag.nam.p11280 { color: #c2410c; background: rgba(194,65,12,.10); border-color: rgba(194,65,12,.38); }
   html[data-theme="light"] .tag.nam.p11280:hover { background: rgba(194,65,12,.18); color: #9a3412; }
-  /* 光元消耗（卡片行 / 表格列 / 详情弹层共用） */
+  /* 特训光元消耗（卡片行 / 表格列 / 详情弹层共用） */
   .costval {
     display: inline-flex; align-items: center; gap: 5px;
     font-size: .82rem; font-weight: 650; color: var(--gold);
@@ -268,7 +268,8 @@
     position: fixed; z-index: 100;
     left: 50%; top: 50%; transform: translate(-50%, -46%) scale(.97);
     width: min(620px, calc(100vw - 24px));
-    max-height: min(78vh, 720px);
+    max-height: min(92vh, 900px);
+    max-height: min(92dvh, 900px);
     background: var(--panel);
     border: 1px solid var(--border2);
     border-radius: 16px;
@@ -291,7 +292,7 @@
   /* ---------- 详情：左图右文（2026-10-17 二次改版）----------
      左列：立绘（等比，绝不裁/拉伸）+ 下方「‹ 形态名 ›」；
      右列：获得方式 / 本命 / 前置要求 竖排；
-     下方 #mBody：特训所需 / 光元消耗 / 参与特训（整宽）。 */
+     下方 #mBody：特训所需 / 特训光元消耗 / 参与特训（整宽）。 */
   .m-top {
     display: flex; align-items: flex-start; gap: 14px;
     padding: 14px 18px 12px;
@@ -356,6 +357,9 @@
   }
   .m-sec .st::after { content: ""; flex: 1; height: 1px; background: var(--border); }
   .m-sec .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .gift-images { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .gift-photo { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; color: var(--muted); font-size: .74rem; }
+  .gift-photo img { width: min(100%, 92px); aspect-ratio: 1; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,.035); }
   .m-sec .hint { font-size: .76rem; color: var(--dim); }
   .m-sec.rev .st { color: #7dd3fc; }
   .m-foot { padding: 11px 18px 14px; border-top: 1px solid var(--border); display: flex; gap: 9px; }
@@ -375,10 +379,24 @@
   @media (max-width: 560px) {
     .wrap { padding: 14px 12px 50px; }
     header h1 { font-size: 1.42rem; }
-    .toolbar { margin-left: -12px; margin-right: -12px; padding-left: 12px; padding-right: 12px; }
+    .toolbar {
+      position: relative; top: auto;
+      margin-left: -12px; margin-right: -12px; padding-left: 12px; padding-right: 12px;
+    }
     .cards { grid-template-columns: 1fr; gap: 10px; }
     .row .k { flex-basis: 54px; }
-    .modal { max-height: 84vh; }
+    .modal { max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); }
+    .m-top { gap: 10px; padding: 8px 14px 7px; }
+    .m-side .m-sec { margin-bottom: 5px; }
+    .m-side .m-sec .st { margin-bottom: 2px; }
+    .m-body { padding: 10px 14px 14px; }
+    .gift-photo img { width: min(100%, 72px); }
+    .m-sec { margin-bottom: 10px; }
+    .m-sec .st { margin-bottom: 5px; }
+    .m-left { flex-basis: 136px; width: 136px; }
+    .m-shot img { max-height: 176px; }
+    .m-ctl { gap: 7px; margin-top: 4px; }
+    .m-arrow-img, .m-arrow-img img { height: 32px; }
   }
 </style>
 <link rel="stylesheet" href="assets/ak/ak-theme.css">
@@ -438,14 +456,28 @@
   <a class="aoxi-site-brand" data-aoxi-intro="rise" href="index.html" aria-label="奥系工具站首页"><img src="assets/logo-site.webp" alt=""><span><small>AOXI / INDEX</small></span></a>
   <nav class="aoxi-site-nav" data-aoxi-intro="right" aria-label="主导航">
       <a href="index.html"><span>首页</span><small>HOME</small></a>
-      <a href="calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+      <details class="aoxi-nav-menu">
+        <summary><span>计算器</span><small>CALCULATOR</small></summary>
+        <div class="aoxi-calc-dropdown">
+          <a href="calculator.html"><span>光元收益预测器</span><small>RESOURCE FORECAST</small></a>
+          <a href="mizang-zhuanpan-calculator.html?tab=zhuanpan"><span>转盘</span><small>DRAW CALCULATOR</small></a>
+          <a href="mizang-zhuanpan-calculator.html?tab=mizang"><span>光之秘藏</span><small>VAULT CALCULATOR</small></a>
+        </div>
+      </details>
       <a href="guides.html" aria-current="page"><span>图鉴</span><small>GUIDES</small></a>
       <a href="strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
       <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
   </nav>
   <details class="aoxi-mobile-nav" data-aoxi-intro="right"><summary><strong>菜单</strong><small>MENU</small></summary><nav class="aoxi-mobile-links" aria-label="手机导航">
         <a href="index.html"><span>首页</span><small>HOME</small></a>
-        <a href="calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+        <details class="aoxi-mobile-submenu">
+          <summary><span>计算器</span><small>CALCULATOR</small></summary>
+          <div class="aoxi-mobile-submenu-panel">
+            <a href="calculator.html"><span>光元收益预测器</span><small>RESOURCE FORECAST</small></a>
+            <a href="mizang-zhuanpan-calculator.html?tab=zhuanpan"><span>转盘</span><small>DRAW CALCULATOR</small></a>
+            <a href="mizang-zhuanpan-calculator.html?tab=mizang"><span>光之秘藏</span><small>VAULT CALCULATOR</small></a>
+          </div>
+        </details>
         <a href="guides.html" aria-current="page"><span>图鉴</span><small>GUIDES</small></a>
         <a href="strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
         <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
@@ -490,7 +522,7 @@
       <table>
         <thead>
           <tr>
-            <th>人间体</th><th>阵营</th><th>本命</th><th>获得方式</th><th>前置要求</th><th>特训所需人间体</th><th>光元消耗</th>
+            <th>人间体</th><th>阵营</th><th>本命</th><th>获得方式</th><th>前置要求</th><th>特训所需人间体</th><th>特训光元消耗</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -518,7 +550,7 @@
   </div>
   <!-- 详情头部下方：**左图右文**（2026-10-17 二次改版）
        左「立绘 + 箭头 + 形态名」，右侧竖排「获得方式 / 本命 / 前置要求」；
-       特训所需、光元消耗、参与特训仍在下方整宽（#mBody）。 -->
+       特训所需、特训光元消耗、参与特训仍在下方整宽（#mBody）。 -->
   <div class="m-top" id="mTop">
     <div class="m-left" id="mPic" hidden>
       <button class="m-shot" id="mZoomBtn" type="button" aria-label="查看大图" title="点击查看大图">
@@ -631,7 +663,7 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
   /* ---------- 商店价格（2026-10-17，管理者口径）----------
      获得方式写「限时商店6000光元」→ 6000（特训名单里标金色）
      写「限时商店购买」但没标价 → 统一按 11280（标橙色）
-     其余（城市 / 试炼 LVxx / 礼包 / 首充）→ 0，不计入光元消耗 */
+     其余（城市 / 试炼 LVxx / 礼包 / 首充）→ 0，不计入特训光元消耗 */
   const SHOP_UNPRICED = 11280;
   const PRICE = Object.create(null);
   entries.forEach(e => {
@@ -708,11 +740,35 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     if (!list || !list.length) return `<span class="tag none">${emptyText || "—"}</span>`;
     return list.map(v => tag(v, selfName, withPrice)).join("");
   }
+  /* 图片版显示礼物图和名称；文字版只显示名称。 */
+  const GIFT_IMAGES = {
+    "格斗手套": "assets/gifts/格斗手套.webp",
+    "恶魔之花": "assets/gifts/恶魔之花.webp",
+    "宇宙地图": "assets/gifts/宇宙地图.webp",
+    "白色围巾": "assets/gifts/白色围巾.webp",
+    "棒球手套": "assets/gifts/棒球手套.webp",
+    "能量指环": "assets/gifts/能量指环.webp",
+    "咖喱饭": "assets/gifts/咖喱饭.webp",
+    "光子计算机": "assets/gifts/光子计算机.webp",
+    "战斗日记": "assets/gifts/战斗日记.webp",
+    "飞行执照": "assets/gifts/飞行执照.webp",
+    "巴顿羽毛": "assets/gifts/巴顿羽毛.webp",
+  };
+  function giftSection(title, list, imageView) {
+    if (!list || !list.length) return "";
+    const items = list.map(name => {
+      const src = imageView && GIFT_IMAGES[name];
+      return src
+        ? `<span class="gift-photo"><img src="${esc(src)}" alt="${esc(name)}" loading="lazy" decoding="async"><span>${hl(name)}</span></span>`
+        : `<span class="tag">${hl(name)}</span>`;
+    }).join("");
+    return `<div class="m-sec"><div class="st">${title}</div><div class="${imageView ? "gift-images" : "tags"}">${items}</div></div>`;
+  }
   function rowOf(k, list, selfName, emptyText, withPrice) {
     return `<div class="row"><span class="k">${k}</span><div class="tags">${tags(list, selfName, emptyText, withPrice)}</div></div>`;
   }
 
-  /* ---- 光元消耗：特训所需角色价格之和 ---- */
+  /* ---- 特训光元消耗：特训所需角色价格之和 ---- */
   const costOf = e => (e.traits || []).reduce((s, n) => s + (PRICE[n] || 0), 0);
   function costHtml(e) {
     const sum = costOf(e);
@@ -722,14 +778,17 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
       `<img src="assets/guangyuan.webp" alt="光元">${sum.toLocaleString("zh-CN")}</span>`;
   }
   function costRow(e) {
-    return `<div class="row"><span class="k">光元消耗</span><div class="tags">${costHtml(e)}</div></div>`;
+    return `<div class="row"><span class="k">特训光元消耗</span><div class="tags">${costHtml(e)}</div></div>`;
   }
 
   // ---- 卡片 ----
   /* ---- 图片路径（2026-10-17）----
      images/humans/<id>/base|awaken|transcend.webp + avatar.webp（常态头像） */
   const IMG_BASE = "images/humans/";
-  const picOf = (e, f) => IMG_BASE + e.img + "/" + f + ".webp";
+  /* 个别角色的常态立绘源图侧转 90°；仅常态改名换图，觉醒/超越保持原图。 */
+  const ROTATED_PORTRAITS = { "316cbac8": "upright" };
+  const picOf = (e, f) => IMG_BASE + e.img + "/" + f +
+    (f === "base" && ROTATED_PORTRAITS[e.img] ? "-" + ROTATED_PORTRAITS[e.img] : "") + ".webp";
 
   function cardHtml(e) {
     const f = FAC[e.faction] || {};
@@ -876,8 +935,10 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     ];
     const lowSecs = [
       sec(`特训所需人间体（${(e.traits || []).length}）`, tags(e.traits, e.name, "无", true)),
-      sec("光元消耗", costHtml(e)),
+      sec("特训光元消耗", costHtml(e)),
     ];
+    lowSecs.push(giftSection("喜欢的礼物", e.likeGifts, view === "image"));
+    lowSecs.push(giftSection("讨厌的礼物", e.dislikeGifts, view === "image"));
     if (tb.length) lowSecs.push(`<div class="m-sec rev"><div class="st">参与以下人间体的特训（${tb.length}）</div><div class="tags">${tags(tb, e.name)}</div></div>`);
     if (fo.length) lowSecs.push(`<div class="m-sec rev"><div class="st">被下列人间体作为本命（${fo.length}）</div><div class="tags">${tags(fo, e.name)}</div></div>`);
 
@@ -899,8 +960,24 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     setTimeout(() => { m.classList.remove("closing"); k.classList.remove("closing"); }, 180);
     stack.length = 0;
   }
+  function backDetail() {
+    if (stack.length > 1) { stack.pop(); openDetail(stack[stack.length - 1], false); }
+    else { closeDetail(); }
+  }
 
   // ---- 事件 ----
+  /* App 返回键/左滑：先关大图；弹层打开时沿详情栈后退，栈底才关闭弹层。 */
+  document.addEventListener("ak:back", ev => {
+    if ($("mZoom") && !$("mZoom").hidden) {
+      $("mZoom").hidden = true;
+      $("mZoomImg").removeAttribute("src");
+      ev.preventDefault();
+      return;
+    }
+    if (!$("modal").classList.contains("on")) return;
+    ev.preventDefault();
+    backDetail();
+  });
   document.addEventListener("click", ev => {
     const chip = ev.target.closest("[data-facet]");
     if (chip) { facet = chip.dataset.facet; renderFacets(); render(); return; }
@@ -956,10 +1033,7 @@ const GUIDE = /*__GUIDE_DATA__*/ null;
     if (e.key === "ArrowLeft" && pIdx > 0) { e.preventDefault(); pIdx--; paintPortrait(); }
     else if (e.key === "ArrowRight" && pIdx < pForms.length - 1) { e.preventDefault(); pIdx++; paintPortrait(); }
   });
-  $("mBack").addEventListener("click", () => {
-    if (stack.length > 1) { stack.pop(); openDetail(stack[stack.length - 1], false); }
-    else { closeDetail(); }
-  });
+  $("mBack").addEventListener("click", backDetail);
 
   // ---- 初始化 ----
   $("totalCount").textContent = entries.length;

@@ -18,7 +18,7 @@ AKP.register({
   meta: { category: "奥特之星", tier: "UL" },
 
   versions: [
-    { id: "v1", badge: "v1", btnLabel: "v1", date: "2019-6" },
+    { id: "v1", badge: "v1", btnLabel: "v1", date: "2019-06-21" },
     { id: "v2", badge: "v2", btnLabel: "v2", date: "2020" },
     { id: "v3", badge: "v3", btnLabel: "v3", date: "2022-6" },
     { id: "v4", badge: "v4", btnLabel: "v4", date: "2023-1" }

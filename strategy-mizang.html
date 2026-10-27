@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>光之秘藏 · 奥系攻略</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="并非五斗的光之秘藏图文攻略：碎星锤消耗、突破碎片收益、毕业成本与转盘对比。默认文字版，可按需查看作者原图。">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="奥系工具站">
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #101828; --panel2: #0d1526;
+    --border: #1e2a41; --border2: #263449;
+    --text: #e6ebf5; --muted: #8b98ad; --dim: #64748b;
+    --blue: #3b82f6; --gold: #fbbf24; --radius: 12px;
+    --orig-red: #ff6259; --orig-mark-bg: #f4e5ab; --orig-mark-text: #17150d;
+  }
+  [data-theme="light"] {
+    --bg: #f5f7fb; --panel: #ffffff; --panel2: #f8fafc;
+    --border: #e2e8f0; --border2: #cbd5e1;
+    --text: #172033; --muted: #526176; --dim: #718096;
+    --blue: #2563eb; --gold: #b77900;
+    --orig-red: #c92f27;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px; line-height: 1.65; min-height: 100vh;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px 60px; }
+  .top-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .back-home, .calc-link {
+    display: inline-flex; align-items: center; gap: 5px; font-size: .82rem;
+    color: var(--muted); text-decoration: none; padding: 5px 11px 5px 8px;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--panel2);
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .back-home:hover { color: #93c5fd; border-color: var(--blue); }
+  .calc-link { margin-left: auto; color: var(--gold); border-color: rgba(251,191,36,.42); background: rgba(251,191,36,.08); font-weight: 650; }
+  .calc-link:hover { color: #fde68a; border-color: var(--gold); }
+  @media (max-width: 600px) {
+    .calc-link { margin-left: 0; }
+  }
+  header { text-align: center; padding: 8px 0 16px; }
+  header h1 {
+    margin: 0 0 6px; font-size: 1.7rem; font-weight: 750; letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--dim); font-size: .8rem; letter-spacing: .3px; }
+  .author {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 9px;
+    background: linear-gradient(90deg, rgba(251,191,36,.10), rgba(251,191,36,.02));
+    border: 1px solid rgba(251,191,36,.30);
+    border-radius: var(--radius); padding: 11px 14px; margin-bottom: 16px;
+  }
+  .author .lab { font-size: .72rem; color: var(--muted); letter-spacing: 1px; }
+  .author .avatar {
+    display: block; flex: 0 0 44px; width: 44px; height: 44px; padding: 3px;
+    border-radius: 50%; background: var(--ring, #fbbf24); line-height: 0;
+    box-shadow: 0 0 0 1px rgba(15,23,42,.35);
+  }
+  .author .avatar img {
+    display: block; width: 100%; height: 100%; border-radius: 50%;
+    object-fit: cover; background: var(--panel2);
+  }
+  .author .author-name {
+    color: var(--gold); font-size: .96rem; font-weight: 700;
+    border-bottom: 1px dashed rgba(251,191,36,.55); text-decoration: none;
+  }
+  .author a.author-name:hover { color: #fde68a; border-bottom-style: solid; }
+  .author .hint { margin-left: auto; font-size: .74rem; color: var(--dim); }
+  .author .date {
+    display: inline-flex; align-items: center; gap: 7px; padding-left: 11px;
+    border-left: 1px solid rgba(251,191,36,.28);
+  }
+  .author .date time {
+    color: var(--text); font-size: .84rem; font-weight: 650;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  @media (max-width: 560px) {
+    .author .hint { margin-left: 0; width: 100%; }
+    .author .date { padding-left: 0; border-left: 0; width: 100%; }
+  }
+
+  .view-bar {
+    display: flex; align-items: center; gap: 12px; margin: 0 0 16px;
+    padding: 8px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .view-tabs { display: inline-flex; gap: 5px; padding: 3px; background: var(--panel2); border: 1px solid var(--border); border-radius: 9px; }
+  .view-tabs button {
+    appearance: none; border: 0; background: transparent; color: var(--muted);
+    padding: 7px 15px; border-radius: 6px; cursor: pointer; font: inherit;
+    font-size: .82rem; font-weight: 650; transition: background .15s, color .15s;
+  }
+  .view-tabs button[aria-selected="true"] { background: var(--gold); color: #17130a; }
+  .view-tabs button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .view-hint { color: var(--dim); font-size: .75rem; }
+  @media (max-width: 620px) {
+    .view-bar { align-items: stretch; flex-wrap: wrap; }
+    .view-tabs { width: 100%; }
+    .view-tabs button { flex: 1; }
+    .view-hint { order: 3; width: 100%; padding: 0 4px 2px; }
+  }
+
+  [hidden] { display: none !important; }
+  .article-sheet {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: clamp(20px, 4vw, 38px);
+    box-shadow: 0 12px 34px rgba(0,0,0,.10);
+  }
+  .article-body { max-width: 780px; margin: 0 auto; }
+  .article-body p { margin: 0 0 1.05em; }
+  .article-body p:last-child { margin-bottom: 0; }
+  .article-body strong { font-weight: 760; }
+  .article-body .red { color: var(--orig-red); }
+  .article-body .italic { font-style: italic; }
+  .article-body .line-tight { margin-bottom: .25em; }
+  .article-body .line-tight + .line-tight { margin-top: -.12em; }
+  .article-body .rule { border: 0; border-top: 1px solid var(--border2); margin: 1.8em 0; }
+  .article-body h2 { margin: 1.9em 0 .9em; font-size: 1.05rem; line-height: 1.4; color: var(--text); }
+  .article-body .recommend { margin: 1.9em 0 .8em; }
+  .article-body .method { margin: 0 0 1.4em; }
+  .article-body .method p { margin-bottom: .24em; }
+  .article-body .indent { padding-left: 1.6em; }
+  .article-body .tiny-note { font-size: .88em; color: var(--muted); }
+  .article-body mark {
+    color: var(--orig-mark-text); background: var(--orig-mark-bg);
+    padding: .08em .22em; box-decoration-break: clone; -webkit-box-decoration-break: clone;
+  }
+  .article-figure { margin: 1.4em 0 1.6em; }
+  .article-figure a {
+    display: block; overflow: hidden; background: var(--bg);
+    border: 1px solid var(--border2); border-radius: 10px;
+    transition: border-color .15s;
+  }
+  .article-figure a:hover { border-color: var(--blue); }
+  .article-figure img { display: block; width: 100%; height: auto; }
+  .article-figure figcaption { margin-top: 7px; color: var(--dim); font-size: .72rem; text-align: center; }
+
+  .original-sheet { padding: clamp(12px, 2.5vw, 22px); }
+  .original-head { max-width: 780px; margin: 0 auto 13px; color: var(--muted); font-size: .8rem; text-align: center; }
+  .original-frame {
+    display: block; overflow: hidden; background: var(--bg);
+    border: 1px solid var(--border2); border-radius: 10px;
+  }
+  .original-frame img { display: block; width: 100%; height: auto; }
+  .original-frame:hover { border-color: var(--blue); }
+
+  @media (max-width: 560px) {
+    .article-sheet { padding: 20px 17px 22px; }
+    .article-body { font-size: 14.5px; line-height: 1.85; }
+    .article-body .indent { padding-left: .9em; }
+  }
+  footer { margin-top: 28px; text-align: center; color: var(--dim); font-size: .75rem; line-height: 2; }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
+</head>
+<body data-ak-progress>
+<div class="wrap">
+  <div class="top-actions">
+    <a class="back-home" href="strategies.html">← 返回奥系攻略</a>
+    <a class="calc-link" href="mizang-zhuanpan-calculator.html?tab=mizang">打开秘藏计算器 →</a>
+  </div>
+
+  <header>
+    <h1>光之秘藏</h1>
+    <span class="ak-label-en">Light Secret Guide</span>
+    <p class="sub">获取突破角色的方式之一 · 内容版权归原作者所有</p>
+  </header>
+
+  <div class="author">
+    <span class="avatar" style="--ring:#fbbf24"><img src="assets/authors/bingfeiwudou.webp" width="44" height="44" alt="并非五斗头像" loading="lazy" decoding="async"></span>
+    <span class="lab">攻略作者</span>
+    <a class="author-name" href="https://tieba.baidu.com/p/10920330651" target="_blank" rel="noopener noreferrer">并非五斗</a>
+    <span class="date"><span class="lab">攻略日期</span><time datetime="2026-08-05">2026.8.05</time></span>
+    <span class="hint">图片转载 · 默认文字版</span>
+  </div>
+
+  <div class="view-bar">
+    <div class="view-tabs" role="tablist" aria-label="攻略显示方式">
+      <button type="button" role="tab" id="tab-text" aria-selected="true" aria-controls="text-view" data-view="text">文字版</button>
+      <button type="button" role="tab" id="tab-original" aria-selected="false" aria-controls="original-view" data-view="original">原图版</button>
+    </div>
+    <span class="view-hint">原图仅在切换后加载</span>
+  </div>
+
+  <section id="text-view" role="tabpanel" aria-labelledby="tab-text">
+    <article class="article-sheet">
+      <div class="article-body">
+        <p>获取突破角色的方式之一</p>
+
+        <figure class="article-figure">
+          <a href="assets/guides/mizang/2-mizang-mechanism.webp" target="_blank" rel="noopener noreferrer">
+            <img src="assets/guides/mizang/2-mizang-mechanism.webp" width="975" height="1300" alt="光之秘藏活动界面：单次敲开与全部敲开" loading="lazy" decoding="async">
+          </a>
+          <figcaption>点击图片查看原图</figcaption>
+        </figure>
+
+        <p class="line-tight">秘藏使用<strong>碎星锤</strong>敲取，碎星锤价格为<strong>120光元/个</strong></p>
+        <p class="line-tight">活动期间每天可领3个碎星锤</p>
+
+        <p>若<strong>不点全部敲开</strong>，则一轮(连敲8次)共消耗1+1+2+3+3+4+5+6=25个碎星锤<br>
+        而<strong>全部敲开</strong>只需要20个碎星锤<br>
+        并且敲完8次，奖励的刷新是免费的</p>
+
+        <p>如果你一次次敲，先不说这沟槽的概率会让你经常在第8次才敲出突破碎片，哪怕你在第6或7次敲出来了，刷新下一轮奖励还要花100光元呢<br>
+        <span class="red">所以无脑点“全部敲开”就行了</span></p>
+
+        <figure class="article-figure">
+          <a href="assets/guides/mizang/3-mizang-rewards.webp" target="_blank" rel="noopener noreferrer">
+            <img src="assets/guides/mizang/3-mizang-rewards.webp" width="1050" height="700" alt="光之秘藏奖励预览与积分奖励" loading="lazy" decoding="async">
+          </a>
+          <figcaption>点击图片查看原图</figcaption>
+        </figure>
+
+        <p class="line-tight">敲完一轮(8次)，给25个突破碎片</p>
+        <p class="line-tight">其次有用的奖励就是宇宙之星碎片(进阶+16用的)</p>
+        <p>爱迪学堂里，你每敲30次，送15个突破碎片（最多领7次，敲满210次就没了）</p>
+
+        <hr class="rule">
+
+        <p>70碎片合成一张突破材料，一个L突破角色合成仅需1张突破材料，UL则是2张L及以上品质的卡，毕业(+12)总计要求10张本体<br>
+        所以毕业一张突破UL要1400个突破碎片</p>
+
+        <h2 class="recommend">推荐敲法：（光元花费没算送的碎星锤）</h2>
+
+        <div class="method">
+          <p>(1)想一次毕业突破UL</p>
+          <div class="indent">
+            <p>敲<strong>52轮</strong>，即<strong>416次</strong></p>
+            <p>突破碎片得<strong>52 * 25 + 7 * 15 = 1405片</strong></p>
+            <p>光元花费：<strong>52 * 20 * 120 = 124800</strong>，即<strong>12.48w光元</strong></p>
+          </div>
+        </div>
+
+        <div class="method">
+          <p>(2)分两次毕业突破UL</p>
+          <div class="indent">
+            <p>两次都敲<strong>24轮</strong>，即<strong>192 * 2次</strong></p>
+            <p>突破碎片得(<strong>24</strong> * 25 + 6 * 15) * 2 = <strong>1380片</strong></p>
+            <p>两次排名奖励怎么着也够20片了，所以也能毕业UL</p>
+            <p>光元花费：(<strong>24</strong> * 20 * 120) * 2 = <strong>115200</strong>，即<strong>11.52w光元</strong>（每次5.76w光元）</p>
+            <p class="italic">这种敲法主要是<strong>能吃两次消费返利</strong>，并且敲完一次后，可以用L突破角色过渡；敲完第二次后，就把L角色拆了，去毕业UL换堆了</p>
+          </div>
+        </div>
+
+        <p>最后提一嘴转盘，转盘毕业一个突破UL大约是14w光元<br>
+        但同时还能获得红装和橙宝物材料，橙宝物用来塞奥塔，还是很不错的<br>
+        综合来说，转盘性价比是超越秘藏的</p>
+
+        <p>虽然秘藏给了<strong>宇宙之星碎片</strong>，但真的很少，毕业一张UL的敲量，也就得大约十几二十片这样的程度(tm的yx，优化给我优化好的呀)，所以我是比较推荐去搞转盘的</p>
+
+        <p>最后还要说的是，转盘和秘藏又不冲突，想要什么资源了，动态调整自己的抽法/敲法，结合自己情况来规划就行<br>
+        比如我还有一种两个都搞的玩法：<br>
+        <mark><strong>秘藏敲19轮 + (转盘19000次的突破圈 + 转盘100次的红装圈)</strong></mark><br>
+        <mark><strong>得 1405片突破碎片 和 32片红装碎片，花费13.56w光元</strong></mark></p>
+      </div>
+    </article>
+  </section>
+
+  <section id="original-view" role="tabpanel" aria-labelledby="tab-original" hidden>
+    <article class="article-sheet original-sheet">
+      <p class="original-head">作者原图完整保留。图片较大，因此仅在切换到原图版时加载。</p>
+      <a class="original-frame" href="assets/guides/mizang/1-guangzhi-mizang.webp" target="_blank" rel="noopener noreferrer">
+        <img id="original-full" data-src="assets/guides/mizang/1-guangzhi-mizang.webp" width="1159" height="4628" alt="并非五斗的光之秘藏攻略原图" decoding="async">
+      </a>
+    </article>
+  </section>
+
+  <footer>原文内容版权归原作者并非五斗所有 · 文字版仅作阅读整理</footer>
+</div>
+
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"][data-view]'));
+  var panels = {
+    text: document.getElementById('text-view'),
+    original: document.getElementById('original-view')
+  };
+  var originalImg = document.getElementById('original-full');
+  var originalLoaded = false;
+
+  function showView(name) {
+    tabs.forEach(function (tab) {
+      var active = tab.dataset.view === name;
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      tab.setAttribute('tabindex', active ? '0' : '-1');
+    });
+    Object.keys(panels).forEach(function (key) {
+      panels[key].hidden = key !== name;
+    });
+    if (name === 'original' && !originalLoaded) {
+      originalImg.src = originalImg.dataset.src;
+      originalLoaded = true;
+    }
+  }
+
+  tabs.forEach(function (tab, index) {
+    tab.addEventListener('click', function () { showView(tab.dataset.view); });
+    tab.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      var next = (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[next].focus();
+      showView(tabs[next].dataset.view);
+    });
+  });
+})();
+</script>
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
+</body>
+</html>

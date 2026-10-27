@@ -22,3 +22,6 @@ node_modules/
 # Python 缓存（pack_deploy.py 会 import apk-project-v2/sync_www.py，生成 __pycache__）
 __pycache__/
 *.pyc
+
+# PowerShell 空变量误生成文件
+$null

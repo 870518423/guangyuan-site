@@ -25,11 +25,18 @@ OUT = os.path.join(SRC, 'deploy.zip')
 INCLUDES = [
     'index.html',
     'calculator.html',
+    'mizang-zhuanpan-calculator.html',  # 光之秘藏 / 转盘统一计算器
     'guides.html',
     'strategies.html',
     'strategy-xiulian.html',
     'strategy-dati.html',
-    'strategy-bingfeiwudou.html',   # 转载攻略页（新增，勿删）
+    'strategy-bingfeiwudou.html',   # 转载攻略页
+    'strategy-huluji.html',         # 老虎机抽取推荐（图片攻略）
+    'strategy-ul-tier.html',        # UL 强度排行榜（图片攻略）
+    'strategy-mizang.html',         # 光之秘藏（图文攻略）
+    'mizang-calculator.html',       # 秘藏光元消耗计算器（验收版）
+    'strategy-zhuanpan.html',       # 奥特转盘（图文攻略）
+    'zhuanpan-calculator.html',     # 转盘光元消耗计算器（验收版）
     'app.html',                     # App 设置页（第 14 轮，2026-10-18）
     'app',                          # APK 安装包目录（第 15 轮，网页版「下载 App」用）
     'module.json',                  # 资源包清单（pack_deploy 自动生成，勿手改）
@@ -52,8 +59,18 @@ EXCLUDE_SUFFIX = ('.bak', '~', '.tmp', '.swp', '.orig', '.rej')
 # 万一被误拷进站点目录，这里兜底拦住（2026-10-13 M4 顺带加固）
 EXCLUDE_NAMES = {'Thumbs.db', 'desktop.ini', '.DS_Store', '_模板.js'}
 
+# 伤害计算器尚在本地验收，暂不进入网页部署包或 content.json。
+# 后续获准发布时，删除以下两项排除即可。
+PACK_EXCLUDE_FILES = {'damage-calculator.html', 'damage-calculator-linked.html'}
+PACK_EXCLUDE_PREFIXES = ('assets/damage-calc/',)
+
 # 这些扩展名属于「站点会实际请求的资源」，逐个校验存在性（缺了要报警）
 EXPECTED_HTML = [n for n in INCLUDES if n.endswith('.html')]
+
+
+def _is_pack_excluded(rel):
+    rel = rel.replace('\\', '/')
+    return rel in PACK_EXCLUDE_FILES or any(rel.startswith(p) for p in PACK_EXCLUDE_PREFIXES)
 
 
 def collect():
@@ -62,7 +79,7 @@ def collect():
     for item in INCLUDES:
         full = os.path.join(SRC, item)
         if os.path.isfile(full):
-            if _is_dev_artifact(item):
+            if _is_dev_artifact(item) or _is_pack_excluded(item):
                 continue
             got.append(item)
         elif os.path.isdir(full):
@@ -72,7 +89,7 @@ def collect():
                         continue
                     abs_path = os.path.join(root, f)
                     rel = os.path.relpath(abs_path, SRC).replace('\\', '/')
-                    if _is_dev_artifact(rel):
+                    if _is_dev_artifact(rel) or _is_pack_excluded(rel):
                         continue
                     got.append(rel)
         else:
@@ -209,7 +226,7 @@ SITE_BASE = 'https://m78calc.cn'   # App 内下载资源包用（Capacitor origi
 # 复用它导出的 collect_www_files()，改白名单只改 sync_www.py 一处，
 # 线上 content.json 与 APK 内置 www 自动保持一致。
 _SYNC_WWW = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '..', 'apk-project-v2', 'sync_www.py')
+                         'apk-project-v2', 'sync_www.py')
 
 
 def _collect_www_files():
@@ -225,7 +242,10 @@ def _collect_www_files():
     fallback = []
     for item in ('index.html', 'calculator.html', 'guides.html', 'strategies.html',
                  'strategy-xiulian.html', 'strategy-dati.html',
-                 'strategy-bingfeiwudou.html', 'app.html',
+                 'strategy-bingfeiwudou.html', 'strategy-huluji.html',
+                 'strategy-ul-tier.html', 'strategy-mizang.html',
+                 'mizang-calculator.html', 'strategy-zhuanpan.html',
+                 'zhuanpan-calculator.html', 'mizang-zhuanpan-calculator.html', 'app.html',
                  'manifest.json', 'service-worker.js', 'ak-analytics.js',
                  'module.json', 'version.json', 'content.json'):
         p = os.path.join(SRC, item)
@@ -249,7 +269,7 @@ def build_content_manifest(build):
     #   ① 自列会让指纹比对永远差几项（content.json 写完才落盘，记下的是上一版指纹）；
     #   ② 把它们列进内容清单 = 允许 App 把它们塞进内容桶，违反铁律 8。
     LIVE_MANIFESTS = ('content.json', 'version.json', 'module.json')
-    files = [f for f in _collect_www_files() if f not in LIVE_MANIFESTS]
+    files = [f for f in _collect_www_files() if f not in LIVE_MANIFESTS and not _is_pack_excluded(f)]
     items = []
     total = 0
     for rel in files:
@@ -291,7 +311,7 @@ def read_apk_version():
     build/contentVersion 都是内容与内核的版本，跟安装包无关；拿它们判断重装会把每次
     内容热更都误报成「请下载安装包」。app 字段缺省时 App 一律按「无需重装」处理。"""
     gradle = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          '..', 'apk-project-v2', 'android', 'app', 'build.gradle')
+                          'apk-project-v2', 'android', 'app', 'build.gradle')
     try:
         import re as _re
         txt = open(gradle, encoding='utf-8').read()
@@ -301,6 +321,23 @@ def read_apk_version():
     except Exception:
         pass
     return None
+
+
+def read_apk_notes(apk_ver):
+    """读取当前 APK 版本的更新公告，写入 version.json.apkNotes。"""
+    if not apk_ver:
+        return []
+    path = os.path.join(SRC, 'app', 'release-notes.json')
+    try:
+        import json as _json
+        with open(path, encoding='utf-8') as fh:
+            data = _json.load(fh)
+        notes = data.get(apk_ver, [])
+        if not isinstance(notes, list):
+            return []
+        return [str(x).strip() for x in notes if str(x).strip()][:8]
+    except Exception:
+        return []
 
 
 def build_pack_manifests():
@@ -356,10 +393,12 @@ def build_pack_manifests():
     }
     content = build_content_manifest(build)
     apk_ver = read_apk_version()
+    apk_notes = read_apk_notes(apk_ver)
     version = {
         'build': build,
         'contentVersion': content['contentVersion'],   # 第 18 轮：内容覆盖层版本（取 BUILD 号）
         'apk': apk_ver,                                # 第 19 轮：安装包版本（判断是否需重装）
+        'apkNotes': apk_notes,                         # App 检查更新时展示的当前 APK 更新公告
         'generated': module['generated'],
         'packs': {k: {'version': v['version'], 'count': v['count'], 'bytes': v['bytes']} for k, v in packs.items()},
     }

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>光之秘藏/转盘计算器 · 奥系工具站</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="光之秘藏与奥特转盘光元消耗计算器：切换标签即可计算秘藏碎片、转盘核心奖励、道具数量与光元消耗。">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" type="image/png" href="assets/favicon-app.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="奥系工具站">
+<meta name="mobile-web-app-capable" content="yes">
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{var q=location.search.indexOf('app=1')>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute('data-app','1');var l=document.createElement('link');l.rel='stylesheet';l.href='assets/ak/app.css';document.head.appendChild(l);var s=document.createElement('script');s.src='assets/ak/app-shell.js';s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
+<link rel="stylesheet" href="assets/ak/aoxi-site-refresh.css">
+<style>
+  html:not([data-app]) body.aoxi-calc-hub {
+    min-height:100vh; overflow-x:hidden; background:var(--aoxi-bg); color:var(--aoxi-text);
+  }
+  .calc-hub-wrap {
+    width:min(1240px,calc(100% - 48px)); margin:0 auto; padding:32px 0 72px;
+  }
+  .calc-hub-back {
+    display:inline-flex; align-items:center; gap:6px; min-height:34px; margin-bottom:12px; padding:5px 12px;
+    border:1px solid var(--aoxi-line-strong); color:var(--aoxi-muted); background:var(--aoxi-panel);
+    font-size:12px; text-decoration:none; transition:border-color 160ms ease,color 160ms ease;
+  }
+  .calc-hub-back:hover { border-color:var(--aoxi-cyan); color:var(--aoxi-cyan); }
+  .calc-hub-hero {
+    position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:28px;
+    min-height:220px; padding:30px 32px; overflow:hidden; border:1px solid var(--aoxi-line);
+    background:linear-gradient(125deg,var(--aoxi-panel) 0%,var(--aoxi-panel-2) 100%);
+  }
+  .calc-hub-hero::before {
+    position:absolute; inset:0; content:""; pointer-events:none; opacity:.34;
+    background-image:linear-gradient(rgba(81,228,230,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(81,228,230,.08) 1px,transparent 1px);
+    background-size:34px 34px; mask-image:linear-gradient(90deg,transparent,#000 58%,#000);
+  }
+  .calc-hub-hero__copy { position:relative; z-index:1; }
+  .calc-hub-kicker {
+    display:block; margin-bottom:15px; color:var(--aoxi-cyan); font-family:ui-monospace,Consolas,monospace;
+    font-size:9px; letter-spacing:.17em;
+  }
+  .calc-hub-hero h1 {
+    display:flex; flex-direction:column; align-items:flex-start; gap:3px; margin:0;
+    color:var(--aoxi-text); font-size:clamp(30px,3.8vw,48px); font-weight:650;
+    letter-spacing:-.04em; line-height:1.12;
+  }
+  .calc-hub-hero h1 span { display:block; }
+  .calc-hub-hero p {
+    max-width:720px; margin:15px 0 0; color:var(--aoxi-muted); font-size:13px; line-height:1.9;
+  }
+  .calc-hub-sources { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .calc-hub-sources a {
+    display:inline-flex; align-items:center; min-height:32px; padding:4px 10px; border:1px solid var(--aoxi-line);
+    color:var(--aoxi-muted); font-size:10px; text-decoration:none; background:var(--aoxi-bg-2);
+  }
+  .calc-hub-sources a:hover { border-color:var(--aoxi-cyan); color:var(--aoxi-cyan); }
+  .calc-hub-mark {
+    position:relative; z-index:1; display:grid; width:138px; height:138px; place-items:center;
+    border:1px solid var(--aoxi-line-strong); background:var(--aoxi-bg-2);
+  }
+  .calc-hub-mark::before,.calc-hub-mark::after {
+    position:absolute; width:18px; height:18px; content:""; border-color:var(--aoxi-cyan);
+  }
+  .calc-hub-mark::before { top:-1px; left:-1px; border-top:2px solid; border-left:2px solid; }
+  .calc-hub-mark::after { right:-1px; bottom:-1px; border-right:2px solid; border-bottom:2px solid; }
+  .calc-hub-mark img { width:120px; height:120px; object-fit:contain; }
+  .calc-tabs {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:14px 0 10px;
+  }
+  .calc-tab {
+    --ease-out:cubic-bezier(.22,1,.36,1);
+    position:relative; isolation:isolate; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:16px;
+    min-height:72px; padding:14px 18px; border:1px solid var(--aoxi-line); border-radius:0;
+    background:var(--aoxi-panel); color:var(--aoxi-muted); text-align:left; font:inherit; cursor:pointer;
+    transition:border-color 160ms ease,background 160ms ease,color 160ms ease;
+  }
+  .calc-tab::before {
+    position:absolute; top:-1px; left:-1px; width:38px; height:2px; background:transparent; content:"";
+  }
+  .calc-tab > span { display:grid; gap:2px; }
+  .calc-tab strong { color:var(--aoxi-text); font-size:14px; font-weight:620; }
+  .calc-tab small { color:var(--aoxi-quiet); font-family:ui-monospace,Consolas,monospace; font-size:8px; letter-spacing:.12em; }
+  .calc-tab em { color:var(--aoxi-quiet); font-family:ui-monospace,Consolas,monospace; font-size:18px; font-style:normal; }
+  .calc-tab:hover { border-color:var(--aoxi-line-strong); background:var(--aoxi-panel-2); }
+  .calc-tab[aria-selected="true"] { border-color:var(--aoxi-line-strong); background:var(--aoxi-panel-2); }
+  .calc-tab[aria-selected="true"]::before { background:var(--aoxi-cyan); }
+  .calc-tab[aria-selected="true"] strong,.calc-tab[aria-selected="true"] em { color:var(--aoxi-cyan); }
+  .calc-panel {
+    position:relative; min-height:540px; overflow:hidden; border:1px solid var(--aoxi-line);
+    background:var(--aoxi-panel);
+  }
+  .calc-panel[hidden] { display:none; }
+  .calc-panel iframe {
+    position:relative; z-index:1; display:block; width:100%; min-height:540px; border:0; background:transparent;
+  }
+  .calc-loading {
+    position:absolute; z-index:0; inset:0; display:grid; place-items:center; color:var(--aoxi-quiet);
+    font-family:ui-monospace,Consolas,monospace; font-size:10px; letter-spacing:.12em;
+  }
+  .calc-panel.is-ready .calc-loading { display:none; }
+  .calc-hub-foot {
+    display:flex; align-items:center; justify-content:space-between; gap:18px; margin-top:14px; padding:14px 16px;
+    border:1px solid var(--aoxi-line); color:var(--aoxi-quiet); background:var(--aoxi-panel); font-size:10px; line-height:1.7;
+  }
+  .calc-hub-foot a { color:var(--aoxi-cyan); text-decoration:none; }
+  html[data-app] body.aoxi-calc-hub { min-height:100vh; background:var(--bg); color:var(--text); }
+  html[data-app] .calc-hub-wrap { width:100%; padding:14px 10px 40px; }
+  html[data-app] .calc-hub-hero { min-height:0; padding:20px; }
+  html[data-app] .calc-hub-mark { display:none; }
+  html[data-app] .calc-tabs { margin-top:10px; }
+  @media (max-width:700px) {
+    .calc-hub-wrap { width:calc(100% - 28px); padding:18px 0 52px; }
+    .calc-hub-hero { grid-template-columns:minmax(0,1fr); min-height:0; padding:22px 19px; }
+    .calc-hub-hero h1 { font-size:clamp(29px,9vw,42px); }
+    .calc-hub-mark { display:none; }
+    .calc-tabs { grid-template-columns:minmax(0,1fr); }
+    .calc-tab { min-height:64px; }
+    .calc-hub-foot { align-items:flex-start; flex-direction:column; }
+  }
+</style>
+<script defer src="/ak-analytics.js"></script>
+</head>
+<body class="aoxi-refresh aoxi-calc-hub" data-ak-progress>
+<header class="aoxi-site-head"><div class="aoxi-site-head__inner">
+  <a class="aoxi-site-brand" data-aoxi-intro="rise" href="index.html" aria-label="奥系工具站首页"><img src="assets/logo-site.webp" alt=""><span><small>AOXI / INDEX</small></span></a>
+  <nav class="aoxi-site-nav" data-aoxi-intro="right" aria-label="主导航">
+    <a href="index.html"><span>首页</span><small>HOME</small></a>
+    <details class="aoxi-nav-menu is-current">
+      <summary class="is-current" aria-current="page"><span>计算器</span><small>CALCULATOR</small></summary>
+      <div class="aoxi-calc-dropdown">
+        <a href="calculator.html"><span>光元收益预测器</span><small>RESOURCE FORECAST</small></a>
+        <a href="mizang-zhuanpan-calculator.html?tab=zhuanpan" data-calc-link="zhuanpan"><span>转盘</span><small>DRAW CALCULATOR</small></a>
+        <a href="mizang-zhuanpan-calculator.html?tab=mizang" data-calc-link="mizang"><span>光之秘藏</span><small>VAULT CALCULATOR</small></a>
+      </div>
+    </details>
+    <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
+    <a href="strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
+    <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
+  </nav>
+  <details class="aoxi-mobile-nav" data-aoxi-intro="right"><summary><strong>菜单</strong><small>MENU</small></summary><nav class="aoxi-mobile-links" aria-label="手机导航">
+    <a href="index.html"><span>首页</span><small>HOME</small></a>
+    <details class="aoxi-mobile-submenu is-current">
+      <summary><span>计算器</span><small>CALCULATOR</small></summary>
+      <div class="aoxi-mobile-submenu-panel">
+        <a href="calculator.html"><span>光元收益预测器</span><small>RESOURCE FORECAST</small></a>
+        <a href="mizang-zhuanpan-calculator.html?tab=zhuanpan" data-calc-link="zhuanpan"><span>转盘</span><small>DRAW CALCULATOR</small></a>
+        <a href="mizang-zhuanpan-calculator.html?tab=mizang" data-calc-link="mizang"><span>光之秘藏</span><small>VAULT CALCULATOR</small></a>
+      </div>
+    </details>
+    <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
+    <a href="strategies.html"><span>攻略</span><small>STRATEGIES</small></a>
+    <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
+  </nav></details>
+</div></header>
+
+<main class="calc-hub-wrap">
+  <a class="calc-hub-back" id="calc-hub-back" href="strategy-mizang.html">← 返回光之秘藏攻略</a>
+  <section class="calc-hub-hero" data-aoxi-intro="rise">
+    <div class="calc-hub-hero__copy">
+      <span class="calc-hub-kicker">CALCULATOR SUITE / MIZANG + DRAW</span>
+      <h1 class="calc-hub-title" aria-label="光之秘藏、转盘计算器"><span>光之秘藏</span><span>转盘计算器</span></h1>
+      <p>把活动投入、抽数与轮次换算成实际奖励和光元消耗。两个计算器共用同一页面，切换标签会保留各自已经填写的计算状态。</p>
+      <div class="calc-hub-sources">
+        <a href="strategy-mizang.html">计算依据：光之秘藏攻略 ↗</a>
+        <a href="strategy-zhuanpan.html">计算依据：奥特转盘攻略 ↗</a>
+      </div>
+    </div>
+    <div class="calc-hub-mark" aria-hidden="true"><img id="calc-hub-mark-image" src="assets/ak/calc-hub-vault.webp" alt=""></div>
+  </section>
+
+  <div class="calc-tabs" role="tablist" aria-label="选择计算器">
+    <button class="calc-tab" id="tab-zhuanpan" type="button" role="tab" aria-selected="false" aria-controls="panel-zhuanpan" tabindex="-1">
+      <span><strong>奥特转盘</strong><small>DRAW CALCULATOR</small></span><em>01</em>
+    </button>
+    <button class="calc-tab" id="tab-mizang" type="button" role="tab" aria-selected="true" aria-controls="panel-mizang" tabindex="0">
+      <span><strong>光之秘藏</strong><small>VAULT CALCULATOR</small></span><em>02</em>
+    </button>
+  </div>
+
+  <section class="calc-panel" id="panel-zhuanpan" role="tabpanel" aria-labelledby="tab-zhuanpan" hidden>
+    <div class="calc-loading">正在载入转盘计算器…</div>
+    <iframe src="zhuanpan-calculator.html?embed=1" data-calc-src="zhuanpan-calculator.html" title="奥特转盘计算器"></iframe>
+  </section>
+  <section class="calc-panel" id="panel-mizang" role="tabpanel" aria-labelledby="tab-mizang">
+    <div class="calc-loading">正在载入光之秘藏计算器…</div>
+    <iframe src="mizang-calculator.html?embed=1" data-calc-src="mizang-calculator.html" title="光之秘藏计算器"></iframe>
+  </section>
+
+  <div class="calc-hub-foot">
+    <span>所有计算均在本机浏览器完成，不会上传输入数据。</span>
+    <span>计算结果以游戏内实际规则为准 · <a href="strategies.html">查看全部攻略</a></span>
+  </div>
+</main>
+
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
+<script>
+(function () {
+  var aliases = { zhuanpan: 'zhuanpan', mizang: 'mizang' };
+  var requested = new URLSearchParams(location.search).get('tab');
+  var activeTab = aliases[requested] || 'mizang';
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.calc-tab'));
+  var panels = {
+    zhuanpan: document.getElementById('panel-zhuanpan'),
+    mizang: document.getElementById('panel-mizang')
+  };
+  var frames = {
+    zhuanpan: panels.zhuanpan.querySelector('iframe'),
+    mizang: panels.mizang.querySelector('iframe')
+  };
+  var markImage = document.getElementById('calc-hub-mark-image');
+  var markImages = {
+    zhuanpan: 'assets/ak/calc-hub-draw.webp',
+    mizang: 'assets/ak/calc-hub-vault.webp'
+  };
+  var backLink = document.getElementById('calc-hub-back');
+  var backLinks = {
+    zhuanpan: { href: 'strategy-zhuanpan.html', label: '← 返回奥特转盘攻略' },
+    mizang: { href: 'strategy-mizang.html', label: '← 返回光之秘藏攻略' }
+  };
+
+  function iframeUrl(name) {
+    var url = new URL(frames[name].getAttribute('data-calc-src') + '?embed=1', location.href);
+    if (new URLSearchParams(location.search).get('app') === '1') url.searchParams.set('app', '1');
+    return url.href;
+  }
+
+  Object.keys(frames).forEach(function (name) {
+    var frame = frames[name];
+    if (frame.getAttribute('src') !== iframeUrl(name)) frame.src = iframeUrl(name);
+  });
+
+  function syncLinks() {
+    document.querySelectorAll('[data-calc-link]').forEach(function (link) {
+      if (link.getAttribute('data-calc-link') === activeTab) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+  }
+
+  function measure(name) {
+    var frame = frames[name];
+    if (!frame || !frame.contentWindow) return;
+    frame.contentWindow.postMessage({ type: 'aoxi-measure' }, '*');
+  }
+
+  function syncTheme() {
+    var theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    Object.keys(frames).forEach(function (name) {
+      if (frames[name].contentWindow) frames[name].contentWindow.postMessage({ type: 'aoxi-theme-sync', theme: theme }, '*');
+    });
+  }
+
+  function selectTab(name, focusTab, updateUrl) {
+    if (!panels[name]) name = 'mizang';
+    activeTab = name;
+    if (markImage) {
+      var markSrc = markImages[name];
+      if (markImage.getAttribute('src') !== markSrc) markImage.src = markSrc;
+      markImage.alt = name === 'zhuanpan' ? '奥特转盘' : '光之秘藏';
+    }
+    if (backLink) {
+      backLink.href = backLinks[name].href;
+      backLink.textContent = backLinks[name].label;
+    }
+    tabs.forEach(function (tab) {
+      var selected = tab.id === 'tab-' + name;
+      tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+      tab.tabIndex = selected ? 0 : -1;
+      if (selected && focusTab) tab.focus();
+    });
+    Object.keys(panels).forEach(function (key) { panels[key].hidden = key !== name; });
+    syncLinks();
+    if (updateUrl !== false) {
+      var url = new URL(location.href);
+      url.searchParams.set('tab', name);
+      history.replaceState(null, '', url.href);
+    }
+    window.requestAnimationFrame(function () {
+      measure(name);
+      syncTheme();
+    });
+  }
+
+  tabs.forEach(function (tab, index) {
+    tab.addEventListener('click', function () {
+      selectTab(tab.id === 'tab-zhuanpan' ? 'zhuanpan' : 'mizang');
+    });
+    tab.addEventListener('keydown', function (event) {
+      var next = null;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index + tabs.length - 1) % tabs.length;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % tabs.length;
+      if (event.key === 'Home') next = 0;
+      if (event.key === 'End') next = tabs.length - 1;
+      if (next === null) return;
+      event.preventDefault();
+      selectTab(tabs[next].id === 'tab-zhuanpan' ? 'zhuanpan' : 'mizang', true);
+    });
+  });
+
+  Object.keys(frames).forEach(function (name) {
+    var frame = frames[name];
+    frame.addEventListener('load', function () {
+      panels[name].classList.add('is-ready');
+      syncTheme();
+      measure(name);
+    });
+  });
+
+  window.addEventListener('message', function (event) {
+    if (!event.data || event.data.type !== 'aoxi-calc-height') return;
+    var name = Object.keys(frames).find(function (key) { return frames[key].contentWindow === event.source; });
+    if (!name) return;
+    var height = Math.max(480, Math.min(24000, Math.round(Number(event.data.height) || 0)));
+    var frame = frames[name];
+    if (height && Math.abs(parseFloat(frame.style.height || '0') - height) > 1) frame.style.height = height + 'px';
+  });
+
+  document.getElementById('ak-theme-toggle')?.addEventListener('click', function () {
+    window.setTimeout(syncTheme, 0);
+  });
+  window.addEventListener('resize', function () {
+    window.requestAnimationFrame(function () { measure(activeTab); });
+  });
+  window.addEventListener('load', syncTheme);
+
+  selectTab(activeTab, false, false);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load', function () {
+  navigator.serviceWorker.register('service-worker.js').catch(function () {});
+});
+</script>
+</body>
+</html>

@@ -50,6 +50,7 @@
   }
   header .sub { margin: 0; color: var(--dim); font-size: .8rem; letter-spacing: .3px; }
   header .sub b { color: var(--gold); font-weight: 600; }
+  header .update-note { margin-top: 5px; color: var(--muted); }
 
   .author {
     display: flex; align-items: center; flex-wrap: wrap; gap: 9px;
@@ -59,6 +60,15 @@
     padding: 11px 14px; margin-bottom: 16px;
   }
   .author .lab { font-size: .72rem; color: var(--muted); letter-spacing: 1px; }
+  .author .avatar {
+    display: block; flex: 0 0 44px; width: 44px; height: 44px; padding: 3px;
+    border-radius: 50%; background: var(--ring, #fbbf24); line-height: 0;
+    box-shadow: 0 0 0 1px rgba(15,23,42,.35);
+  }
+  .author .avatar img {
+    display: block; width: 100%; height: 100%; border-radius: 50%;
+    object-fit: cover; background: var(--panel2);
+  }
   .author a {
     display: inline-flex; align-items: center; gap: 5px;
     color: var(--gold); font-size: .96rem; font-weight: 650;
@@ -67,7 +77,18 @@
   .author a:hover { color: #fde68a; border-bottom-color: #fde68a; }
   .author a::after { content: "↗"; font-size: .78rem; opacity: .8; }
   .author .hint { margin-left: auto; font-size: .74rem; color: var(--dim); }
-  @media (max-width: 560px) { .author .hint { margin-left: 0; width: 100%; } }
+  .author .date {
+    display: inline-flex; align-items: center; gap: 7px; padding-left: 11px;
+    border-left: 1px solid rgba(251,191,36,.28);
+  }
+  .author .date time {
+    color: var(--text); font-size: .84rem; font-weight: 650;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  @media (max-width: 560px) {
+    .author .hint { margin-left: 0; width: 100%; }
+    .author .date { padding-left: 0; border-left: 0; width: 100%; }
+  }
 
   .note {
     background: var(--panel2); border: 1px solid var(--border);
@@ -166,7 +187,7 @@
     <p class="sub">收录自玩家社区 · 内容版权归原作者所有</p>
   </header>
 
-  <div class="author"><span class="lab">作者</span><a href="https://space.bilibili.com/505753055" target="_blank" rel="noopener noreferrer">故稔</a><span class="hint">点击前往作者的 B 站主页</span></div>
+  <div class="author"><span class="avatar" style="--ring:#60a5fa"><img src="assets/authors/guren.webp" width="44" height="44" alt="故稔头像" loading="lazy" decoding="async"></span><span class="lab">攻略作者</span><a href="https://space.bilibili.com/505753055" target="_blank" rel="noopener noreferrer">故稔</a><span class="date"><span class="lab">攻略日期</span><time datetime="2026-10-09">2026.10.9</time></span><span class="hint">首次收录日期</span></div>
 
   <p class="note">以下数值为 <b class="lv">6级</b> 词条的非完美属性数值，数值越大越接近完美。</p>
 

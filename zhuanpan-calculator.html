@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>奥特转盘光元计算器 · 奥系工具站</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="奥特转盘光元计算器：选择四圈轮次并输入投入光元，按攻略优先级计算全部核心奖励。">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="奥系工具站">
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{if(new URLSearchParams(location.search).get('embed')==='1')document.documentElement.setAttribute('data-calc-embed','1');}catch(e){}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #101828; --panel2: #0d1526;
+    --border: #1e2a41; --border2: #263449;
+    --text: #e6ebf5; --muted: #8b98ad; --dim: #64748b;
+    --blue: #3b82f6; --gold: #fbbf24; --green: #34d399; --red: #fb7185; --violet: #a78bfa; --radius: 12px;
+  }
+  [data-theme="light"] {
+    --bg: #f5f7fb; --panel: #fff; --panel2: #f8fafc;
+    --border: #e2e8f0; --border2: #cbd5e1;
+    --text: #172033; --muted: #526176; --dim: #718096;
+    --blue: #2563eb; --gold: #b77900; --green: #047857; --red: #be123c; --violet: #6d28d9;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px; line-height: 1.65;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+  /* 统一计算器页内嵌模式：隐藏独立入口与标题，只保留计算主体。 */
+  html[data-calc-embed] body { background: transparent; }
+  html[data-calc-embed] .top-links,
+  html[data-calc-embed] .wrap>header,
+  html[data-calc-embed] .ak-theme-toggle { display: none !important; }
+  html[data-calc-embed] .wrap { max-width: none; padding: 14px 14px 26px; }
+  @media (max-width: 560px) {
+    html[data-calc-embed] .wrap { padding: 10px 9px 20px; }
+  }
+  .top-links { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .back-home {
+    display: inline-flex; align-items: center; gap: 5px; font-size: .82rem;
+    color: var(--muted); text-decoration: none; padding: 5px 11px 5px 8px;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--panel2);
+    transition: color .15s, border-color .15s;
+  }
+  .back-home:hover { color: #93c5fd; border-color: var(--blue); }
+  .preview-badge {
+    margin-left: auto; color: var(--gold); border: 1px solid rgba(251,191,36,.35);
+    background: rgba(251,191,36,.07); border-radius: 999px; padding: 4px 10px;
+    font-size: .7rem; letter-spacing: .5px;
+  }
+  header { text-align: center; padding: 8px 0 16px; }
+  header h1 {
+    margin: 0 0 6px; font-size: 1.65rem; font-weight: 750; letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--dim); font-size: .8rem; }
+  header .sub a { color: var(--gold); text-decoration: none; }
+  .preset-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 12px; margin-bottom: 10px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 12px;
+  }
+  .preset-bar .preset-label { color: var(--muted); font-size: .75rem; margin-right: 2px; }
+  .preset-btn {
+    appearance: none; border: 1px solid var(--border2); color: var(--muted);
+    background: var(--panel2); border-radius: 7px; padding: 6px 11px;
+    font: inherit; font-size: .78rem; font-weight: 650; cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .preset-btn:hover { color: var(--text); border-color: var(--blue); }
+  .preset-btn.active { background: rgba(251,191,36,.13); border-color: var(--gold); color: var(--gold); }
+  .plan-summary {
+    display: flex; align-items: center; gap: 8px; min-height: 36px;
+    padding: 7px 12px; margin-bottom: 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--panel2); color: var(--muted);
+    font-size: .75rem; line-height: 1.5;
+  }
+  .plan-summary b { flex: none; color: var(--gold); font-weight: 700; }
+  .calculator-grid { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: 14px; align-items: start; }
+  .panel { min-width: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  .panel h2 { margin: 0 0 13px; color: var(--gold); font-size: 1rem; line-height: 1.35; }
+  .input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .field {
+    display: block; min-width: 0; padding: 9px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 9px;
+  }
+  .field > span:first-child { display: block; margin-bottom: 6px; color: var(--muted); font-size: .73rem; line-height: 1.25; }
+  .input-wrap { position: relative; display: block; }
+  .input-wrap input, .input-wrap select {
+    display: block; width: 100%; appearance: none; border: 1px solid var(--border2);
+    background: var(--panel); color: var(--text); border-radius: 7px;
+    padding: 9px 31px 9px 9px; font: inherit; font-size: .94rem;
+    font-variant-numeric: tabular-nums; outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .input-wrap select { cursor: pointer; }
+  .input-wrap input::-webkit-outer-spin-button, .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .input-wrap input:focus, .input-wrap select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.13); }
+  .input-wrap .suffix { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--dim); font-size: .67rem; pointer-events: none; }
+  .input-wrap .suffix-icon { position: absolute; right: 8px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); object-fit: contain; pointer-events: none; }
+  .select-arrow { position: absolute; right: 10px; top: 50%; width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: translateY(-65%) rotate(45deg); pointer-events: none; }
+  .readout strong { display: block; padding: 9px 0 8px; color: var(--blue); font-size: .96rem; font-variant-numeric: tabular-nums; }
+  .result-hero { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-bottom: 11px; }
+  .hero-metric {
+    display: flex; min-width: 0; align-items: center; flex-direction: column; text-align: center;
+    padding: 12px 7px 11px; border: 1px solid var(--border); border-radius: 11px;
+    background: linear-gradient(180deg, rgba(251,191,36,.08), var(--panel2));
+  }
+  .hero-metric.break-result { background: linear-gradient(180deg, rgba(59,130,246,.10), var(--panel2)); }
+  .hero-metric.red-result { background: linear-gradient(180deg, rgba(251,113,133,.09), var(--panel2)); }
+  .metric-icon-wrap { display: flex; align-items: center; justify-content: center; gap: 3px; min-height: 48px; margin-bottom: 4px; }
+  .metric-icon { display: block; width: 48px; height: 48px; object-fit: contain; }
+  .metric-icon.small-pair { width: 36px; height: 36px; }
+  .metric-token {
+    display: grid; place-items: center; width: 48px; height: 48px; border-radius: 10px;
+    color: var(--gold); background: rgba(251,191,36,.10); border: 1px solid rgba(251,191,36,.35);
+    font-size: 1.2rem; font-weight: 800;
+  }
+  .metric-copy { min-width: 0; width: 100%; }
+  .metric-copy .label { display: block; color: var(--muted); font-size: .68rem; line-height: 1.3; }
+  .metric-copy strong {
+    display: block; margin-top: 2px; color: var(--text); font-size: clamp(1.22rem, 4.3vw, 1.82rem);
+    line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -.4px;
+  }
+  .metric-copy strong em { display: block; margin-top: 3px; color: var(--muted); font-style: normal; font-size: .38em; font-weight: 600; letter-spacing: 0; }
+  .cost-result strong { color: var(--gold); }
+  .break-result strong { color: var(--blue); }
+  .red-result strong { color: var(--red); }
+  .metric-multi { display: grid; gap: 1px; font-size: .72em; line-height: 1.25; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .stat { min-width: 0; background: var(--panel2); border: 1px solid var(--border); border-radius: 9px; padding: 8px 9px; }
+  .stat .label { display: block; color: var(--dim); font-size: .62rem; line-height: 1.25; }
+  .stat strong { display: block; margin-top: 1px; color: var(--text); font-size: .94rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stat strong em { color: var(--muted); font-style: normal; font-size: .7em; font-weight: 400; margin-left: 2px; }
+  .reward-panel { margin-top: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  .reward-panel h2 { margin: 0 0 4px; color: var(--gold); font-size: 1rem; }
+  .reward-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+  .reward-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    min-width: 0; padding: 9px 11px; border: 1px solid var(--border); border-radius: 9px;
+    background: var(--panel2);
+  }
+  .reward-icon {
+    display: block; flex: 0 0 36px; width: 36px; height: 36px; padding: 1px;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--bg);
+    object-fit: cover;
+  }
+  .reward-name { min-width: 0; flex: 1; color: var(--muted); font-size: .77rem; }
+  .reward-name b { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; color: var(--text); font-weight: 680; }
+  .reward-name .reward-title { min-width: 0; }
+  .reward-name .reward-per-trigger { margin-left: 5px; color: var(--muted); font-size: .68rem; font-style: normal; font-weight: 500; white-space: nowrap; }
+  .reward-name .reward-amount { flex: none; color: var(--text); font-style: normal; font-size: .86rem; font-weight: 720; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .reward-name .reward-desc { display: block; color: var(--dim); font-size: .63rem; }
+  .reward-item.extra { border-style: dashed; }
+  .breakdown { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .breakdown summary { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .76rem; font-weight: 650; cursor: pointer; list-style: none; user-select: none; }
+  .breakdown summary::-webkit-details-marker { display: none; }
+  .breakdown summary::after { content: ''; width: 7px; height: 7px; margin-left: auto; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform .15s ease; }
+  .breakdown[open] summary::after { transform: rotate(-135deg); }
+  .breakdown summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; border-radius: 3px; }
+  .breakdown dl { display: grid; grid-template-columns: minmax(104px, .65fr) minmax(0, 1.35fr); margin: 8px 0 0; }
+  .breakdown dt, .breakdown dd { margin: 0; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: .72rem; }
+  .breakdown dt { color: var(--dim); }
+  .breakdown dd { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .breakdown dt:last-of-type, .breakdown dd:last-of-type { border-bottom: 0; }
+  .breakdown strong { color: var(--text); }
+  footer { margin-top: 24px; text-align: center; color: var(--dim); font-size: .72rem; line-height: 2; }
+  @media (max-width: 760px) {
+    .calculator-grid { grid-template-columns: 1fr; }
+    .reward-list { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    .wrap { padding: 16px 12px 44px; }
+    header h1 { font-size: 1.4rem; }
+    .panel, .reward-panel { padding: 12px; }
+    .input-grid { gap: 8px; }
+    .field { padding: 8px; }
+    .metric-icon { width: 42px; height: 42px; }
+    .metric-icon.small-pair { width: 31px; height: 31px; }
+    .metric-icon-wrap { min-height: 42px; }
+    .metric-token { width: 42px; height: 42px; }
+    .hero-metric { padding: 10px 4px 9px; }
+    .metric-copy strong { font-size: clamp(1.08rem, 5.7vw, 1.42rem); }
+    .top-links { padding-right: 72px; }
+    .preview-badge { flex-basis: 100%; margin-left: 0; text-align: center; }
+  }
+  @media (max-width: 350px) {
+    .input-grid { grid-template-columns: 1fr; }
+    .result-hero { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr; }
+  }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
+</head>
+<body data-ak-progress>
+<div class="wrap">
+  <div class="top-links">
+    <a class="back-home" href="strategy-zhuanpan.html">← 返回奥特转盘攻略</a>
+    <a class="back-home" href="strategies.html">奥系攻略</a>
+    <span class="preview-badge">验收版 · 暂未加入首页导航</span>
+  </div>
+
+  <header>
+    <h1>奥特转盘光元计算器</h1>
+    <span class="ak-label-en">Ultra Roulette Cost Calculator</span>
+    <p class="sub">按 <a href="strategy-zhuanpan.html">并非五斗的《奥特转盘》攻略</a> 计算 · 全部在本机完成</p>
+  </header>
+
+  <div class="preset-bar" aria-label="快速预设">
+    <span class="preset-label">快速预设</span>
+    <button class="preset-btn" type="button" data-preset="once">一次毕业</button>
+    <button class="preset-btn" type="button" data-preset="split">分两次毕业</button>
+    <button class="preset-btn active" type="button" data-preset="custom">自定义</button>
+  </div>
+  <div class="plan-summary"><b>当前方案</b><span id="plan-summary">第 4 圈 × 3,100 抽</span></div>
+
+  <div class="calculator-grid">
+    <section class="panel" aria-labelledby="input-title">
+      <h2 id="input-title">输入条件</h2>
+      <div class="input-grid">
+        <label class="field" for="round-select">
+          <span>抽取轮次</span>
+          <span class="input-wrap">
+            <select id="round-select">
+              <option value="1">第 1 圈 · 0～9 点</option>
+              <option value="2">第 2 圈 · 9～12 点</option>
+              <option value="3">第 3 圈 · 12～18 点</option>
+              <option value="4" selected>第 4 圈 · 18～24 点</option>
+            </select>
+            <i class="select-arrow" aria-hidden="true"></i>
+          </span>
+        </label>
+        <label class="field" for="rank-shards">
+          <span>排名奖励突破碎片</span>
+          <span class="input-wrap"><input id="rank-shards" type="number" min="0" max="999999" step="1" value="0" inputmode="numeric"><span class="suffix">片</span></span>
+        </label>
+        <label class="field" for="investment">
+          <span>投入光元</span>
+          <span class="input-wrap"><input id="investment" type="number" min="0" max="9999999" step="50" value="139500" inputmode="numeric" aria-label="投入光元"><img class="suffix-icon" src="assets/guangyuan.webp" width="18" height="18" alt="光元"></span>
+        </label>
+        <div class="field readout">
+          <span>预计抽数</span>
+          <strong id="draw-preview">3,100 次</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="result-title" aria-live="polite">
+      <h2 id="result-title">奖励汇总</h2>
+
+      <div class="result-hero">
+        <div class="hero-metric cost-result">
+          <div class="metric-icon-wrap" id="box-icons"><span class="metric-token">宝</span></div>
+          <div class="metric-copy"><span class="label" id="box-label">宝物选择箱</span><strong id="box-value">45 个</strong></div>
+        </div>
+        <div class="hero-metric break-result">
+          <div class="metric-icon-wrap" id="secondary-icons"><img class="metric-icon" src="assets/guides/zhuanpan/breakthrough-fragment.webp" width="48" height="48" alt="突破碎片图标"></div>
+          <div class="metric-copy"><span class="label" id="secondary-label">突破碎片</span><strong id="secondary-value">1,395 片</strong></div>
+        </div>
+        <div class="hero-metric red-result">
+          <div class="metric-icon-wrap"><img class="metric-icon" src="assets/guides/zhuanpan/red-equipment-fragment.webp" width="48" height="48" alt="红装碎片图标"></div>
+          <div class="metric-copy"><span class="label">红装碎片</span><strong id="red-value">42 片</strong></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span class="label">总抽数</span><strong id="total-draws">3,100<em>次</em></strong></div>
+        <div class="stat"><span class="label">转盘券</span><strong id="tickets">2,790<em>个</em></strong></div>
+        <div class="stat"><span class="label">实际使用光元</span><strong id="actual-cost">139,500<em>光元</em></strong></div>
+      </div>
+
+      <details class="breakdown">
+        <summary>计算明细</summary>
+        <dl id="detail-list"></dl>
+      </details>
+    </section>
+  </div>
+
+  <section class="reward-panel" aria-labelledby="reward-title">
+    <h2 id="reward-title">全部核心奖励</h2>
+    <div class="reward-list" id="reward-list"></div>
+  </section>
+
+  <footer>本地计算，不上传任何输入 · 数据口径来自并非五斗的《奥特转盘》攻略</footer>
+</div>
+
+<script>
+(function () {
+  var INTERVALS = [100, 65, 32, 30, 25, 10];
+  var COST_PER_TICKET = 50;
+  var TRIAL_700_RED = 4;
+  var TRIAL_1000_RED = 10;
+  var TRIAL_MAX = 4;
+  var BREAK_ICON = 'assets/guides/zhuanpan/breakthrough-fragment.webp';
+  var RED_ICON = 'assets/guides/zhuanpan/red-equipment-fragment.webp';
+  var BOX_ICONS = {
+    1: 'assets/guides/zhuanpan/treasure-box-1.webp',
+    2: 'assets/guides/zhuanpan/treasure-box-2.webp',
+    3: 'assets/guides/zhuanpan/treasure-box-3.webp',
+    4: 'assets/guides/zhuanpan/treasure-box-4.webp'
+  };
+  var ITEM_ICONS = {
+    fire: 'assets/guides/zhuanpan/reward-spark-core.webp',
+    medal: 'assets/guides/zhuanpan/reward-merit-medal.webp',
+    universal: 'assets/guides/zhuanpan/reward-universal-fragment.webp',
+    earth: 'assets/guides/zhuanpan/reward-earth-block.webp',
+    exp: 'assets/guides/zhuanpan/reward-exp-medal-1.webp',
+    summon: 'assets/guides/zhuanpan/reward-neo-summon-card.webp',
+    crystal: 'assets/guides/zhuanpan/reward-crimson-crystal.webp',
+    key: 'assets/guides/zhuanpan/reward-green-key-bag.webp',
+    ribbon: 'assets/guides/zhuanpan/reward-honor-ribbon.webp',
+    jade: 'assets/guides/zhuanpan/reward-purple-jade.webp'
+  };
+
+  var ROUNDS = {
+    1: {
+      label: '第 1 圈', range: '0～9 点', type: '红装圈',
+      rewards: [
+        { key: 'red', name: '红装碎片', amount: 4, unit: '片', icon: RED_ICON },
+        { key: 'box3', name: '宝物材料选择箱 III', amount: 1, unit: '个', icon: BOX_ICONS[3], box: 3 },
+        { key: 'fire', name: '火花核心', amount: 15, unit: '个', icon: ITEM_ICONS.fire },
+        { key: 'medal', name: '功绩勋章', amount: 10, unit: '个', icon: ITEM_ICONS.medal },
+        { key: 'universal', name: 'L 万能碎片', amount: 8, unit: '个', icon: ITEM_ICONS.universal },
+        { key: 'earth', name: '土块', amount: 40, unit: '个', icon: ITEM_ICONS.earth }
+      ]
+    },
+    2: {
+      label: '第 2 圈', range: '9～12 点', type: '突破圈',
+      rewards: [
+        { key: 'break', name: '突破碎片', amount: 45, unit: '片', icon: BREAK_ICON },
+        { key: 'box1', name: '宝物材料选择箱 I', amount: 1, unit: '个', icon: BOX_ICONS[1], box: 1 },
+        { key: 'fire', name: '火花核心', amount: 15, unit: '个', icon: ITEM_ICONS.fire },
+        { key: 'medal', name: '功绩勋章', amount: 10, unit: '个', icon: ITEM_ICONS.medal },
+        { key: 'exp', name: '1 级经验勋章袋', amount: 1, unit: '个', icon: ITEM_ICONS.exp },
+        { key: 'summon', name: '新生代召唤卡', amount: 2, unit: '个', icon: ITEM_ICONS.summon }
+      ]
+    },
+    3: {
+      label: '第 3 圈', range: '12～18 点', type: '红装圈',
+      rewards: [
+        { key: 'red', name: '红装碎片', amount: 4, unit: '片', icon: RED_ICON },
+        { key: 'crystal', name: '赤红晶石', amount: 8, unit: '个', icon: ITEM_ICONS.crystal },
+        { key: 'key', name: '绿色钥匙袋', amount: 1, unit: '个', icon: ITEM_ICONS.key },
+        { key: 'ribbon', name: '荣誉绶带', amount: 2, unit: '个', icon: ITEM_ICONS.ribbon },
+        { key: 'summon', name: '新生代召唤卡', amount: 6, unit: '个', icon: ITEM_ICONS.summon },
+        { key: 'universal', name: 'L 万能碎片', amount: 3, unit: '个', icon: ITEM_ICONS.universal }
+      ]
+    },
+    4: {
+      label: '第 4 圈', range: '18～24 点', type: '突破圈',
+      rewards: [
+        { key: 'break', name: '突破碎片', amount: 45, unit: '片', icon: BREAK_ICON },
+        { key: 'box2', name: '宝物材料选择箱 II', amount: 1, unit: '个', icon: BOX_ICONS[2], box: 2 },
+        { key: 'key', name: '绿色钥匙袋', amount: 1, unit: '个', icon: ITEM_ICONS.key },
+        { key: 'medal', name: '功绩勋章', amount: 10, unit: '个', icon: ITEM_ICONS.medal },
+        { key: 'universal', name: 'L 万能碎片', amount: 8, unit: '个', icon: ITEM_ICONS.universal },
+        { key: 'jade', name: '紫翠玉', amount: 10, unit: '个', icon: ITEM_ICONS.jade }
+      ]
+    }
+  };
+
+  var presetBtns = Array.prototype.slice.call(document.querySelectorAll('[data-preset]'));
+  var roundSelect = document.getElementById('round-select');
+  var rankInput = document.getElementById('rank-shards');
+  var investmentInput = document.getElementById('investment');
+  var state = { preset: 'once', plan: null };
+  var out = {
+    planSummary: document.getElementById('plan-summary'),
+    drawPreview: document.getElementById('draw-preview'),
+    totalDraws: document.getElementById('total-draws'),
+    tickets: document.getElementById('tickets'),
+    actualCost: document.getElementById('actual-cost'),
+    boxIcons: document.getElementById('box-icons'),
+    boxLabel: document.getElementById('box-label'),
+    boxValue: document.getElementById('box-value'),
+    secondaryIcons: document.getElementById('secondary-icons'),
+    secondaryLabel: document.getElementById('secondary-label'),
+    secondaryValue: document.getElementById('secondary-value'),
+    redValue: document.getElementById('red-value'),
+    detailList: document.getElementById('detail-list'),
+    rewardList: document.getElementById('reward-list')
+  };
+
+  function toInt(el, min, max, fallback) {
+    var value = Number.parseInt(el.value, 10);
+    if (!Number.isFinite(value)) value = fallback;
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function fmt(value) {
+    return Math.round(value).toLocaleString('zh-CN');
+  }
+
+  function ticketCount(draws) {
+    return Math.floor(draws / 10) * 9 + draws % 10;
+  }
+
+  function trialRedForDraws(draws) {
+    var fullRounds = Math.min(Math.floor(draws / 1000), TRIAL_MAX);
+    var red = fullRounds * (TRIAL_700_RED + TRIAL_1000_RED);
+    var progress = draws % 1000;
+    if (fullRounds < TRIAL_MAX && progress >= 700) red += TRIAL_700_RED;
+    return red;
+  }
+
+  function drawsForBudget(budget) {
+    var tenPulls = Math.floor(budget / 450);
+    var remainder = budget % 450;
+    return tenPulls * 10 + Math.floor(remainder / 50);
+  }
+
+  function oncePlan() {
+    return [{ stages: [{ round: 4, draws: 3100 }] }];
+  }
+
+  function splitPlan() {
+    return [
+      { stages: [{ round: 4, draws: 1900 }, { round: 1, draws: 100 }] },
+      { stages: [{ round: 4, draws: 1200 }] }
+    ];
+  }
+
+  function customPlan() {
+    var round = toInt(roundSelect, 1, 4, 4);
+    var budget = toInt(investmentInput, 0, 9999999, 0);
+    return [{ stages: [{ round: round, draws: drawsForBudget(budget) }] }];
+  }
+
+  function markPreset(name) {
+    state.preset = name;
+    presetBtns.forEach(function (button) {
+      button.classList.toggle('active', button.dataset.preset === name);
+    });
+  }
+
+  function setPreset(name) {
+    if (name === 'once') {
+      investmentInput.value = '139500';
+      roundSelect.value = '4';
+      state.plan = oncePlan();
+    } else if (name === 'split') {
+      investmentInput.value = '144000';
+      roundSelect.value = '4';
+      state.plan = splitPlan();
+    } else {
+      state.plan = customPlan();
+    }
+    markPreset(name);
+    update();
+  }
+
+  function countRewardTriggers(draws, rewardIndex) {
+    var count = 0;
+    var interval = INTERVALS[rewardIndex];
+    for (var n = interval; n <= draws; n += interval) {
+      var won = true;
+      for (var higher = 0; higher < rewardIndex; higher++) {
+        if (n % INTERVALS[higher] === 0) { won = false; break; }
+      }
+      if (won) count++;
+    }
+    return count;
+  }
+
+  function allStages(plan) {
+    var stages = [];
+    plan.forEach(function (phase) {
+      phase.stages.forEach(function (stage) { stages.push(stage); });
+    });
+    return stages;
+  }
+
+  function summarizePlan(plan) {
+    if (state.preset === 'split') {
+      return '第一次：第 4 圈 1,900 抽 + 第 1 圈 100 抽；第二次：第 4 圈 1,200 抽';
+    }
+    if (state.preset === 'once') return '第 4 圈 × 3,100 抽';
+    var stage = allStages(plan)[0];
+    var round = ROUNDS[stage.round];
+    return round.label + ' · ' + round.range + '（' + round.type + '）× ' + fmt(stage.draws) + ' 抽';
+  }
+
+  function addReward(totals, reward, count) {
+    var existing = totals[reward.key];
+    if (!existing) {
+      existing = totals[reward.key] = {
+        key: reward.key, name: reward.name, unit: reward.unit, amount: 0,
+        triggers: 0, interval: reward.interval, icon: reward.icon || '', box: reward.box || 0,
+        triggerAmounts: []
+      };
+    }
+    if (existing.triggerAmounts.indexOf(reward.amount) < 0) existing.triggerAmounts.push(reward.amount);
+    existing.amount += reward.amount * count;
+    existing.triggers += count;
+  }
+
+  function registerBox(boxes, reward, count) {
+    if (!reward.box || !count) return;
+    var existing = boxes[reward.box] || (boxes[reward.box] = { count: 0, label: reward.name, icon: reward.icon });
+    existing.count += count;
+  }
+
+  function renderIcons(container, entries) {
+    if (!entries.length) {
+      container.innerHTML = '<span class="metric-token">奖</span>';
+      return;
+    }
+    var pair = entries.length > 1;
+    container.innerHTML = entries.map(function (entry) {
+      return '<img class="metric-icon' + (pair ? ' small-pair' : '') + '" src="' + entry.icon + '" width="' + (pair ? 36 : 48) + '" height="' + (pair ? 36 : 48) + '" alt="' + entry.label + '图标">';
+    }).join('');
+  }
+
+  function update() {
+    var plan = state.plan || customPlan();
+    var stages = allStages(plan);
+    var totalDraws = 0;
+    var totalTickets = 0;
+    var totals = {};
+    var boxes = {};
+    var trialRed = 0;
+
+    plan.forEach(function (phase) {
+      var phaseDraws = 0;
+      phase.stages.forEach(function (stage) {
+        phaseDraws += stage.draws;
+        totalDraws += stage.draws;
+        totalTickets += ticketCount(stage.draws);
+        var round = ROUNDS[stage.round];
+        round.rewards.forEach(function (reward, index) {
+          reward.interval = INTERVALS[index];
+          var count = countRewardTriggers(stage.draws, index);
+          addReward(totals, reward, count);
+          registerBox(boxes, reward, count);
+        });
+      });
+      trialRed += trialRedForDraws(phaseDraws);
+    });
+
+    var rankShards = toInt(rankInput, 0, 999999, 0);
+    var breakTriggers = totals.break ? totals.break.triggers : 0;
+    var breakAmount = totals.break ? totals.break.amount : 0;
+    var breakValue = breakAmount + rankShards;
+    var breakPerTrigger = breakTriggers ? breakAmount / breakTriggers : 45;
+    var coreRed = totals.red ? totals.red.amount : 0;
+    var redTotal = coreRed + trialRed;
+    var actualCost = totalTickets * COST_PER_TICKET;
+    var inputBudget = toInt(investmentInput, 0, 9999999, 0);
+
+    out.planSummary.textContent = summarizePlan(plan);
+    out.drawPreview.textContent = fmt(totalDraws) + ' 次';
+    out.totalDraws.innerHTML = fmt(totalDraws) + '<em>次</em>';
+    out.tickets.innerHTML = fmt(totalTickets) + '<em>个</em>';
+    out.actualCost.innerHTML = fmt(actualCost) + '<em>光元</em>';
+    out.redValue.textContent = fmt(redTotal) + ' 片';
+
+    var boxEntries = Object.keys(boxes).sort(function (a, b) { return Number(a) - Number(b); }).map(function (id) {
+      return { id: Number(id), count: boxes[id].count, label: boxes[id].label, icon: boxes[id].icon };
+    });
+    var boxTotal = boxEntries.reduce(function (sum, entry) { return sum + entry.count; }, 0);
+    var shownKeys = {};
+    var availableRewards = [];
+    stages.forEach(function (stage) {
+      ROUNDS[stage.round].rewards.forEach(function (reward) {
+        if (totals[reward.key] && totals[reward.key].triggers > 0 && shownKeys[reward.key] !== 'listed') {
+          shownKeys[reward.key] = 'listed';
+          availableRewards.push(reward);
+        }
+      });
+    });
+
+    function rewardValue(reward) {
+      var total = totals[reward.key];
+      return total ? fmt(total.amount) + ' ' + total.unit : '0';
+    }
+
+    function showReward(iconEl, labelEl, valueEl, reward) {
+      var total = totals[reward.key];
+      iconEl.innerHTML = '<img class="metric-icon" src="' + reward.icon + '" width="48" height="48" alt="' + reward.name + '图标">';
+      labelEl.textContent = reward.name;
+      valueEl.textContent = rewardValue(reward);
+    }
+
+    if (boxEntries.length) {
+      renderIcons(out.boxIcons, boxEntries);
+      out.boxLabel.textContent = boxEntries.length === 1 ? boxEntries[0].label : '宝物材料选择箱';
+      out.boxValue.textContent = fmt(boxTotal) + ' 个';
+      stages.forEach(function (stage) {
+        ROUNDS[stage.round].rewards.forEach(function (reward) {
+          if (reward.box && boxes[reward.box]) shownKeys[reward.key] = 'shown';
+        });
+      });
+    } else {
+      var primary = availableRewards.find(function (reward) { return reward.key !== 'red'; });
+      if (primary) {
+        showReward(out.boxIcons, out.boxLabel, out.boxValue, primary);
+        shownKeys[primary.key] = 'shown';
+      } else {
+        out.boxIcons.innerHTML = '<span class="metric-token">奖</span>';
+        out.boxLabel.textContent = '核心奖励';
+        out.boxValue.textContent = '0';
+      }
+    }
+
+    if (breakValue > 0 && shownKeys.break !== 'shown') {
+      out.secondaryIcons.innerHTML = '<img class="metric-icon" src="' + BREAK_ICON + '" width="48" height="48" alt="突破碎片图标">';
+      out.secondaryLabel.textContent = '突破碎片';
+      out.secondaryValue.textContent = fmt(breakValue) + ' 片';
+      shownKeys.break = 'shown';
+    } else {
+      var secondary = availableRewards.find(function (reward) {
+        return reward.key !== 'red' && shownKeys[reward.key] !== 'shown';
+      });
+      if (secondary) {
+        showReward(out.secondaryIcons, out.secondaryLabel, out.secondaryValue, secondary);
+        shownKeys[secondary.key] = 'shown';
+      } else {
+        out.secondaryIcons.innerHTML = '<span class="metric-token">奖</span>';
+        out.secondaryLabel.textContent = '后续奖励';
+        out.secondaryValue.textContent = '0';
+      }
+    }
+
+    var detail = [];
+    detail.push(['抽取方案', summarizePlan(plan)]);
+    detail.push(['转盘券', fmt(totalDraws) + ' 抽 → ' + fmt(totalTickets) + ' 券 × 50 = ' + fmt(actualCost) + ' 光元']);
+    if (inputBudget !== actualCost) detail.push(['投入光元', fmt(inputBudget) + ' 光元（实际使用 ' + fmt(actualCost) + ' 光元）']);
+    var breakFormula = fmt(breakTriggers) + ' 次 × ' + fmt(breakPerTrigger) + ' 片';
+    if (rankShards) breakFormula += ' + 排名奖励 ' + fmt(rankShards) + ' 片';
+    breakFormula += ' = ' + fmt(breakValue) + ' 片';
+    detail.push(['突破碎片', breakFormula]);
+    detail.push(['红装碎片', (coreRed ? fmt(coreRed) : '0') + ' + 试炼 ' + fmt(trialRed) + ' = ' + fmt(redTotal) + ' 片']);
+    out.detailList.innerHTML = detail.map(function (row) {
+      return '<dt>' + row[0] + '</dt><dd>' + row[1] + '</dd>';
+    }).join('');
+
+    var orderedKeys = [];
+    stages.forEach(function (stage) {
+      ROUNDS[stage.round].rewards.forEach(function (reward) {
+        if (orderedKeys.indexOf(reward.key) < 0) orderedKeys.push(reward.key);
+      });
+    });
+    var rewardHtml = orderedKeys.filter(function (key) { return totals[key]; }).map(function (key) {
+      var reward = totals[key];
+      var iconHtml = reward.icon ? '<img class="reward-icon" src="' + reward.icon + '" width="36" height="36" alt="" loading="lazy" decoding="async">' : '';
+      var perTrigger = reward.triggerAmounts.map(function (amount) { return fmt(amount); }).join('/') + ' ' + reward.unit;
+      return '<div class="reward-item">' + iconHtml + '<div class="reward-name"><b><span class="reward-title">' + reward.name + '<small class="reward-per-trigger">' + perTrigger + '</small></span><em class="reward-amount">' + fmt(reward.amount) + ' ' + reward.unit + '</em></b><span class="reward-desc">每 ' + reward.interval + ' 抽触发 · 共 ' + fmt(reward.triggers) + ' 次</span></div></div>';
+    });
+    rewardHtml.push('<div class="reward-item extra"><img class="reward-icon" src="' + RED_ICON + '" width="36" height="36" alt="" loading="lazy" decoding="async"><div class="reward-name"><b><span class="reward-title">奥特试炼红装奖励</span><em class="reward-amount">' + fmt(trialRed) + ' 片</em></b><span class="reward-desc">每 700 抽给 4 片，每 1,000 抽给 10 片；每轮按 1,000 抽计，最多 4 轮</span></div></div>');
+    if (rankShards) {
+      rewardHtml.push('<div class="reward-item extra"><img class="reward-icon" src="' + BREAK_ICON + '" width="36" height="36" alt="" loading="lazy" decoding="async"><div class="reward-name"><b><span class="reward-title">排名奖励突破碎片</span><em class="reward-amount">' + fmt(rankShards) + ' 片</em></b><span class="reward-desc">手动填写</span></div></div>');
+    }
+    out.rewardList.innerHTML = rewardHtml.join('');
+  }
+
+  presetBtns.forEach(function (button) {
+    button.addEventListener('click', function () { setPreset(button.dataset.preset); });
+  });
+
+  roundSelect.addEventListener('change', function () {
+    markPreset('custom');
+    state.plan = customPlan();
+    update();
+  });
+  investmentInput.addEventListener('input', function () {
+    markPreset('custom');
+    state.plan = customPlan();
+    update();
+  });
+  rankInput.addEventListener('input', update);
+  rankInput.addEventListener('change', update);
+
+  setPreset('once');
+})();
+</script>
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
+
+<script>
+(function () {
+  if (!document.documentElement.hasAttribute('data-calc-embed')) return;
+  var lastHeight = 0;
+  var queued = false;
+  function reportHeight() {
+    queued = false;
+    var height = Math.ceil(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight));
+    if (Math.abs(height - lastHeight) < 2) return;
+    lastHeight = height;
+    if (window.parent !== window) window.parent.postMessage({ type: 'aoxi-calc-height', height: height }, '*');
+  }
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    window.requestAnimationFrame(reportHeight);
+  }
+  window.addEventListener('message', function (event) {
+    var data = event.data || {};
+    if (data.type === 'aoxi-theme-sync') {
+      document.documentElement.setAttribute('data-theme', data.theme === 'light' ? 'light' : 'dark');
+      schedule();
+    } else if (data.type === 'aoxi-measure') {
+      schedule();
+    }
+  });
+  if ('ResizeObserver' in window) new ResizeObserver(schedule).observe(document.documentElement);
+  window.addEventListener('load', schedule);
+  window.addEventListener('resize', schedule);
+  document.addEventListener('DOMContentLoaded', schedule);
+  schedule();
+})();
+</script></body>
+</html>

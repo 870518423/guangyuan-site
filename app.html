@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="ak-app-version" content="0.2.2">
 <title>App 设置 · 奥系工具站</title>
 <script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
 <script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
@@ -69,6 +70,14 @@
   .bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,.07); overflow: hidden; margin: 14px 0 8px; }
   .bar i { display: block; height: 100%; width: 0; background: var(--blue, #3b82f6); transition: width .2s; }
   .pstat { font-size: .76rem; color: var(--muted, #93a4bd); min-height: 1.2em; }
+  .update-notes {
+    margin: 10px 0 8px; padding: 10px 12px; border-radius: 10px;
+    background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.24);
+    color: var(--text, #e6edf7); line-height: 1.65;
+  }
+  .update-notes b { color: var(--gold, #ffb300); font-size: .82rem; }
+  .update-notes ul { margin: 6px 0 0; padding-left: 18px; }
+  .update-notes li + li { margin-top: 3px; }
   .actions { display: flex; gap: 10px; margin-top: 12px; }
   .actions .btn { flex: 1; }
   .webnote {
@@ -85,6 +94,17 @@
   /* 内容更新卡（第 18 轮）：仅 App 内可用（网页版内容天然在线，无此卡）；
      #content-card 必须写在内联样式里，不能放 app.css（原因同 #dl 的 a/b 两块） */
   html:not([data-app]) #content-card { display: none; }
+  .security-list { display: grid; gap: 0; margin-top: 10px; }
+  .security-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--border, #1a2336); }
+  .security-row:first-child { border-top: 0; padding-top: 0; }
+  .security-k { font-size: .76rem; color: var(--dim, #64748b); }
+  .security-v { min-width: 0; font-size: .78rem; color: var(--muted, #93a4bd); line-height: 1.6; }
+  .security-v b { color: var(--text, #e6edf7); font-weight: 600; }
+  .security-v a { color: var(--blue, #60a5fa); text-decoration: none; }
+  .security-v a:hover { text-decoration: underline; }
+  .security-v code { color: var(--text, #e6edf7); font-family: inherit; font-size: .74rem; word-break: break-all; user-select: all; }
+  html[data-app] #security { display: none; }
+  @media (max-width: 480px) { .security-row { grid-template-columns: 1fr; gap: 2px; } }
   .about p { margin: 0 0 9px; font-size: .82rem; color: var(--muted, #93a4bd); line-height: 1.75; }
   .about b { color: var(--gold, #ffb300); font-weight: 600; }
 </style>
@@ -100,22 +120,34 @@
   </header>
 
   <section class="card" id="dl">
-    <h2>下载 App <span class="tag">v0.2.1</span></h2>
+    <h2>下载 App <span class="tag">v0.2.2</span></h2>
     <div class="web-only">
-      <div class="kv">版本 <b>v0.2.1</b> · 安装包 <b>5.2 MB</b>（资源包另计，可按需下载）</div>
+      <div class="kv">版本 <b>v0.2.2</b> · 安装包 <b>5.4 MB</b>（资源包另计，可按需下载）</div>
       <ul class="log">
+        <li>v0.2.2：修复部分手机左边缘右滑返回无法触发，并完善版本更新公告</li>
         <li>首版：完整离线核心（收益预测器 / 图鉴 / 攻略 / 被动收录）</li>
         <li>三类资源包可选下载：攻略 / 被动图鉴 / 人间体图鉴</li>
         <li>支持站内检查更新，资源包可增量补下</li>
         <li>新增内容更新：不重装也能拉最新页面与数据</li>
         <li>修复内容更新：新文件即刻可看，差量不再反复重下；界面与新版网站一致</li>
       </ul>
-      <a class="btn solid" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="app/aoxi-tools-v0.2.1.apk" download="奥系工具站-v0.2.1.apk">下载安装包（5.2 MB）</a>
+      <a class="btn solid" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="app/aoxi-tools-v0.2.2-r2.apk" download="奥系工具站-v0.2.2.apk">下载安装包（5.4 MB）</a>
     </div>
     <div class="app-only">
-      <div class="kv">当前版本 <b id="curVer">v0.2.1</b>（App 内已含完整离线核心）</div>
+      <div class="kv">当前版本 <b id="curVer">v0.2.2</b>（App 内已含完整离线核心）</div>
       <div class="kv" id="updResult" style="margin-top:8px">点击下方按钮，检查站点是否有新版本。</div>
       <button class="btn solid" style="margin-top:10px" type="button" id="updBtn">检查更新</button>
+    </div>
+  </section>
+
+  <section class="card" id="security">
+    <h2>安全与源码 <span class="tag">可核验</span></h2>
+    <p class="hint">安装包与源码同属一个公开仓库；App 只申请网络权限。若下载文件的哈希与下方不一致，请勿安装。</p>
+    <div class="security-list">
+      <div class="security-row"><span class="security-k">完整源码</span><div class="security-v"><a href="https://github.com/870518423/guangyuan-site/tree/main/apk-project-v2" target="_blank" rel="noopener">GitHub · apk-project-v2</a></div></div>
+      <div class="security-row"><span class="security-k">应用权限</span><div class="security-v"><b>仅网络访问（INTERNET）</b>，不申请通讯录、定位、相机、麦克风或存储权限。</div></div>
+      <div class="security-row"><span class="security-k">APK SHA-256</span><div class="security-v"><code>c849a7da252658e7a3a8b19e215875dbda79e9ec674f306bc85570e21119adf1</code></div></div>
+      <div class="security-row"><span class="security-k">签名证书 SHA-256</span><div class="security-v"><code>5a7a53f78b241bff2d1794815b7f5b3f5c92676f7c87f892ac1279df80fed3b2</code></div></div>
     </div>
   </section>
 
@@ -310,42 +342,94 @@
 </script>
 <script src="assets/ak/theme.js"></script>
 <script>
-  /* 检查更新（App 内）：比对本地与线上 version.json 的 BUILD（第 15 轮，2026-10-18） */
+  /* 检查更新（App 内）：当前安装版本优先取系统 versionName；公告优先取线上
+     version.json，线上尚未生成公告时用包内 version.json 快照兜底。 */
   (function () {
     if (!document.documentElement.hasAttribute("data-app")) return;
     var SITE_URL = "https://m78calc.cn";
     var btn = document.getElementById("updBtn");
     if (!btn) return;
+
+    function normalizeVersion(value) {
+      var m = /^(\d+(?:\.\d+)*)/.exec(String(value || "").trim().replace(/^v/i, ""));
+      return m ? m[1] : "";
+    }
+    function installedVersion(local) {
+      try {
+        if (window.AKNativeApp && typeof window.AKNativeApp.getVersionName === "function") {
+          var native = normalizeVersion(window.AKNativeApp.getVersionName());
+          if (native) return native;
+        }
+      } catch (e) {}
+      var meta = document.querySelector('meta[name="ak-app-version"]');
+      var fromMeta = meta ? normalizeVersion(meta.getAttribute("content")) : "";
+      if (fromMeta) return fromMeta;
+      var cur = document.getElementById("curVer");
+      var fromPage = cur ? normalizeVersion(cur.textContent) : "";
+      if (fromPage) return fromPage;
+      return normalizeVersion(local && local.apk);
+    }
+    function compareVersion(a, b) {
+      var aa = normalizeVersion(a).split(".");
+      var bb = normalizeVersion(b).split(".");
+      var n = Math.max(aa.length, bb.length);
+      for (var i = 0; i < n; i++) {
+        var x = parseInt(aa[i] || "0", 10) || 0;
+        var y = parseInt(bb[i] || "0", 10) || 0;
+        if (x !== y) return x > y ? 1 : -1;
+      }
+      return 0;
+    }
+    function escapeHtml(value) {
+      return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) {
+        return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+      });
+    }
+    function notesHtml(version, primary, fallback) {
+      var notes = primary && Array.isArray(primary.apkNotes) ? primary.apkNotes : [];
+      if (!notes.length && fallback && Array.isArray(fallback.apkNotes)) notes = fallback.apkNotes;
+      notes = notes.filter(function (x) { return typeof x === "string" && x.trim(); }).slice(0, 8);
+      if (!notes.length) return "";
+      return '<div class="update-notes"><b>v' + escapeHtml(version) + ' 更新内容</b><ul>' +
+        notes.map(function (x) { return "<li>" + escapeHtml(x) + "</li>"; }).join("") +
+        "</ul></div>";
+    }
+
     btn.addEventListener("click", function () {
       var r = document.getElementById("updResult");
       btn.disabled = true;
       r.textContent = "正在检查…";
       fetch("version.json").then(function (res) { return res.json(); }).then(function (local) {
         return fetch(SITE_URL + "/version.json", { cache: "no-store" }).then(function (res) { return res.json(); }).then(function (remote) {
-          /* 第 19 轮修正：BUILD 是「内核 / 内容」版本号，不等于「有没有新安装包」。
-             App 内置的 version.json 永远停在装机时的 BUILD（它不进内容桶、不走热更），
-             所以直接比 BUILD 会把每次内容热更都误报成「发现新版本，请下载安装包」。
-             现在只比 APK 版本字段 apk；两侧都缺该字段时一律当作「无需重装」。 */
-          var newApk = !!(remote.apk && local.apk && remote.apk !== local.apk);
+          var localApk = installedVersion(local);
+          var remoteApk = normalizeVersion(remote && remote.apk);
+          var newApk = !!(remoteApk && localApk && compareVersion(remoteApk, localApk) > 0);
+          var shownVersion = newApk ? remoteApk : (localApk || remoteApk);
+          var notes = newApk
+            ? notesHtml(remoteApk, remote, local)
+            : notesHtml(localApk || remoteApk, local, remote);
           function done(result) { r.innerHTML = result; }
-          /* 内容差异（第 18 轮）：APK 本体不变但内容更新了 → 引导去内容更新卡 */
           function checkContent() {
-            if (!window.AkContent) return false;
+            if (!window.AkContent) return Promise.resolve(false);
             return window.AkContent.status().then(function (st) {
               if (st.ok && st.diff && st.diff.length > 0) {
-                done("App 已是最新，但发现<b>新内容</b>（" + st.diff.length + " 个文件）。<br>请到下方「内容更新」卡点「更新内容」。");
+                done("安装包 <b>v" + escapeHtml(localApk || "—") + "</b> 已是最新，但发现<b>新内容</b>（" +
+                  st.diff.length + " 个文件）。" + notes +
+                  "请到下方「内容更新」卡点「更新内容」。");
                 return true;
               }
               return false;
             });
           }
           if (newApk) {
-            done("发现新安装包 <b>" + remote.apk + "</b>（当前 " + local.apk + "）。<br>请到网页版下载最新安装包覆盖安装。");
+            done("发现新安装包 <b>v" + escapeHtml(remoteApk) + "</b>（当前 v" + escapeHtml(localApk) + "）。" +
+              notes + "请到网页版下载最新安装包覆盖安装。");
           } else {
             checkContent().catch(function () { return false; }).then(function (hasContent) {
               if (hasContent) return;
               var cv = remote.contentVersion || remote.build || "—";
-              done("已是最新内容（内容 " + cv + " · 本机内核 " + (local.build || "—") + "）");
+              done("已是最新版本 <b>v" + escapeHtml(localApk || shownVersion || "—") + "</b>（内容 " +
+                escapeHtml(cv) + "）。" + notes);
             });
           }
         });

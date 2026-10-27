@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>秘藏光元消耗计算器 · 奥系工具站</title>
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="光之秘藏光元消耗计算器：按敲取轮数、活动期数、排名奖励与免费碎星锤，计算突破碎片、碎星锤数量和光元消耗。">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/apple-touch-app.png">
+<link rel="icon" href="assets/favicon-app.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="奥系工具站">
+<script>(function(){try{var t=localStorage.getItem('ak-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<script>(function(){try{if(new URLSearchParams(location.search).get('embed')==='1')document.documentElement.setAttribute('data-calc-embed','1');}catch(e){}})();</script>
+<script>(function(){try{var q=location.search.indexOf("app=1")>-1;var c=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();if(!q&&!c)return;var d=document.documentElement;d.setAttribute("data-app","1");var l=document.createElement("link");l.rel="stylesheet";l.href="assets/ak/app.css";document.head.appendChild(l);var s=document.createElement("script");s.src="assets/ak/app-shell.js";s.defer=true;document.head.appendChild(s);}catch(e){}})();</script>
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #101828; --panel2: #0d1526;
+    --border: #1e2a41; --border2: #263449;
+    --text: #e6ebf5; --muted: #8b98ad; --dim: #64748b;
+    --blue: #3b82f6; --gold: #fbbf24; --radius: 12px;
+    --green: #34d399; --red: #fb7185;
+  }
+  [data-theme="light"] {
+    --bg: #f5f7fb; --panel: #fff; --panel2: #f8fafc;
+    --border: #e2e8f0; --border2: #cbd5e1;
+    --text: #172033; --muted: #526176; --dim: #718096;
+    --blue: #2563eb; --gold: #b77900; --green: #047857; --red: #be123c;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+    font-size: 14px; line-height: 1.65;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 20px 16px 60px; }
+  /* 统一计算器页内嵌模式：隐藏独立入口与标题，只保留计算主体。 */
+  html[data-calc-embed] body { background: transparent; }
+  html[data-calc-embed] .top-links,
+  html[data-calc-embed] .wrap>header,
+  html[data-calc-embed] .ak-theme-toggle { display: none !important; }
+  html[data-calc-embed] .wrap { max-width: none; padding: 14px 14px 26px; }
+  @media (max-width: 560px) {
+    html[data-calc-embed] .wrap { padding: 10px 9px 20px; }
+  }
+  .top-links { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .back-home {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .82rem; color: var(--muted); text-decoration: none;
+    padding: 5px 11px 5px 8px; border: 1px solid var(--border2);
+    border-radius: 8px; background: var(--panel2); transition: color .15s, border-color .15s;
+  }
+  .back-home:hover { color: #93c5fd; border-color: var(--blue); }
+  .preview-badge {
+    margin-left: auto; color: var(--gold); border: 1px solid rgba(251,191,36,.35);
+    background: rgba(251,191,36,.07); border-radius: 999px; padding: 4px 10px;
+    font-size: .7rem; letter-spacing: .5px;
+  }
+  header { text-align: center; padding: 8px 0 18px; }
+  header h1 {
+    margin: 0 0 6px; font-size: 1.65rem; font-weight: 750; letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin: 0; color: var(--dim); font-size: .8rem; }
+  header .sub a { color: var(--gold); text-decoration: none; }
+
+  .preset-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 11px 13px; margin-bottom: 14px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 12px;
+  }
+  .preset-bar .preset-label { color: var(--muted); font-size: .76rem; margin-right: 2px; }
+  .preset-btn {
+    appearance: none; border: 1px solid var(--border2); color: var(--muted);
+    background: var(--panel2); border-radius: 7px; padding: 6px 11px;
+    font: inherit; font-size: .78rem; font-weight: 650; cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .preset-btn:hover { color: var(--text); border-color: var(--blue); }
+  .preset-btn.active { background: rgba(251,191,36,.13); border-color: var(--gold); color: var(--gold); }
+  .preset-bar .preset-tip { margin-left: auto; color: var(--dim); font-size: .7rem; }
+
+  .calculator-grid { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 14px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; min-width: 0; }
+  .panel h2 { margin: 0 0 14px; color: var(--gold); font-size: 1rem; line-height: 1.35; }
+  .panel h2 small { color: var(--dim); font-size: .7rem; font-weight: 400; margin-left: 5px; }
+
+  .input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .field {
+    display: block; min-width: 0; margin: 0; padding: 10px;
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .field > span:first-child {
+    display: flex; align-items: center; gap: 5px; min-height: 2.5em;
+    margin-bottom: 6px; color: var(--muted); font-size: .75rem; line-height: 1.25;
+  }
+  .field .unit { color: var(--dim); font-size: .64rem; white-space: nowrap; }
+  .input-wrap { position: relative; display: block; }
+  .input-wrap input {
+    display: block; width: 100%; appearance: textfield; border: 1px solid var(--border2);
+    background: var(--panel); color: var(--text); border-radius: 8px;
+    padding: 9px 29px 9px 9px; font: inherit; font-size: .96rem;
+    font-variant-numeric: tabular-nums; outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .input-wrap input::-webkit-outer-spin-button, .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .input-wrap input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.13); }
+  .input-wrap .suffix { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--dim); font-size: .68rem; pointer-events: none; }
+  .field-note { margin: 6px 0 0; color: var(--dim); font-size: .64rem; line-height: 1.5; }
+
+  .result-hero { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .hero-metric {
+    display: flex; min-width: 0; align-items: center; flex-direction: column; text-align: center;
+    padding: 12px 8px 11px; border: 1px solid var(--border); border-radius: 11px;
+    background: linear-gradient(180deg, rgba(251,191,36,.08), var(--panel2));
+  }
+  .hero-metric.shard-result { background: linear-gradient(180deg, rgba(59,130,246,.10), var(--panel2)); }
+  .metric-icon { display: block; width: 44px; height: 44px; object-fit: contain; margin-bottom: 4px; }
+  .metric-copy { min-width: 0; width: 100%; }
+  .metric-copy .label { display: block; color: var(--muted); font-size: .71rem; line-height: 1.3; }
+  .metric-copy strong {
+    display: block; margin-top: 2px; font-size: clamp(1.35rem, 6.4vw, 2.05rem);
+    line-height: 1.12; font-variant-numeric: tabular-nums; letter-spacing: -.4px; white-space: nowrap;
+  }
+  .cost-result strong { color: var(--gold); }
+  .shard-result strong { color: var(--blue); }
+  .metric-copy strong span, .metric-copy strong em {
+    display: block; margin: 4px 0 0; color: var(--muted); font-style: normal;
+    font-size: .38em; font-weight: 600; letter-spacing: 0;
+  }
+  .result-status-row { display: flex; align-items: center; justify-content: flex-end; min-height: 24px; margin-bottom: 7px; }
+  .status-badge {
+    display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 6px;
+    font-size: .7rem; font-weight: 700; border: 1px solid currentColor;
+  }
+  .status-badge.ok { color: var(--green); background: rgba(52,211,153,.08); }
+  .status-badge.short { color: var(--red); background: rgba(251,113,133,.08); }
+  .progress-line { height: 7px; overflow: hidden; background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; }
+  .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--gold)); transition: width .25s ease; }
+  .progress-meta { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; color: var(--dim); font-size: .67rem; }
+
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+  .stat { display: flex; align-items: center; gap: 7px; min-width: 0; background: var(--panel2); border: 1px solid var(--border); border-radius: 9px; padding: 8px 9px; }
+  .stat-icon { flex: 0 0 27px; width: 27px; height: 27px; object-fit: contain; }
+  .stat-copy { min-width: 0; }
+  .stat .label { display: block; color: var(--dim); font-size: .64rem; line-height: 1.25; }
+  .stat strong { display: block; margin-top: 1px; color: var(--text); font-size: .98rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stat strong em { color: var(--muted); font-style: normal; font-size: .7em; font-weight: 400; margin-left: 2px; }
+
+  .breakdown { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .breakdown h3 { margin: 0 0 7px; color: var(--muted); font-size: .76rem; font-weight: 650; }
+  .breakdown dl { display: grid; grid-template-columns: minmax(100px, .8fr) minmax(0, 1.4fr); gap: 0; margin: 0; }
+  .breakdown dt, .breakdown dd { margin: 0; padding: 7px 0; border-bottom: 1px dashed var(--border); font-size: .76rem; }
+  .breakdown dt { color: var(--dim); }
+  .breakdown dd { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .breakdown dt:last-of-type, .breakdown dd:last-of-type { border-bottom: 0; }
+  .breakdown strong { color: var(--text); }
+
+  .notice { margin-top: 14px; padding: 11px 13px; background: var(--panel2); border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: 8px; color: var(--muted); font-size: .74rem; line-height: 1.75; }
+  .notice b { color: var(--gold); }
+  footer { margin-top: 24px; text-align: center; color: var(--dim); font-size: .72rem; line-height: 2; }
+  @media (max-width: 720px) {
+    .calculator-grid { grid-template-columns: 1fr; }
+    .preset-tip { display: none; }
+  }
+  @media (max-width: 480px) {
+    .wrap { padding: 16px 12px 44px; }
+    header h1 { font-size: 1.42rem; }
+    .panel { padding: 12px; }
+    .input-grid, .result-hero, .stats { gap: 8px; }
+    .field { padding: 8px; }
+    .field > span:first-child { font-size: .71rem; }
+    .field-note { font-size: .61rem; }
+    .metric-icon { width: 38px; height: 38px; }
+    .hero-metric { padding: 10px 6px 9px; }
+    .metric-copy strong { font-size: clamp(1.28rem, 6.2vw, 1.65rem); }
+    .stat { padding: 7px; }
+    .stat-icon { flex-basis: 23px; width: 23px; height: 23px; }
+    .stat .label { font-size: .6rem; }
+    .stat strong { font-size: .9rem; }
+    .top-links { padding-right: 72px; }
+    .preview-badge { flex-basis: 100%; margin-left: 0; text-align: center; }
+  }
+</style>
+<link rel="stylesheet" href="assets/ak/ak-theme.css">
+<link rel="stylesheet" href="assets/ak/ak-motion.css">
+<link rel="stylesheet" href="assets/ak/ak-components.css">
+<link rel="stylesheet" href="assets/ak/ak-light.css">
+<script defer src="/ak-analytics.js"></script>
+</head>
+<body data-ak-progress>
+<div class="wrap">
+  <div class="top-links">
+    <a class="back-home" href="strategy-mizang.html">← 返回光之秘藏攻略</a>
+    <a class="back-home" href="strategies.html">奥系攻略</a>
+    <span class="preview-badge">验收版 · 暂未加入首页导航</span>
+  </div>
+
+  <header>
+    <h1>秘藏光元消耗计算器</h1>
+    <span class="ak-label-en">Secret Vault Cost Calculator</span>
+    <p class="sub">按 <a href="strategy-mizang.html">并非五斗的《光之秘藏》攻略</a> 计算 · 全部在本机完成</p>
+  </header>
+
+  <div class="preset-bar" aria-label="快速预设">
+    <span class="preset-label">快速预设</span>
+    <button class="preset-btn active" type="button" data-preset="once">一次毕业 · 52轮</button>
+    <button class="preset-btn" type="button" data-preset="twice">分两次 · 24轮×2</button>
+    <button class="preset-btn" type="button" data-preset="custom">自定义</button>
+    <span class="preset-tip">分两次预设已计入排名奖励20片</span>
+  </div>
+
+  <div class="calculator-grid">
+    <section class="panel" aria-labelledby="input-title">
+      <h2 id="input-title">输入条件</h2>
+
+      <div class="input-grid">
+        <label class="field" for="rounds">
+          <span>每期敲取轮数</span>
+          <span class="input-wrap"><input id="rounds" type="number" min="0" max="999" step="1" value="52" inputmode="numeric"><span class="suffix">轮</span></span>
+          <p class="field-note">每轮8次，全部敲开耗20个锤。</p>
+        </label>
+
+        <label class="field" for="sessions">
+          <span>活动期数</span>
+          <span class="input-wrap"><input id="sessions" type="number" min="1" max="20" step="1" value="1" inputmode="numeric"><span class="suffix">期</span></span>
+          <p class="field-note">每期30次奖励独立计算。</p>
+        </label>
+
+        <label class="field" for="rank-shards">
+          <span>排名奖励突破碎片 <small class="unit">合计</small></span>
+          <span class="input-wrap"><input id="rank-shards" type="number" min="0" max="100000" step="1" value="0" inputmode="numeric"><span class="suffix">片</span></span>
+          <p class="field-note">不确定时可填0。</p>
+        </label>
+
+        <label class="field" for="free-hammers">
+          <span>免费碎星锤 <small class="unit">合计</small></span>
+          <span class="input-wrap"><input id="free-hammers" type="number" min="0" max="100000" step="1" value="0" inputmode="numeric"><span class="suffix">个</span></span>
+          <p class="field-note">活动期间每天可领3个。</p>
+        </label>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="result-title" aria-live="polite">
+      <h2 id="result-title">计算结果 <small>目标：1400片</small></h2>
+
+      <div class="result-hero">
+        <div class="hero-metric cost-result">
+          <img class="metric-icon" src="assets/guangyuan.webp" width="44" height="44" alt="光元图标">
+          <div class="metric-copy">
+            <span class="label">累计消耗光元</span>
+            <strong id="cost">124,800<span>光元</span></strong>
+          </div>
+        </div>
+        <div class="hero-metric shard-result">
+          <img class="metric-icon" src="assets/guides/mizang/mizang-fragment.webp" width="44" height="44" alt="密藏碎片图标">
+          <div class="metric-copy">
+            <span class="label">获得密藏碎片</span>
+            <strong id="shards">1,405<em>片</em></strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-status-row"><span class="status-badge ok" id="status">可毕业</span></div>
+      <div class="progress-line" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-meta"><span id="progress-text">1405 / 1400片</span><span id="balance-text">溢出5片</span></div>
+
+      <div class="stats">
+        <div class="stat">
+          <img class="stat-icon" src="assets/guides/mizang/star-hammer.webp" width="27" height="27" alt="碎星锤图标">
+          <div class="stat-copy"><span class="label">碎星锤总计</span><strong id="hammers">1,040<em>个</em></strong></div>
+        </div>
+        <div class="stat">
+          <div class="stat-copy"><span class="label">总敲取次数</span><strong id="hits">416<em>次</em></strong></div>
+        </div>
+      </div>
+
+      <div class="breakdown">
+        <h3>计算明细</h3>
+        <dl>
+          <dt>基础碎片</dt><dd id="base-shards">52 × 25 × 1 = 1,300片</dd>
+          <dt>累计敲取奖励</dt><dd id="bonus-shards">7次 × 15 × 1 = 105片</dd>
+          <dt>排名奖励</dt><dd id="rank-result">0片</dd>
+          <dt>碎星锤原价</dt><dd id="hammer-result"><strong>1,040 × 120 = 124,800光元</strong></dd>
+          <dt>免费锤抵扣</dt><dd id="free-result">0个，节省0光元</dd>
+        </dl>
+      </div>
+
+      <p class="notice"><b>计算口径：</b>每轮25片；每满30次额外15片，每期限7次；全部敲开每轮20个碎星锤，单价120光元。</p>
+    </section>
+  </div>
+
+  <footer>本地计算，不上传任何输入 · 数据口径来自并非五斗的《光之秘藏》攻略</footer>
+</div>
+
+<script>
+(function () {
+  var SHARDS_PER_ROUND = 25;
+  var HAMMERS_PER_ROUND = 20;
+  var HITS_PER_ROUND = 8;
+  var BONUS_PER_30_HITS = 15;
+  var BONUS_MAX = 7;
+  var COST_PER_HAMMER = 120;
+  var TARGET_SHARDS = 1400;
+
+  var roundsEl = document.getElementById('rounds');
+  var sessionsEl = document.getElementById('sessions');
+  var rankEl = document.getElementById('rank-shards');
+  var freeEl = document.getElementById('free-hammers');
+  var presetButtons = Array.prototype.slice.call(document.querySelectorAll('[data-preset]'));
+
+  var out = {
+    cost: document.getElementById('cost'),
+    status: document.getElementById('status'),
+    progressFill: document.getElementById('progress-fill'),
+    progressText: document.getElementById('progress-text'),
+    balanceText: document.getElementById('balance-text'),
+    shards: document.getElementById('shards'),
+    hammers: document.getElementById('hammers'),
+    hits: document.getElementById('hits'),
+    baseShards: document.getElementById('base-shards'),
+    bonusShards: document.getElementById('bonus-shards'),
+    rankResult: document.getElementById('rank-result'),
+    hammerResult: document.getElementById('hammer-result'),
+    freeResult: document.getElementById('free-result')
+  };
+
+  function toInt(el, min, max, fallback) {
+    var value = Number.parseInt(el.value, 10);
+    if (!Number.isFinite(value)) value = fallback;
+    value = Math.max(min, Math.min(max, value));
+    return value;
+  }
+
+  function fmt(value) {
+    return Math.round(value).toLocaleString('zh-CN');
+  }
+
+  function setPreset(name) {
+    presetButtons.forEach(function (button) {
+      button.classList.toggle('active', button.dataset.preset === name);
+    });
+    if (name === 'once') {
+      roundsEl.value = 52;
+      sessionsEl.value = 1;
+      rankEl.value = 0;
+      freeEl.value = 0;
+    } else if (name === 'twice') {
+      roundsEl.value = 24;
+      sessionsEl.value = 2;
+      rankEl.value = 20;
+      freeEl.value = 0;
+    }
+    update();
+  }
+
+  function markCustom() {
+    presetButtons.forEach(function (button) {
+      button.classList.toggle('active', button.dataset.preset === 'custom');
+    });
+  }
+
+  function update() {
+    var rounds = toInt(roundsEl, 0, 999, 0);
+    var sessions = toInt(sessionsEl, 1, 20, 1);
+    var rankShards = toInt(rankEl, 0, 100000, 0);
+    var freeHammers = toInt(freeEl, 0, 100000, 0);
+
+    var hitsPerSession = rounds * HITS_PER_ROUND;
+    var bonusPerSession = Math.min(Math.floor(hitsPerSession / 30), BONUS_MAX);
+    var baseShards = rounds * SHARDS_PER_ROUND * sessions;
+    var bonusShards = bonusPerSession * BONUS_PER_30_HITS * sessions;
+    var totalShards = baseShards + bonusShards + rankShards;
+    var totalHammers = rounds * HAMMERS_PER_ROUND * sessions;
+    var paidHammers = Math.max(0, totalHammers - freeHammers);
+    var cost = paidHammers * COST_PER_HAMMER;
+    var originalCost = totalHammers * COST_PER_HAMMER;
+    var savedCost = Math.min(totalHammers, freeHammers) * COST_PER_HAMMER;
+    var progress = Math.min(100, totalShards / TARGET_SHARDS * 100);
+    var deficit = Math.max(0, TARGET_SHARDS - totalShards);
+    var surplus = Math.max(0, totalShards - TARGET_SHARDS);
+
+    out.cost.innerHTML = fmt(cost) + '<span>光元</span>';
+    out.status.textContent = deficit === 0 ? '可毕业' : '还差 ' + fmt(deficit) + ' 片';
+    out.status.className = 'status-badge ' + (deficit === 0 ? 'ok' : 'short');
+    out.progressFill.style.width = progress.toFixed(2) + '%';
+    out.progressText.textContent = fmt(totalShards) + ' / ' + fmt(TARGET_SHARDS) + '片';
+    out.balanceText.textContent = deficit === 0 ? '溢出 ' + fmt(surplus) + ' 片' : '完成 ' + progress.toFixed(1) + '%';
+    out.shards.innerHTML = fmt(totalShards) + '<em>片</em>';
+    out.hammers.innerHTML = fmt(totalHammers) + '<em>个</em>';
+    out.hits.innerHTML = fmt(hitsPerSession * sessions) + '<em>次</em>';
+    out.baseShards.textContent = rounds + ' × 25 × ' + sessions + ' = ' + fmt(baseShards) + '片';
+    out.bonusShards.textContent = bonusPerSession + '次 × 15 × ' + sessions + ' = ' + fmt(bonusShards) + '片';
+    out.rankResult.textContent = fmt(rankShards) + '片';
+    out.hammerResult.innerHTML = '<strong>' + fmt(totalHammers) + ' × 120 = ' + fmt(originalCost) + '光元</strong>';
+    out.freeResult.textContent = fmt(freeHammers) + '个，节省' + fmt(savedCost) + '光元' + (freeHammers > totalHammers ? '（超出部分不抵扣）' : '');
+  }
+
+  presetButtons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      if (button.dataset.preset === 'custom') {
+        markCustom();
+        roundsEl.focus();
+        roundsEl.select();
+      } else {
+        setPreset(button.dataset.preset);
+      }
+    });
+  });
+
+  [roundsEl, sessionsEl, rankEl, freeEl].forEach(function (input) {
+    input.addEventListener('input', function () {
+      markCustom();
+      update();
+    });
+    input.addEventListener('change', update);
+  });
+
+  update();
+})();
+</script>
+<script src="assets/ak/ripple.js"></script>
+<script src="assets/ak/transitions.js"></script>
+<script src="assets/ak/progress.js"></script>
+<script src="assets/ak/theme.js"></script>
+
+<script>
+(function () {
+  if (!document.documentElement.hasAttribute('data-calc-embed')) return;
+  var lastHeight = 0;
+  var queued = false;
+  function reportHeight() {
+    queued = false;
+    var height = Math.ceil(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight));
+    if (Math.abs(height - lastHeight) < 2) return;
+    lastHeight = height;
+    if (window.parent !== window) window.parent.postMessage({ type: 'aoxi-calc-height', height: height }, '*');
+  }
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    window.requestAnimationFrame(reportHeight);
+  }
+  window.addEventListener('message', function (event) {
+    var data = event.data || {};
+    if (data.type === 'aoxi-theme-sync') {
+      document.documentElement.setAttribute('data-theme', data.theme === 'light' ? 'light' : 'dark');
+      schedule();
+    } else if (data.type === 'aoxi-measure') {
+      schedule();
+    }
+  });
+  if ('ResizeObserver' in window) new ResizeObserver(schedule).observe(document.documentElement);
+  window.addEventListener('load', schedule);
+  window.addEventListener('resize', schedule);
+  document.addEventListener('DOMContentLoaded', schedule);
+  schedule();
+})();
+</script></body>
+</html>

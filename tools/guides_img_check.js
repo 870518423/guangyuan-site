@@ -6,9 +6,9 @@
      1. 默认纯文字版：卡片无头像、阵营图标可见
      2. 切图片版：每张卡左侧是 44px 常**态**头像（avatar.webp），且加载成功
      3. 详情：立绘出现，默认常态；右箭头 → 觉醒 → 超越觉醒，边界箭头置灰
-     4. 缺形态角色（下野首相）箭头都 disabled；无图角色（朝影雄一郎）整块隐藏
+     4. 朝影雄一郎三张立绘齐全，常态 → 觉醒 → 超越觉醒均可加载
      5. 表格视图已停用（切不到、DOM 不渲染）
-   截图：.workbuddy/shots/guides-{text,image,detail-base,detail-transcend,detail-none}.png */
+   截图：.workbuddy/shots/guides-{text,image,detail-base,detail-transcend,detail-chaoying,detail-text,detail-gongteng-lingjia}.png + passive-lingjia-from-guides.png */
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
@@ -70,7 +70,7 @@ const check = (n, ok, extra) => {
   check("默认不显示头像（文字版不生成头像 DOM）", st.pavShown === null || st.pavShown === false, String(st.pavShown));
   check("文字版显示阵营图标", st.ficShown === true, String(st.ficShown));
   check("表格视图已停用", st.tableShown === false);
-  check("卡片 132 张", st.cards === 132, st.cards);
+  check("卡片 133 张", st.cards === 133, st.cards);
   const textShot = await shot("guides-text.png");
 
   /* ---------- 2) 图片版：常态头像 ---------- */
@@ -91,7 +91,7 @@ const check = (n, ok, extra) => {
             w: pavs[0] ? Math.round(pavs[0].getBoundingClientRect().width) : 0};
   })())`));
   check("切到图片版（cardView 带 view-image）", im.hasClass === true);
-  check("图片版：除无图角色外都能露出头像", im.shown === 131, im.shown + "/131（朝影雄一郎无图，回退阵营图标）");
+  check("图片版：133 张卡片都能露出头像", im.shown === 133, im.shown + "/133");
   check("头像全部指向 avatar.webp（只用常态）", im.allAvatar === true);
   /* 头像是 lazy 的：只断言「首屏可见的那几张都真的加载出来了」 */
   check("首屏头像实际加载成功", im.loaded >= 4, im.loaded + "/" + im.total);
@@ -141,8 +141,7 @@ const check = (n, ok, extra) => {
 
   /* ---------- 4) 缺形态 / 无图 ---------- */
   await ev(`document.getElementById('mClose').click()`); await sleep(350);
-  /* 图鉴 132 人里有图的 131 位三形态齐全；缺形态的只有图鉴未收录的「下野首相」，
-     所以这里在数据层断言，不靠点开某个角色（那会误命中把名字写在特训里的别人）。 */
+  /* 图鉴 133 人全部有图且三形态齐全；这里做数据层全量断言。 */
   const formsStat = JSON.parse(await ev(`JSON.stringify((function(){
     var bad = GUIDE.entries.filter(function(e){ return e.img && e.forms.length < 3; })
                            .map(function(e){ return e.name + ':' + e.forms.join('/'); });
@@ -151,23 +150,48 @@ const check = (n, ok, extra) => {
   check("有图角色三形态齐全", formsStat.bad.length === 0, formsStat.bad.join(",") || "0 个缺形态");
 
   await ev(`document.getElementById('mClose').click()`); await sleep(350);
+  /* 朝影雄一郎原先缺图，2026-10-27 从 ATMOLImageCreation 补齐三形态。 */
   await ev(`(function(){var i=document.getElementById('q');i.value='朝影雄一郎';i.dispatchEvent(new Event('input',{bubbles:true}));})()`);
   await sleep(700);
-  const noneInfo = JSON.parse(await ev(`JSON.stringify((function(){
+  const cyInfo = JSON.parse(await ev(`JSON.stringify((function(){
     var cards=document.querySelectorAll('#cardView .card');
     if(!cards.length) return {n:0};
     cards[0].querySelector('.card-hd h3').click();
     return {n:cards.length};
   })())`));
   await sleep(800);
-  const none = JSON.parse(await ev(`JSON.stringify((function(){
+  const cyBase = JSON.parse(await ev(`JSON.stringify((function(){
+    var img=document.getElementById('mPortrait');
     return {picHidden:document.getElementById('mPic').hidden,
-            avatar:!!document.querySelector('#cardView .pav'),
-            ficonVisible:(function(){var f=document.querySelector('#cardView .ficon');return !!f && f.offsetParent!==null;})()};
+            src:img.getAttribute('src'), form:document.getElementById('mForm').textContent,
+            loaded:img.complete&&img.naturalWidth>0};
   })())`));
-  check("无图角色（朝影雄一郎）：立绘区隐藏", noneInfo.n >= 1 && none.picHidden === true);
-  check("无图角色：图片版回退显示阵营图标", none.ficonVisible === true);
-  const noneShot = await shot("guides-detail-none.png");
+  check("朝影雄一郎：常态立绘显示并加载成功",
+    cyInfo.n === 1 && cyBase.picHidden === false && /4101dbd5\/base\.webp$/.test(cyBase.src || "") &&
+    cyBase.form === "常态" && cyBase.loaded === true,
+    cyBase.src + " / " + cyBase.form);
+
+  await ev(`document.getElementById('mNext').click()`); await sleep(500);
+  const cyAwaken = JSON.parse(await ev(`JSON.stringify((function(){
+    var img=document.getElementById('mPortrait');
+    return {src:img.getAttribute('src'), form:document.getElementById('mForm').textContent,
+            loaded:img.complete&&img.naturalWidth>0};
+  })())`));
+  check("朝影雄一郎：觉醒立绘显示并加载成功",
+    /4101dbd5\/awaken\.webp$/.test(cyAwaken.src || "") && cyAwaken.form === "觉醒" && cyAwaken.loaded === true,
+    cyAwaken.src + " / " + cyAwaken.form);
+
+  await ev(`document.getElementById('mNext').click()`); await sleep(500);
+  const cyTranscend = JSON.parse(await ev(`JSON.stringify((function(){
+    var img=document.getElementById('mPortrait');
+    return {src:img.getAttribute('src'), form:document.getElementById('mForm').textContent,
+            loaded:img.complete&&img.naturalWidth>0, next:document.getElementById('mNext').disabled};
+  })())`));
+  check("朝影雄一郎：超越觉醒立绘显示并加载成功",
+    /4101dbd5\/transcend\.webp$/.test(cyTranscend.src || "") && cyTranscend.form === "超越觉醒" &&
+    cyTranscend.loaded === true && cyTranscend.next === true,
+    cyTranscend.src + " / " + cyTranscend.form);
+  const chaoyingShot = await shot("guides-detail-chaoying.png");
 
   /* ---------- 8) 文字版详情：不出图、单列（管理者：应该和以前一样） ---------- */
   await ev(`document.getElementById('mClose').click()`); await sleep(350);
@@ -191,7 +215,34 @@ const check = (n, ok, extra) => {
     tm.secs.join(" / "));
   const textModal = await shot("guides-detail-text.png");
 
-  console.log("\n  截图：" + [textShot, imageShot, baseShot, transShot, noneShot, textModal].join("  "));
+  /* ---------- 9) 工藤优幸本命「令迦」→ 角色被动页 ---------- */
+  await ev(`document.getElementById('mClose').click()`); await sleep(350);
+  await ev(`(function(){var i=document.getElementById('q');i.value='工藤优幸';i.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+  await sleep(700);
+  await ev(`document.querySelector('#cardView .card-hd h3').click()`); await sleep(800);
+  const fateLinks = JSON.parse(await ev(`JSON.stringify([].map.call(document.querySelectorAll('#mBody a.fate-go'), function(a){
+    return {text:a.textContent.trim(), href:a.getAttribute('href')};
+  }))`));
+  const lingjiaLink = fateLinks.filter(function(a){ return a.text.indexOf('令迦') >= 0; })[0];
+  check("工藤优幸：本命令迦可点击", !!lingjiaLink && lingjiaLink.href === "passive/char.html?id=lingjia",
+    fateLinks.map(function(a){ return a.text + " → " + a.href; }).join(" / "));
+  const fateSourceShot = await shot("guides-detail-gongteng-lingjia.png");
+
+  await ev(`(function(){var a=[].slice.call(document.querySelectorAll('#mBody a.fate-go')).filter(function(x){return x.textContent.indexOf('令迦')>=0;})[0];a.click();})()`);
+  await sleep(2200);
+  const lingjiaPage = JSON.parse(await ev(`JSON.stringify({
+    path: location.pathname + location.search,
+    title: document.title,
+    name: document.getElementById('name') ? document.getElementById('name').textContent : '',
+    rendered: !!document.querySelector('[data-akp-char="lingjia"]')
+  })`));
+  check("令迦：成功跳转并渲染角色被动页",
+    lingjiaPage.path === "/passive/char.html?id=lingjia" && lingjiaPage.name === "令迦" &&
+    lingjiaPage.title.indexOf("令迦") === 0 && lingjiaPage.rendered === true,
+    lingjiaPage.path + " / " + lingjiaPage.title);
+  const fateShot = await shot("passive-lingjia-from-guides.png");
+
+  console.log("\n  截图：" + [textShot, imageShot, baseShot, transShot, chaoyingShot, textModal, fateSourceShot, fateShot].join("  "));
   console.log("  " + (fail ? "FAILED" : "ALL PASS") + "  " + pass + " pass / " + fail + " fail");
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(2); });

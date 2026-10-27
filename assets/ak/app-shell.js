@@ -21,6 +21,18 @@
     return location.pathname.indexOf("/passive/") >= 0 ? "../" : "";
   })();
 
+  /* ⑥ 页面级返回拦截：手机返回键与左滑共用。
+     页面监听 cancelable 的 ak:back；调用 preventDefault() 即表示已处理
+     （如图鉴先关大图、回上一条详情、关弹层），原生层不再执行网页后退。 */
+  window.AkAppBack = function () {
+    try {
+      var ev = new CustomEvent("ak:back", { cancelable: true });
+      return !document.dispatchEvent(ev);
+    } catch (e) {
+      return false;
+    }
+  };
+
   /* 三包定义（与 module.json / pack_deploy 保持一致） */
   var PACKS = [
     { id: "guide", name: "攻略资源包", size: "约 2 MB", desc: "并非五斗 3 张高清攻略长图", def: true },

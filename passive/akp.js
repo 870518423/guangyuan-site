@@ -1087,8 +1087,14 @@
         verBadge.textContent = versions[vi].badge;
         verBadge.className = "akp-ver akp-ver--cur";
       }
-      /* 日期：当前版本的上线日期（数据文件 versions[].date，缺省不显示） */
-      dateEl.textContent = versions[vi].date || "";
+      /* 日期：普通态显当前版本；对比态显「上一版 → 当前版」。
+         日期仍直接使用数据文件 versions[].date，不在这里改写格式。 */
+      var dateText = versions[vi].date || "";
+      if (inDiff) {
+        var prevDate = versions[vi - 1].date || "";
+        if (prevDate && dateText) dateText = prevDate + " → " + dateText;
+      }
+      dateEl.textContent = dateText;
 
       /* 按钮一：切到下一版（循环） */
       var nk = (vi + 1) % versions.length;

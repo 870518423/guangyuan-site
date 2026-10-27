@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>奥系攻略</title>
 <meta name="theme-color" content="#0a0e1a">
-<meta name="description" content="奥系攻略板块：修炼数值表、趣味问答题库等玩家社区攻略收录">
+<meta name="description" content="奥系攻略板块：修炼数值表、趣味问答题库、老虎机抽取推荐、UL强度排行榜等玩家社区攻略收录">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/apple-touch-app.png">
 <link rel="icon" href="assets/favicon-app.png">
@@ -50,6 +50,7 @@
   }
   header .sub { margin: 0; color: var(--dim); font-size: .8rem; letter-spacing: .3px; }
   header .sub b { color: var(--gold); font-weight: 600; }
+  header .update-note { margin-top: 5px; color: var(--muted); }
 
   .search-row { position: relative; display: flex; align-items: center; margin-bottom: 14px; }
   .search-row input {
@@ -90,10 +91,27 @@
   .card:hover { transform: translateY(-3px); border-color: var(--border2); box-shadow: 0 12px 30px rgba(0,0,0,.4); }
   .card:hover::after { opacity: .17; }
   .card-hd { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
-  .card-hd img { width: 34px; height: 34px; object-fit: contain; flex: 0 0 34px; border-radius: 8px; }
+  .card-hd .card-avatar {
+    display: block; flex: 0 0 38px; width: 38px; height: 38px; padding: 3px;
+    border-radius: 50%; background: var(--ring, var(--accent)); line-height: 0;
+    box-shadow: 0 0 0 1px rgba(15,23,42,.35);
+  }
+  .card-hd .card-avatar img {
+    display: block; width: 100%; height: 100%; object-fit: cover;
+    border-radius: 50%; background: var(--panel2);
+  }
   .card-hd h3 { margin: 0; font-size: 1.06rem; font-weight: 680; flex: 1; min-width: 0; }
   .card-hd .go { color: var(--accent); opacity: .5; font-size: 1rem; }
   .card:hover .go { opacity: 1; }
+  .card-date {
+    display: inline-flex; align-items: center; gap: 7px; margin: 0 0 10px;
+    padding: 2px 8px; border: 1px solid var(--border2); border-radius: 6px;
+    color: var(--dim); font-size: .7rem; line-height: 1.55;
+  }
+  .card-date span { letter-spacing: .4px; }
+  .card-date time {
+    color: var(--accent); font-weight: 650; font-variant-numeric: tabular-nums;
+  }
   .card .desc { margin: 0 0 11px; color: var(--muted); font-size: .83rem; line-height: 1.72; }
   .card .tags { display: flex; flex-wrap: wrap; gap: 6px; }
   .card .tags span {
@@ -144,14 +162,28 @@
   <a class="aoxi-site-brand" data-aoxi-intro="rise" href="index.html" aria-label="奥系工具站首页"><img src="assets/logo-site.webp" alt=""><span><small>AOXI / INDEX</small></span></a>
   <nav class="aoxi-site-nav" data-aoxi-intro="right" aria-label="主导航">
       <a href="index.html"><span>首页</span><small>HOME</small></a>
-      <a href="calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+      <details class="aoxi-nav-menu">
+        <summary><span>计算器</span><small>CALCULATOR</small></summary>
+        <div class="aoxi-calc-dropdown">
+          <a href="calculator.html"><span>光元收益预测器</span><small>RESOURCE FORECAST</small></a>
+          <a href="mizang-zhuanpan-calculator.html?tab=zhuanpan"><span>转盘</span><small>DRAW CALCULATOR</small></a>
+          <a href="mizang-zhuanpan-calculator.html?tab=mizang"><span>光之秘藏</span><small>VAULT CALCULATOR</small></a>
+        </div>
+      </details>
       <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
       <a href="strategies.html" aria-current="page"><span>攻略</span><small>STRATEGIES</small></a>
       <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
   </nav>
   <details class="aoxi-mobile-nav" data-aoxi-intro="right"><summary><strong>菜单</strong><small>MENU</small></summary><nav class="aoxi-mobile-links" aria-label="手机导航">
         <a href="index.html"><span>首页</span><small>HOME</small></a>
-        <a href="calculator.html"><span>计算器</span><small>CALCULATOR</small></a>
+        <details class="aoxi-mobile-submenu">
+          <summary><span>计算器</span><small>CALCULATOR</small></summary>
+          <div class="aoxi-mobile-submenu-panel">
+            <a href="calculator.html"><span>光元收益预测器</span><small>RESOURCE FORECAST</small></a>
+            <a href="mizang-zhuanpan-calculator.html?tab=zhuanpan"><span>转盘</span><small>DRAW CALCULATOR</small></a>
+            <a href="mizang-zhuanpan-calculator.html?tab=mizang"><span>光之秘藏</span><small>VAULT CALCULATOR</small></a>
+          </div>
+        </details>
         <a href="guides.html"><span>图鉴</span><small>GUIDES</small></a>
         <a href="strategies.html" aria-current="page"><span>攻略</span><small>STRATEGIES</small></a>
         <a href="passive/index.html"><span>被动</span><small>PASSIVE</small></a>
@@ -167,7 +199,7 @@
   </header>
 
   <div class="search-row">
-    <input id="q" type="search" placeholder="搜索攻略名称、简介或标签…" autocomplete="off">
+    <input id="q" type="search" placeholder="搜索攻略名称、简介、作者、标签或日期…" autocomplete="off" aria-label="搜索攻略">
     <button id="clearQ" type="button" aria-label="清空">✕</button>
   </div>
   <p class="count">共 <b id="n">0</b> 篇攻略</p>
@@ -183,7 +215,7 @@
 </div>
 
 <script>
-const SECTIONS = [{"id": "xiulian", "title": "修炼数值表", "cat": "修炼", "file": "strategy-xiulian.html", "icon": "assets/strategy-book.png", "accent": "#fbbf24", "desc": "按修炼条目分组，收录四维、全伤／全免、高级属性、增幅与抗性的非完美属性数值，由低到高排列。", "tags": ["6级词条", "数值区间", "升序排列"]}, {"id": "dati", "title": "趣味问答题库", "cat": "答题", "file": "strategy-dati.html", "icon": "assets/strategy-book.png", "accent": "#38bdf8", "desc": "160 道奥特曼知识题。答案默认隐藏，可当题库自测；也能一键展开当速查手册，支持题号与关键词搜索。", "tags": ["160 题", "可自测", "一键展开"]}, {"id": "bingfeiwudou", "title": "并非五斗的警备队攻略", "cat": "警备队", "file": "strategy-bingfeiwudou.html", "icon": "assets/strategy-book.png", "accent": "#34d399", "desc": "转载并非五斗的警备队图文攻略：警备队商店兑换建议、源晶掉落表，以及 16 到 20 章章节怪物站位图，含三张可折叠长图。", "tags": ["3 张图", "警备队兑换", "章节站位"]}];
+const SECTIONS = [{"id": "xiulian", "title": "修炼数值表", "cat": "修炼", "file": "strategy-xiulian.html", "author": "故稔", "avatar": "assets/authors/guren.webp", "ring": "#60a5fa", "accent": "#fbbf24", "desc": "转载故稔的修炼数值表：按修炼条目分组，收录四维、全伤／全免、高级属性、增幅与抗性的非完美属性数值，由低到高排列。", "tags": ["6级词条", "数值区间", "升序排列"], "date": "2026.10.9", "date_iso": "2026-10-09"}, {"id": "dati", "title": "趣味问答题库", "cat": "答题", "file": "strategy-dati.html", "author": "故稔", "avatar": "assets/authors/guren.webp", "ring": "#60a5fa", "accent": "#38bdf8", "desc": "转载故稔的趣味问答题库：169 道奥特曼知识题。答案默认隐藏，可当题库自测；也能一键展开当速查手册，支持题号与关键词搜索。", "tags": ["169 题", "可自测", "一键展开"], "date": "于2026-10-23更新", "date_iso": "2026-10-23"}, {"id": "bingfeiwudou", "title": "并非五斗的警备队攻略", "cat": "警备队", "file": "strategy-bingfeiwudou.html", "author": "并非五斗", "avatar": "assets/authors/bingfeiwudou.webp", "ring": "#fbbf24", "accent": "#34d399", "desc": "转载并非五斗的警备队图文攻略：警备队商店兑换建议、源晶掉落表，以及 16 到 20 章章节怪物站位图，含三张可折叠长图。", "tags": ["3 张图", "警备队兑换", "章节站位"], "date": "2026.9.10", "date_iso": "2026-09-10"}, {"id": "huluji", "title": "老虎机抽取推荐从夯到拉", "cat": "抽取推荐", "file": "strategy-huluji.html", "author": "没救了number1", "avatar": "assets/authors/number1.webp", "ring": "#fbbf24", "accent": "#fb7185", "desc": "转载没救了number1的老虎机抽取推荐图与视频文字稿：按「夯、顶级、人上人、NPC、拉完了」分档，并按奥星、多宇宙、怪兽、宇宙人四个阵营整理抽取建议。", "tags": ["从夯到拉", "四阵营", "图文整理"], "date": "2026.10.19", "date_iso": "2026-10-19"}, {"id": "ul-tier", "title": "UL强度排行榜", "cat": "强度榜", "file": "strategy-ul-tier.html", "author": "一只路过的小马飞行员", "avatar": "assets/authors/xiaoma-pilot.webp", "ring": "#60a5fa", "accent": "#a78bfa", "desc": "转载一只路过的小马飞行员的 PVP 向 UL 强度排行榜：不计成本，按强 T0 至 T5 分档；部分角色的排位考虑了献祭被动。", "tags": ["仅 PVP", "不计成本", "T0–T5", "1 张图"], "date": "2026.10.21", "date_iso": "2026-10-21"}, {"id": "mizang", "title": "光之秘藏", "cat": "秘藏", "file": "strategy-mizang.html", "author": "并非五斗", "avatar": "assets/authors/bingfeiwudou.webp", "ring": "#fbbf24", "accent": "#f59e0b", "desc": "转载并非五斗的光之秘藏攻略：整理碎星锤消耗、突破碎片收益与毕业成本，并提供文字版与完整原图。", "tags": ["抽取建议"], "date": "2026.8.05", "date_iso": "2026-08-05"}, {"id": "zhuanpan", "title": "奥特转盘", "cat": "转盘攻略", "file": "strategy-zhuanpan.html", "author": "并非五斗", "avatar": "assets/authors/bingfeiwudou.webp", "ring": "#fbbf24", "accent": "#f59e0b", "desc": "转载并非五斗的奥特转盘图文攻略：整理转盘券消耗、四圈奖励、核心奖励优先级与突破UL、红装毕业成本。", "tags": [], "date": "2026.8.05", "date_iso": "2026-08-05"}];
 const cardsEl = document.getElementById('cards');
 const emptyEl = document.getElementById('empty');
 const nEl = document.getElementById('n');
@@ -196,10 +228,11 @@ function render(list){
   cardsEl.innerHTML = list.map(s => `
     <a class="card" href="${esc(s.file)}" style="--accent:${esc(s.accent)}">
       <div class="card-hd">
-        <img src="${esc(s.icon)}" alt="">
+        <span class="card-avatar" style="--ring:${esc(s.ring || s.accent)}"><img src="${esc(s.avatar)}" alt="${esc(s.author)}头像"></span>
         <h3>${esc(s.title)}</h3>
         <span class="go">→</span>
       </div>
+      <div class="card-date"><span>攻略日期</span><time datetime="${esc(s.date_iso)}">${esc(s.date)}</time></div>
       <p class="desc">${esc(s.desc)}</p>
       <div class="tags">${s.cat ? `<span class="cat">${esc(s.cat)}</span>` : ''}${s.tags.map(t => `<span>${esc(t)}</span>`).join('')}</div>
     </a>`).join('');
@@ -212,7 +245,7 @@ function apply(){
   clearEl.classList.toggle('on', !!k);
   if (!k) return render(SECTIONS);
   render(SECTIONS.filter(s =>
-    (s.title + ' ' + s.desc + ' ' + s.tags.join(' ')).toLowerCase().indexOf(k) !== -1
+    (s.title + ' ' + s.author + ' ' + s.desc + ' ' + s.tags.join(' ') + ' ' + s.date).toLowerCase().indexOf(k) !== -1
   ));
 }
 

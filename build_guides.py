@@ -25,7 +25,7 @@ except ImportError:
     sys.exit("缺少依赖：请先安装 openpyxl（pip install openpyxl）")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_SRC = r"C:\Users\Admin\Desktop\奥系道具图片\人间体大全（含特训及条件）.xlsx"
+DEFAULT_SRC = r"C:\Users\Admin\Desktop\奥系\人间体大全（含特训及条件）.xlsx"
 TEMPLATE = os.path.join(HERE, "guide_template.html")
 OUT = os.path.join(HERE, "guides.html")
 
@@ -36,7 +36,7 @@ IMG_MANIFEST = os.path.join(HERE, "images", "humans", "manifest.json")
 IMG_ALIAS = {"姬矢准": "姫矢准"}
 
 # 性别判定表（2026-10-17）：A 序号 / B 角色名 / C 形态数 / D 性别 / E 依据
-SEX_SRC = r"C://Users//Admin//Desktop//奥系道具图片//奥系人间体//人间体性别判定表.xlsx"
+SEX_SRC = r"C://Users//Admin//Desktop//奥系//奥系人间体//人间体性别判定表.xlsx"
 
 
 def load_sex():
@@ -78,6 +78,19 @@ SEPS = "\n，、"
 COL_NAME, COL_FATE, COL_HOW, COL_PREQ = 0, 1, 2, 3
 TRAIT_RANGE = (4, 9)  # E~I
 
+# 礼物按品质从高到低排列；表里可以写完整名称，也可以写前两个字缩写。
+GIFTS_BY_QUALITY = (
+    ("格斗手套", "恶魔之花", "宇宙地图", "白色围巾"),
+    ("棒球手套", "能量指环", "咖喱饭", "光子计算机"),
+    ("战斗日记", "飞行执照", "巴顿羽毛"),
+)
+GIFT_ORDER = {name: i for i, name in enumerate(
+    gift for quality in GIFTS_BY_QUALITY for gift in quality
+)}
+GIFT_NAMES_BY_LENGTH = sorted(GIFT_ORDER, key=len, reverse=True)
+GIFT_ABBREVIATIONS = {name[:2]: name for name in GIFT_ORDER}
+GIFT_ABBREVIATIONS.update({"围巾": "白色围巾", "羽毛": "巴顿羽毛"})
+
 # 「本命 / 前置要求」里同名但不是人间体、而是「角色卡」的特例
 # ------------------------------------------------------------------
 # B 列（本命）和 D 列（前置要求）里绝大多数写的是角色卡名（赛文、盖亚、
@@ -114,6 +127,35 @@ def split_multi(value):
     return parts
 
 
+def normalize_gifts(value):
+    """把礼物缩写还原为完整名称，并按紫、蓝、绿品质排序。"""
+    if value is None:
+        return []
+    text = str(value)
+    for ch in "\r\n，、,;； \t":
+        text = text.replace(ch, "")
+    if not text:
+        return []
+
+    gifts = []
+    pos = 0
+    while pos < len(text):
+        name = next((g for g in GIFT_NAMES_BY_LENGTH if text.startswith(g, pos)), None)
+        if name:
+            gifts.append(name)
+            pos += len(name)
+            continue
+        abbr = text[pos:pos + 2]
+        name = GIFT_ABBREVIATIONS.get(abbr)
+        if name:
+            gifts.append(name)
+            pos += 2
+            continue
+        raise ValueError(f"无法识别礼物「{text[pos:]}」，原内容：{value}")
+
+    return sorted(dict.fromkeys(gifts), key=GIFT_ORDER.get)
+
+
 def load_entries(src):
     wb = openpyxl.load_workbook(src, data_only=True)
     known = {f["name"] for f in FACTIONS}
@@ -125,9 +167,19 @@ def load_entries(src):
     for ws in wb.worksheets:
         title = ws.title.strip()
         faction = title if title in known else title
+        header = {}
+        for cell in ws[1]:
+            value = str(cell.value or "").strip()
+            if value:
+                header[value] = cell.column - 1
+        for required in ("喜欢的礼物", "讨厌的礼物"):
+            if required not in header:
+                sys.exit(f"[{title}] 缺少表头：{required}")
+        like_col = header["喜欢的礼物"]
+        dislike_col = header["讨厌的礼物"]
         got = 0
         for row in ws.iter_rows(min_row=2, max_row=ws.max_row,
-                                min_col=1, max_col=TRAIT_RANGE[1],
+                                min_col=1, max_col=ws.max_column,
                                 values_only=True):
             name = row[COL_NAME]
             if name is None or not str(name).strip():
@@ -138,6 +190,12 @@ def load_entries(src):
                 for t in split_multi(cell):
                     if t not in traits:
                         traits.append(t)
+            try:
+                like_gifts = normalize_gifts(row[like_col])
+                dislike_gifts = normalize_gifts(row[dislike_col])
+            except ValueError as exc:
+                sys.exit(f"[{title}] {name}：{exc}")
+
             # 本命 / 前置：命中 CARD_ITEMS 的加「（角色卡）」后缀，避免误链到人间体
             def mark(values):
                 out = []
@@ -164,6 +222,8 @@ def load_entries(src):
                 "how": split_multi(row[COL_HOW]),
                 "prereq": prereq,
                 "traits": traits,
+                "likeGifts": like_gifts,
+                "dislikeGifts": dislike_gifts,
                 "img": pic["id"] if pic else "",
                 "forms": pic["forms"] if pic else [],
                 "av": 1 if (pic and pic.get("avatar")) else 0,
@@ -175,7 +235,6 @@ def load_entries(src):
 
     return entries, per_faction
 
-
 def find_source(explicit):
     """定位表格：优先用命令行传入的路径；否则用默认路径；再否则自动在桌面里找。"""
     if explicit:
@@ -186,7 +245,8 @@ def find_source(explicit):
         return DEFAULT_SRC
     # 默认路径失效时（比如文件被改名），在桌面里自动找最新的「人间体*.xlsx」
     cands = []
-    for folder in (os.path.join(os.path.expanduser("~"), "Desktop"),
+    for folder in (os.path.join(os.path.expanduser("~"), "Desktop", "奥系"),
+                   os.path.join(os.path.expanduser("~"), "Desktop"),
                    os.path.join(os.path.expanduser("~"), "Desktop", "奥系道具图片")):
         if not os.path.isdir(folder):
             continue
