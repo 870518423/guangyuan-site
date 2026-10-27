@@ -94,17 +94,6 @@
   /* 内容更新卡（第 18 轮）：仅 App 内可用（网页版内容天然在线，无此卡）；
      #content-card 必须写在内联样式里，不能放 app.css（原因同 #dl 的 a/b 两块） */
   html:not([data-app]) #content-card { display: none; }
-  .security-list { display: grid; gap: 0; margin-top: 10px; }
-  .security-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--border, #1a2336); }
-  .security-row:first-child { border-top: 0; padding-top: 0; }
-  .security-k { font-size: .76rem; color: var(--dim, #64748b); }
-  .security-v { min-width: 0; font-size: .78rem; color: var(--muted, #93a4bd); line-height: 1.6; }
-  .security-v b { color: var(--text, #e6edf7); font-weight: 600; }
-  .security-v a { color: var(--blue, #60a5fa); text-decoration: none; }
-  .security-v a:hover { text-decoration: underline; }
-  .security-v code { color: var(--text, #e6edf7); font-family: inherit; font-size: .74rem; word-break: break-all; user-select: all; }
-  html[data-app] #security { display: none; }
-  @media (max-width: 480px) { .security-row { grid-template-columns: 1fr; gap: 2px; } }
   .about p { margin: 0 0 9px; font-size: .82rem; color: var(--muted, #93a4bd); line-height: 1.75; }
   .about b { color: var(--gold, #ffb300); font-weight: 600; }
 </style>
@@ -137,17 +126,6 @@
       <div class="kv">当前版本 <b id="curVer">v0.2.2</b>（App 内已含完整离线核心）</div>
       <div class="kv" id="updResult" style="margin-top:8px">点击下方按钮，检查站点是否有新版本。</div>
       <button class="btn solid" style="margin-top:10px" type="button" id="updBtn">检查更新</button>
-    </div>
-  </section>
-
-  <section class="card" id="security">
-    <h2>安全与源码 <span class="tag">可核验</span></h2>
-    <p class="hint">安装包与源码同属一个公开仓库；App 只申请网络权限。若下载文件的哈希与下方不一致，请勿安装。</p>
-    <div class="security-list">
-      <div class="security-row"><span class="security-k">完整源码</span><div class="security-v"><a href="https://github.com/870518423/guangyuan-site/tree/main/apk-project-v2" target="_blank" rel="noopener">GitHub · apk-project-v2</a></div></div>
-      <div class="security-row"><span class="security-k">应用权限</span><div class="security-v"><b>仅网络访问（INTERNET）</b>，不申请通讯录、定位、相机、麦克风或存储权限。</div></div>
-      <div class="security-row"><span class="security-k">APK SHA-256</span><div class="security-v"><code>c849a7da252658e7a3a8b19e215875dbda79e9ec674f306bc85570e21119adf1</code></div></div>
-      <div class="security-row"><span class="security-k">签名证书 SHA-256</span><div class="security-v"><code>5a7a53f78b241bff2d1794815b7f5b3f5c92676f7c87f892ac1279df80fed3b2</code></div></div>
     </div>
   </section>
 
